@@ -670,6 +670,38 @@ section('riding state cleared on scene change');
   near(g.player.pos[1], C.ROOF.y, 0.1, 'spawned correctly on the new scene');
 }
 
+section('audio balance (layered gain baseline — no outliers)');
+{
+  // static-analyse the audio source so a stray loud sound can never sneak back in
+  let asrc = '';
+  try { asrc = require('fs').readFileSync(__dirname + '/../src/07_audio.js', 'utf8'); } catch (e) {}
+  ok(asrc.length > 0, 'audio source readable for balance audit');
+  if (asrc) {
+    const peaks = [];
+    asrc.split('\n').forEach(ln => {
+      const c = ln.match(/case '(\w+)':/); if (!c) return;
+      const vs = [];
+      let mm; const re = /(?:blip|thump)\([^,]+,[^,]+,\s*([\d.]+)/g;
+      while ((mm = re.exec(ln))) vs.push(parseFloat(mm[1]));
+      const re2 = /hiss\([^,]+,\s*([\d.]+)/g;
+      while ((mm = re2.exec(ln))) vs.push(parseFloat(mm[1]));
+      if (vs.length) peaks.push({ name: c[1], peak: Math.max(...vs) });
+    });
+    ok(peaks.length > 15, 'found the action-sound table (' + peaks.length + ' sounds)');
+    // no action sound louder than 0.6 (the impactBig death stinger is the ceiling)
+    const tooLoud = peaks.filter(p => p.peak > 0.61);
+    ok(tooLoud.length === 0, 'no action sound exceeds the 0.6 ceiling (' + (tooLoud.map(p => p.name + '=' + p.peak).join(',') || 'clean') + ')');
+    // dynamic range stays sane (loudest / quietest <= 15x; was 26x before rebalance)
+    const hi = Math.max(...peaks.map(p => p.peak)), lo = Math.min(...peaks.map(p => p.peak));
+    ok(hi / lo <= 15, 'action-sound dynamic range is reasonable (' + (hi / lo).toFixed(1) + 'x <= 15x)');
+    // ambience gains (continuous) must be low — scan loopNoise vol args
+    const amb = [];
+    let am; const are = /loopNoise\('[a-z]+',\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)/g;
+    while ((am = are.exec(asrc))) amb.push(parseFloat(am[1]));
+    ok(amb.length > 0 && amb.every(v => v <= 0.2), 'every continuous ambience layer is quiet (<=0.2): [' + amb.join(', ') + ']');
+  }
+}
+
 section('avatar render tiers (principle ported from STREET PROTOCOL)');
 {
   const P = C.props;
