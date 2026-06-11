@@ -1,0 +1,23 @@
+{
+  "name": "the-orange-empire",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Los Angeles, 1937. A small citrus town that is not what it says it is. One self-contained HTML file, Three.js r128 from CDN, everything else procedural.",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test/logic.js && node test/playthrough.js && node test/dom.js && node test/audio.js",
+    "test:logic": "node test/logic.js",
+    "test:playthrough": "node test/playthrough.js",
+    "test:dom": "node test/dom.js",
+    "test:audio": "node test/audio.js",
+    "shots": "xvfb-run -a -s \"-screen 0 1280x720x24\" node test/shots.js"
+  },
+  "devDependencies": {
+    "canvas": "^3.2.3",
+    "gl": "^8.1.6",
+    "jsdom": "^29.1.1",
+    "node-web-audio-api": "^2.0.0",
+    "pngjs": "^7.0.0",
+    "three": "^0.128.0"
+  }
+}

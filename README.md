@@ -51,3 +51,9 @@ node node/shots.js       # renders 21 headless PNG screenshots into shots/
 ## Note
 
 This is an **original-assets homage**: no film footage, music, character names, or quoted dialogue. All geometry, audio, and operator lines are original work inspired by the film's ideas.
+
+---
+
+## Also in this repo
+
+**[THE ORANGE EMPIRE](orange-empire/)** — the second simulation. Los Angeles, 1937: a citrus town with six seams in it, a bartender who knows too much, and a road east that ends in green wireframe. A Thirteenth Floor homage the way this one is a Matrix homage. Play it at [`orange-empire/index.html`](orange-empire/index.html).
