@@ -775,6 +775,45 @@ section('motorcycle nitrous (finite turbo, ported from the branch CFG)');
   ok(g.bike.speed > C.BIKE.MAX, 'turbo pushes speed past the normal cap (' + g.bike.speed.toFixed(1) + ' > ' + C.BIKE.MAX + ')');
 }
 
+section('neon mile is INFINITE (streaming chunks, constant memory)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  ok(g.scene.infinite === true, 'neon scene is flagged infinite');
+  const chunks0 = Object.keys(g.scene.chunks).length;
+  ok(chunks0 >= 3, 'road chunks exist on arrival (' + chunks0 + ')');
+  const worldsAt = z => g.scene.insts.filter(i => i.kind === 'world').length;
+
+  // mount and ride a long way down the mile
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'mounted');
+
+  const chunkKeysSeen = new Set(Object.keys(g.scene.chunks));
+  let maxChunksAtOnce = chunks0;
+  for (let i = 0; i < 1200; i++) {
+    step(g, { fwd: 1, sprint: true }, 1 / 60);
+    Object.keys(g.scene.chunks).forEach(k => chunkKeysSeen.add(k));
+    maxChunksAtOnce = Math.max(maxChunksAtOnce, Object.keys(g.scene.chunks).length);
+  }
+  const zTravelled = g.player.pos[2];
+  ok(zTravelled < -100, 'rode far down the mile (z=' + zTravelled.toFixed(0) + ')');
+  ok(chunkKeysSeen.size > chunks0 + 3, 'new chunks were generated ahead while riding (' + chunkKeysSeen.size + ' distinct chunks seen)');
+  ok(maxChunksAtOnce <= 10, 'chunk count stays bounded — old chunks recycle, memory constant (max ' + maxChunksAtOnce + ' at once)');
+
+  // the far-away road is still solid ground + renders without NaN
+  ok(g.player.pos[1] === g.scene.groundY, 'still grounded on the far road (no falling through)');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon renders without NaN');
+  g.mode = 'code';
+  const opsC = C.render(g, 480, 270, g.time);
+  ok(opsC.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon code-view without NaN');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

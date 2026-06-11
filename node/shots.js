@@ -287,4 +287,21 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   for (let i = 0; i < 90; i++) step(g, { fwd: 1, boost: true }, 1 / 60);
   shoot(g, '32_neon_riding', g.time);
 }
+
+// ---- 33 far down the INFINITE neon mile (chunk streaming) ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05);
+  const ex = g.cam.pos, ddx = bike.pos[0]-ex[0], ddy=(bike.pos[1]+0.4)-ex[1], ddz=bike.pos[2]-ex[2];
+  g.player.yaw = Math.atan2(ddx,-ddz); g.player.pitch = C.clamp(Math.asin(ddy/Math.max(0.001,Math.hypot(ddx,ddy,ddz))),-1.4,1.4);
+  step(g, null, 0.05); step(g, { actionEdge: true }, 0.1);
+  for (let i = 0; i < 600; i++) step(g, { fwd: 1, sprint: true }, 1/60);
+  shoot(g, '33_neon_infinite_far', g.time);
+}
+
 console.log('done');
