@@ -2315,6 +2315,21 @@ function updateCamera(dt){
     return codeMode;
   }
 
+
+  // self-hook: tick the rain on every animation frame WITHOUT touching the host's files —
+  // wrap requestAnimationFrame so each scheduled frame ticks the rain first
+  try {
+    var _raf = requestAnimationFrame;
+    if (typeof _raf === 'function') {
+      requestAnimationFrame = function (cb) {
+        return _raf(function (t) {
+          try { if (typeof window !== 'undefined' && window.CodeView) window.CodeView.tick(1 / 60); } catch (e) {}
+          return cb(t);
+        });
+      };
+    }
+  } catch (e) {}
+
   // key binding (C), matching the M/P toggle style
   if (typeof window !== 'undefined') {
     window.addEventListener('keydown', function (ev) {
@@ -2417,7 +2432,6 @@ function frame(now){
   if(raw < 0) raw = 0;
   perfTick(raw * 1000);
   update(raw);
-  if (typeof window !== 'undefined' && window.CodeView) window.CodeView.tick(raw);
   renderer.render(scene, camera);
 }
 

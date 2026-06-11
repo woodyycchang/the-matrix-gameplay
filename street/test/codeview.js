@@ -1,6 +1,24 @@
 'use strict';
 /* test/codeview.js — Matrix code-view toggle (headless logic) */
-const boot = require('./stubs');
+// self-contained loader (the original stubs.js is kept byte-pristine and boots the ORIGINAL build)
+const fs = require('fs'), path = require('path');
+const { JSDOM } = require('jsdom');
+function boot(opts){
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8');
+  const dom = new JSDOM(html.replace(/<script src="https:[^"]*"><\/script>/, ''), { pretendToBeVisual:true, runScripts:'outside-only', url:'https://localhost/' });
+  const window = dom.window, document = window.document;
+  const fake2d = () => new Proxy({ canvas:{} }, { get(t,p){ if(typeof p!=='string')return undefined; if(p==='canvas')return t.canvas; if(p==='measureText')return ()=>({width:10}); if(p==='createLinearGradient'||p==='createRadialGradient'||p==='createPattern')return ()=>({addColorStop(){}}); if(p==='getImageData')return (x,y,w,h)=>({data:new Uint8ClampedArray(w*h*4),width:w,height:h}); return ()=>{}; }, set(){return true;}, has(){return true;} });
+  window.HTMLCanvasElement.prototype.getContext = function(type){ return type==='2d' ? fake2d() : null; };
+  const THREE = require('three');
+  class FakeRenderer { constructor(){ this.domElement=document.createElement('canvas'); this.shadowMap={enabled:false,type:0}; this.outputEncoding=3000; } setPixelRatio(){} setSize(){} setClearColor(){} render(){} dispose(){} }
+  THREE.WebGLRenderer = FakeRenderer; window.THREE = THREE; window.__HEADLESS__ = true;
+  const m = html.match(/<script id="game">([\s\S]*?)<\/script>/);
+  if (opts && typeof opts.preBoot==='function') opts.preBoot(window);
+  const run = new Function('window','document','navigator','performance','requestAnimationFrame', m[1]);
+  run(window, document, window.navigator, (typeof performance!=='undefined'?performance:{now:()=>Date.now()}), ()=>{});
+  if(!window.GAME) throw new Error('window.GAME was not exposed');
+  return { GAME: window.GAME, window, document };
+}
 let pass = 0, fail = 0;
 function ok(c, m) { if (c) { pass++; console.log('  ok  ' + m); } else { fail++; console.error('  FAIL ' + m); } }
 

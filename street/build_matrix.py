@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build street-protocol: concatenate parts, embed three.js inline, verify."""
+"""Matrix build: the ORIGINAL parts, byte-untouched, plus p6b_codeview inserted. Original build.py stays pristine."""
 import re, subprocess, sys, pathlib
 
 ROOT = pathlib.Path(__file__).parent
 PARTS = ['p0_head.html','p1_core.html','p2_audio.html','p3_world.html',
-         'p4_actors.html','p5_combat.html','p5b_boss.html','p6_game.html','p7_boot.html']
+         'p4_actors.html','p5_combat.html','p5b_boss.html','p6_game.html','p6b_codeview.html','p7_boot.html']
 
 html = ''.join((ROOT/'parts'/p).read_text() for p in PARTS)
 
@@ -15,7 +15,8 @@ assert cdn_tag, 'CDN placeholder tag not found'
 html = html.replace(cdn_tag.group(0),
     '<script id="vendor-three">\n' + vendor + '\n</script>')
 
-(ROOT/'index.html').write_text(html)
+(ROOT.parent/'index.html').write_text(html)   # the front-door game (original + Matrix toggle)
+(ROOT.parent/'street.html').write_text(html)  # identical copy for old links + the construct door
 
 m = re.search(r'<script id="game">([\s\S]*?)</script>', html)
 assert m, 'game script missing'

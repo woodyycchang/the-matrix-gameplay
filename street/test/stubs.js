@@ -3,7 +3,7 @@ const fs = require('fs'), path = require('path');
 const { JSDOM } = require('jsdom');
 
 module.exports = function bootGame(opts){
-  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'street.html'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const dom = new JSDOM(html.replace(/<script src="https:[^"]*"><\/script>/, ''), {
     pretendToBeVisual: true, runScripts: 'outside-only', url: 'https://localhost/',
   });

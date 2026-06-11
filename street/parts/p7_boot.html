@@ -64,7 +64,6 @@ function frame(now){
   if(raw < 0) raw = 0;
   perfTick(raw * 1000);
   update(raw);
-  if (typeof window !== 'undefined' && window.CodeView) window.CodeView.tick(raw);
   renderer.render(scene, camera);
 }
 

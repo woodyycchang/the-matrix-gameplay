@@ -8,7 +8,7 @@ let PASS = 0, FAIL = 0;
 const ok = (c, l, x) => { if (c) { PASS++; console.log('  ok  ' + l); } else { FAIL++; console.log('  FAIL ' + l + (x !== undefined ? ' -> ' + JSON.stringify(x) : '')); } };
 
 console.log('== static: single-file build ==');
-const html = fs.readFileSync(path.join(__dirname, '..', '..', 'street.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 ok(/<script id="vendor-three">/.test(html), 'three.js is embedded inline');
 ok(!/<script src="https?:/.test(html), 'no external script dependencies');
 ok(/<meta name="description"/.test(html), 'meta description present');
