@@ -187,7 +187,11 @@
           else {
             var hor = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
             var g = ctx.createLinearGradient(0, 0, 0, H);
-            if (op.mode === 'city') {
+            if (op.mode === 'neon') {
+              g.addColorStop(0, '#04040a');
+              g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#0c0a18');
+              g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'city') {
               g.addColorStop(0, '#9fb2bf');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#cfd6da');
               g.addColorStop(1, op.fogCol);
@@ -488,7 +492,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {

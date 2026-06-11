@@ -28,6 +28,7 @@
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
     bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
+    neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -56,7 +57,8 @@
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
-    [/\b(city|street|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
+    [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
+    [/\b(city|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
   ];
   C.parse = function (text) {
     var s = String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();

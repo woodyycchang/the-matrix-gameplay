@@ -689,6 +689,52 @@ section('avatar render tiers (principle ported from STREET PROTOCOL)');
   ok(Object.keys(tiers).length >= 2, 'crowd contains more than one render tier (' + Object.keys(tiers).length + ' distinct detail levels)');
 }
 
+section('neon mile (cyber street — riding program recovered as native scene)');
+{
+  // keyword routing: neon words win, and must NOT collide with the city crowd scene
+  const k1 = C.parse('the neon mile');
+  ok(k1.type === 'scene' && k1.scene === 'neon', "'neon' loads the neon scene");
+  const k2 = C.parse('let me ride');
+  ok(k2.type === 'scene' && k2.scene === 'neon', "'ride' loads the neon scene");
+  const k3 = C.parse('cyberpunk highway');
+  ok(k3.type === 'scene' && k3.scene === 'neon', "'cyberpunk highway' -> neon");
+  const k4 = C.parse('a crowded street at lunch hour');
+  ok(k4.type === 'scene' && k4.scene === 'city', 'city crowd phrases still load the city, not neon');
+
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  eq(g.sceneName, 'neon mile', 'neon scene is active');
+  eq(g.scene.sky, 'neon', 'neon sky mode set');
+
+  // a bike waits at the start line, rideable
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  ok(!!bike, 'a motorcycle is staged at the start line');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2];
+  g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05);
+  aimAt(g, bike.pos, 0.4);
+  step(g, null, 0.05);
+  ok(g.aim === bike, 'the staged bike is aimable');
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'can mount the bike in the neon scene');
+
+  // ride forward down the long straight; should travel without tunnelling through a wall
+  const z0 = g.player.pos[2];
+  for (let i = 0; i < 180; i++) step(g, { fwd: 1, boost: true }, 1 / 60);
+  ok(g.player.pos[2] < z0 - 5, 'bike travels down the mile (-z)');
+  ok(g.player.pos[0] > -5.0 && g.player.pos[0] < 5.0, 'stays within the side walls (no tunnelling)');
+
+  // render integrity, normal + code view
+  let ops = C.render(g, 640, 360, g.time);
+  ok(ops.length > 30, 'neon scene renders a substantial frame (' + ops.length + ' ops)');
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN polys in neon scene');
+  g.mode = 'code';
+  ops = C.render(g, 640, 360, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN polys in neon code-view');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

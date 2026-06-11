@@ -263,4 +263,28 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   g.mode = 'code';
   shoot(g, '29_render_tiers_code', g.time);
 }
+
+
+// ---- 30/31/32 neon mile: overview, code-view, riding POV ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  // overview from the start line, looking down the mile
+  at(g, 0, 1.5, 7); look(g, 0, -0.04); step(g, null, 0.05);
+  shoot(g, '30_neon_overview', g.time);
+  g.mode = 'code'; shoot(g, '31_neon_code', g.time); g.mode = 'normal';
+  // mount and ride, first-person POV down the straight
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05);
+  const ex = g.cam.pos, ddx = bike.pos[0] - ex[0], ddy = (bike.pos[1] + 0.4) - ex[1], ddz = bike.pos[2] - ex[2];
+  g.player.yaw = Math.atan2(ddx, -ddz);
+  g.player.pitch = C.clamp(Math.asin(ddy / Math.max(0.001, Math.hypot(ddx, ddy, ddz))), -1.4, 1.4);
+  step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  for (let i = 0; i < 90; i++) step(g, { fwd: 1, boost: true }, 1 / 60);
+  shoot(g, '32_neon_riding', g.time);
+}
 console.log('done');

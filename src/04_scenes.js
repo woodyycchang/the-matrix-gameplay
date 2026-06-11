@@ -226,12 +226,59 @@
     return s;
   }
 
+  // ---------------- NEON (the cyber street — a riding program) ----------------
+  // Principle recovered from the cyberpunk-motorcycle branch (long straight, near-black
+  // sky, magenta/cyan curbs, glowing towers), re-forged with our own boxes. Not its code.
+  function sceneNeon() {
+    var L = 220;                                    // long straight, built our way
+    var s = {
+      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
+      groundY: 0, ambience: 'neon', colliders: [],
+      insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }  // facing -z, down the mile
+    };
+    var m = C.newMesh();
+    C.addQuadY(m, -7.4, -L, 7.4, 4, 0.001, '#07070e', 'floor');          // road
+    C.addQuadY(m, -7.4, -L, -5.2, 4, 0.004, '#0c0c16', 'floor');         // sidewalk L
+    C.addQuadY(m, 5.2, -L, 7.4, 4, 0.004, '#0c0c16', 'floor');           // sidewalk R
+    // curb neon strips (the signature palette: magenta outer, cyan inner)
+    C.addQuadY(m, -5.3, -L, -5.0, 4, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, 5.0, -L, 5.3, 4, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, -3.3, -L, -3.05, 4, 0.02, '#19e3ff', 'floor');
+    C.addQuadY(m, 3.05, -L, 3.3, 4, 0.02, '#19e3ff', 'floor');
+    // centreline dashes
+    for (var cz = -8; cz > -L; cz -= 9) C.addQuadY(m, -0.28, cz, 0.28, cz + 4.4, 0.02, '#ff2bd6', 'floor');
+    // two rows of glowing towers, window-lit in neon hues
+    var r = C.rng(820), hues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
+    for (var i = 0; i < 22; i++) {
+      var z = -10 - i * 9.5;
+      var hwL = 4 + r() * 2.5, htL = 14 + r() * 26;
+      C.addBox(m, -10.5 - r() * 2, 0, z, hwL, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -7.4, hues[(i + 1) % 5], true);   // left tower lit face -> +x (toward road)
+      var hwR = 4 + r() * 2.5, htR = 14 + r() * 26;
+      C.addBox(m, 10.5 + r() * 2, 0, z + 4, hwR, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 7.4, hues[(i + 3) % 5], false); // right tower lit face -> -x
+    }
+    C.anchorize(m, 0.05, 73, 8); C.meshBounds(m);
+    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'the mile' }));
+    // street furniture + a bike waiting at the start line
+    s.insts.push(inst(P.lamppost(), [-5.6, 0, -6], 0, { label: 'lamp' }));
+    s.insts.push(inst(P.lamppost(), [5.6, 0, -24], Math.PI, { label: 'lamp' }));
+    s.insts.push(inst(P.lamppost(), [-5.6, 0, -42], 0, { label: 'lamp' }));
+    s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
+    // walls down both sidewalks (long straight corridor)
+    s.colliders.push(box([-11, 0, -L], [-5.0, 14, 4]));
+    s.colliders.push(box([5.0, 0, -L], [11, 14, 4]));
+    s.colliders.push(box([-7.4, 0, -L - 2], [7.4, 14, -L]));            // far end cap
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
       case 'dojo': return sceneDojo();
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
+      case 'neon': return sceneNeon();
       default: return sceneVoid();
     }
   };

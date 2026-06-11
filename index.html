@@ -923,12 +923,59 @@
     return s;
   }
 
+  // ---------------- NEON (the cyber street — a riding program) ----------------
+  // Principle recovered from the cyberpunk-motorcycle branch (long straight, near-black
+  // sky, magenta/cyan curbs, glowing towers), re-forged with our own boxes. Not its code.
+  function sceneNeon() {
+    var L = 220;                                    // long straight, built our way
+    var s = {
+      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
+      groundY: 0, ambience: 'neon', colliders: [],
+      insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }  // facing -z, down the mile
+    };
+    var m = C.newMesh();
+    C.addQuadY(m, -7.4, -L, 7.4, 4, 0.001, '#07070e', 'floor');          // road
+    C.addQuadY(m, -7.4, -L, -5.2, 4, 0.004, '#0c0c16', 'floor');         // sidewalk L
+    C.addQuadY(m, 5.2, -L, 7.4, 4, 0.004, '#0c0c16', 'floor');           // sidewalk R
+    // curb neon strips (the signature palette: magenta outer, cyan inner)
+    C.addQuadY(m, -5.3, -L, -5.0, 4, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, 5.0, -L, 5.3, 4, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, -3.3, -L, -3.05, 4, 0.02, '#19e3ff', 'floor');
+    C.addQuadY(m, 3.05, -L, 3.3, 4, 0.02, '#19e3ff', 'floor');
+    // centreline dashes
+    for (var cz = -8; cz > -L; cz -= 9) C.addQuadY(m, -0.28, cz, 0.28, cz + 4.4, 0.02, '#ff2bd6', 'floor');
+    // two rows of glowing towers, window-lit in neon hues
+    var r = C.rng(820), hues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
+    for (var i = 0; i < 22; i++) {
+      var z = -10 - i * 9.5;
+      var hwL = 4 + r() * 2.5, htL = 14 + r() * 26;
+      C.addBox(m, -10.5 - r() * 2, 0, z, hwL, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -7.4, hues[(i + 1) % 5], true);   // left tower lit face -> +x (toward road)
+      var hwR = 4 + r() * 2.5, htR = 14 + r() * 26;
+      C.addBox(m, 10.5 + r() * 2, 0, z + 4, hwR, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 7.4, hues[(i + 3) % 5], false); // right tower lit face -> -x
+    }
+    C.anchorize(m, 0.05, 73, 8); C.meshBounds(m);
+    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'the mile' }));
+    // street furniture + a bike waiting at the start line
+    s.insts.push(inst(P.lamppost(), [-5.6, 0, -6], 0, { label: 'lamp' }));
+    s.insts.push(inst(P.lamppost(), [5.6, 0, -24], Math.PI, { label: 'lamp' }));
+    s.insts.push(inst(P.lamppost(), [-5.6, 0, -42], 0, { label: 'lamp' }));
+    s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
+    // walls down both sidewalks (long straight corridor)
+    s.colliders.push(box([-11, 0, -L], [-5.0, 14, 4]));
+    s.colliders.push(box([5.0, 0, -L], [11, 14, 4]));
+    s.colliders.push(box([-7.4, 0, -L - 2], [7.4, 14, -L]));            // far end cap
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
       case 'dojo': return sceneDojo();
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
+      case 'neon': return sceneNeon();
       default: return sceneVoid();
     }
   };
@@ -1241,6 +1288,7 @@
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
     bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
+    neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -1269,7 +1317,8 @@
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
-    [/\b(city|street|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
+    [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
+    [/\b(city|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
   ];
   C.parse = function (text) {
     var s = String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -2274,6 +2323,7 @@
         s.start(); ambNodes.push(s, g, f);
       }
       if (name === 'wind') { loopNoise('bandpass', 420, 0.6, 0.5, 0.17, 220); loopNoise('lowpass', 180, 0.5, 0.25, 0.31, 70); }
+      else if (name === 'neon') { loopNoise('lowpass', 70, 0.6, 0.16, 0.13, 26); loopNoise('bandpass', 560, 3.5, 0.07, 0.21, 120); }
       else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.35, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.12, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
@@ -2539,7 +2589,11 @@
           else {
             var hor = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
             var g = ctx.createLinearGradient(0, 0, 0, H);
-            if (op.mode === 'city') {
+            if (op.mode === 'neon') {
+              g.addColorStop(0, '#04040a');
+              g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#0c0a18');
+              g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'city') {
               g.addColorStop(0, '#9fb2bf');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#cfd6da');
               g.addColorStop(1, op.fogCol);
@@ -2840,7 +2894,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {

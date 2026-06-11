@@ -128,6 +128,7 @@
         s.start(); ambNodes.push(s, g, f);
       }
       if (name === 'wind') { loopNoise('bandpass', 420, 0.6, 0.5, 0.17, 220); loopNoise('lowpass', 180, 0.5, 0.25, 0.31, 70); }
+      else if (name === 'neon') { loopNoise('lowpass', 70, 0.6, 0.16, 0.13, 26); loopNoise('bandpass', 560, 3.5, 0.07, 0.21, 120); }
       else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.35, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.12, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
