@@ -735,6 +735,46 @@ section('neon mile (cyber street — riding program recovered as native scene)')
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN polys in neon code-view');
 }
 
+section('motorcycle nitrous (finite turbo, ported from the branch CFG)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'mounted');
+  eq(Math.round(g.bike.turbo * 10) / 10, C.BIKE.TURBO_MAX, 'nitrous starts full');
+
+  // turbo should NOT engage below the speed gate even if Shift held
+  g.bike.speed = 1;
+  step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(!g.bike.boosting, 'turbo will not engage below the speed gate');
+
+  // get up to speed, then hold turbo — it should engage and drain
+  for (let i = 0; i < 60; i++) step(g, { fwd: 1 }, 1 / 60);
+  const tBefore = g.bike.turbo;
+  for (let i = 0; i < 30; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.turbo < tBefore, 'holding turbo drains nitrous (' + tBefore.toFixed(2) + ' -> ' + g.bike.turbo.toFixed(2) + ')');
+
+  // drain to empty, then turbo must cut out
+  for (let i = 0; i < 300; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.turbo <= 0.06, 'nitrous can be fully drained');
+  ok(!g.bike.boosting, 'turbo cuts out when nitrous is empty');
+
+  // coast without turbo — nitrous regenerates
+  const tEmpty = g.bike.turbo;
+  for (let i = 0; i < 120; i++) step(g, { fwd: 0 }, 1 / 60);
+  ok(g.bike.turbo > tEmpty, 'nitrous regenerates when not boosting (' + tEmpty.toFixed(2) + ' -> ' + g.bike.turbo.toFixed(2) + ')');
+
+  // top speed with turbo exceeds normal cap
+  g.bike.turbo = C.BIKE.TURBO_MAX;
+  for (let i = 0; i < 90; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.speed > C.BIKE.MAX, 'turbo pushes speed past the normal cap (' + g.bike.speed.toFixed(1) + ' > ' + C.BIKE.MAX + ')');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

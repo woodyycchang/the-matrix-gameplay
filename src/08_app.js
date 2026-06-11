@@ -293,13 +293,42 @@
         }
       }
     }
+    // riding instruments: speed bar + nitrous gauge, lower-right, only while mounted
+    if (game.bike) drawRideHUD();
+  }
+
+  function drawRideHUD() {
+    var bk = game.bike, B = C.BIKE;
+    var spd = Math.abs(bk.speed), sf = Math.min(1, spd / B.BOOST), tf = bk.turbo / B.TURBO_MAX;
+    var pad = Math.round(Math.min(W, H) * 0.03);
+    var bw = Math.round(W * 0.2), bh = Math.round(H * 0.018);
+    var x = W - pad - bw, y = H - pad - bh;
+    var code = game.mode === 'code';
+    // speed bar
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22';
+    ctx.fillRect(x, y, bw, bh);
+    var sCol = bk.boosting ? '#ff2bd6' : (code ? '#46ff7a' : '#19e3ff');
+    ctx.fillStyle = sCol; ctx.fillRect(x, y, bw * sf, bh);
+    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.lineWidth = 1; ctx.strokeRect(x, y, bw, bh);
+    // nitrous gauge above it
+    var y2 = y - bh - 5;
+    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22'; ctx.fillRect(x, y2, bw, bh);
+    ctx.fillStyle = tf > 0.05 ? '#ffd166' : '#5a4a2a'; ctx.fillRect(x, y2, bw * tf, bh);
+    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.strokeRect(x, y2, bw, bh);
+    // labels
+    setFont(Math.round(Math.min(W, H) * 0.016), false);
+    ctx.textAlign = 'right'; ctx.fillStyle = code ? '#7dffaf' : '#9aa0a8';
+    ctx.fillText(Math.round(spd / B.BOOST * 180) + ' KM/H', x - 8, y + bh);
+    ctx.fillText(bk.boosting ? 'TURBO' : 'NITRO', x - 8, y2 + bh);
+    ctx.textAlign = 'left'; ctx.globalAlpha = 1;
   }
 
   // ---------- HUD ----------
   function updateHUD() {
     hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift turbo';
+    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro (limited)';
     else if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';

@@ -548,10 +548,11 @@
   // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
   // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
   //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34 };
+  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34,
+             TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
 
   Game.prototype.mountBike = function (it) {
-    this.bike = { it: it, speed: 0, lean: 0 };
+    this.bike = { it: it, speed: 0, lean: 0, turbo: C.BIKE.TURBO_MAX, boosting: false };
     it.loadDir = 0;
     if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
     this.held = null;
@@ -582,20 +583,32 @@
     var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
     // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
     p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
-    var turbo = !!input.sprint;
+    var wantTurbo = !!input.sprint;
     var throttle = (input.fwd || 0);
     var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26; // mouse contributes to steering
+    // turbo is a finite boost (nitrous): needs charge AND speed past a gate; drains while held, regens when off
+    var thr = throttle > 0.01;
+    bk.boosting = wantTurbo && bk.turbo > 0.05 && thr && bk.speed > B.TURBO_GATE;
+    if (bk.boosting) { bk.turbo = Math.max(0, bk.turbo - dt); }
+    else { bk.turbo = Math.min(B.TURBO_MAX, bk.turbo + dt * B.TURBO_REGEN); }
     // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
     var speedFrac = bk.speed / B.BOOST;
-    var steerRate = (turbo ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
+    var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
     p.yaw += steerIn * steerRate * dt;
     bk.lean += (C.clamp(steerIn, -1, 1) * Math.min(1, bk.speed / B.MAX) - bk.lean) * Math.min(1, 6 * dt);
-    // longitudinal
-    var maxv = turbo ? B.BOOST : B.MAX;
-    if (throttle > 0.01) bk.speed += B.ACCEL * throttle * dt;
-    else if (throttle < -0.01) bk.speed += B.BRAKE * throttle * dt; // brake/reverse
-    else bk.speed -= Math.sign(bk.speed) * Math.min(Math.abs(bk.speed), B.COAST * dt);
-    bk.speed = C.clamp(bk.speed, -B.MAX * 0.3, maxv);
+    // longitudinal — roll-on with diminishing accel near vmax; turbo lifts the cap and boosts accel
+    var maxv = bk.boosting ? B.BOOST : B.MAX;
+    if (thr) {
+      var accel = (bk.boosting ? B.ACCEL * B.TURBO_GAIN : B.ACCEL) * throttle;
+      bk.speed += accel * dt * Math.max(0.12, 1.04 - bk.speed / maxv);
+    } else if (throttle < -0.01) {
+      bk.speed += B.BRAKE * throttle * dt; // brake/reverse
+    } else {
+      bk.speed -= Math.sign(bk.speed) * Math.min(Math.abs(bk.speed), B.COAST * dt);
+    }
+    // when not boosting but still over the normal cap, ease back down (don't hard-clamp)
+    if (!bk.boosting && bk.speed > B.MAX) bk.speed = Math.max(B.MAX, bk.speed - B.OVER_FALL * dt);
+    bk.speed = C.clamp(bk.speed, -B.MAX * 0.3, B.BOOST);
     // integrate along facing (nose +z at yaw 0)
     var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
     var step = bk.speed * dt;
@@ -628,7 +641,9 @@
     it.yaw = p.yaw;
     it._wob = 0;
     bk.it._lean = bk.lean;
-    this.emit('engine', { speed: Math.abs(bk.speed), throttle: Math.max(0, throttle) });
+    this.emit('engine', { speed: Math.abs(bk.speed), throttle: Math.max(0, throttle),
+                          speedFrac: C.clamp(Math.abs(bk.speed) / B.BOOST, 0, 1),
+                          turbo: bk.turbo / B.TURBO_MAX, boosting: bk.boosting });
     // footstep phase off; engine carries the motion
     p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
   };
