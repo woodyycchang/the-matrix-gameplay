@@ -26,10 +26,6 @@
     hangup: 'Hanging up. Back to white.',
     lesson: 'You looked. Everyone looks — that is the lesson.',
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
-    bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
-    katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
-    door: 'That light is not mine. A whole other street runs behind this door.',
-    portalBack: 'Hung up on the neon. Back to white.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -49,9 +45,6 @@
     bench: 'bench', benches: 'bench',
     lamppost: 'lamppost', streetlight: 'lamppost',
     fountain: 'fountain',
-    motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', bike: 'bike', bikes: 'bike',
-    katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
-    door: 'door', doorway: 'door',
     pedestal: 'pedestal'
   };
   var SCENEKEYS = [
@@ -66,8 +59,6 @@
     if (!s) return { type: 'none' };
     if (/\bhelp\b/.test(s)) return { type: 'help' };
     if (/\b(code|vision|digital|glyphs?)\b/.test(s) && !/\bdress\b/.test(s)) return { type: 'code' };
-    // the portal outranks the city scene so "the street protocol" opens the door, not the crowd
-    if (/\b(metaverse|protocol|neon)\b/.test(s)) return { type: 'props', props: [{ kind: 'door', n: 1 }] };
     for (var i = 0; i < SCENEKEYS.length; i++) {
       if (SCENEKEYS[i][0].test(s)) {
         var sc = SCENEKEYS[i][1];
@@ -126,7 +117,6 @@
     this.flags = { firstFallDone: false, lessonDone: false, attempts: 0, successDone: false, hinted: false };
     this.fx = { flash: 0, flashCol: '#ffffff', vig: 0, vigCol: '#7a1010', cracks: null, crackA: 0, slowmo: 1, slowTarget: 1, bars: 0, stamp: null, stampA: 0, bursts: [], heart: 0, painLinger: 0, camDip: 0, codeFlash: 0 };
     this.held = null;
-    this.bike = null;
     this.msgs = [];
     this.events = [];
     this.trans = null;
@@ -197,7 +187,6 @@
     p.pos = sc.spawn.pos.slice(); p.vel = [0, 0, 0];
     p.yaw = sc.spawn.yaw; p.pitch = 0; p.grounded = true; p.coyote = 0;
     this.held = null;
-    this.bike = null;
     this.state = 'play';
     this._fallFromRoof = false; this._airFromA = false;
     this.flags.successDone = false;
@@ -266,9 +255,6 @@
       case 'booth': mesh = P.booth(); k = 'booth'; lbl = 'exit'; break;
       case 'dummy': mesh = P.dummy(); k = 'dummy'; break;
       case 'mirror': mesh = P.mirror(); this.say(L.mirror); break;
-      case 'bike': mesh = P.bike(); k = 'bike'; lbl = 'motorcycle'; this.say(L.bike, 0.6); break;
-      case 'katana': mesh = P.katanaStand(); k = 'katana'; lbl = 'katana'; this.say(L.katana, 0.6); break;
-      case 'door': mesh = P.door(); k = 'door'; lbl = 'the street'; this.say(L.door, 0.6); break;
       case 'bench': mesh = P.bench(); break;
       case 'lamppost': mesh = P.lamppost(); break;
       case 'fountain': mesh = P.fountain(); break;
@@ -278,13 +264,12 @@
     it.loadT = 0; it.loadDir = 1; it._delay = delay || 0;
     this.scene.insts.push(it);
     var b = mesh.bounds;
-    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv' || kind === 'bike') {
+    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv') {
       var cy = Math.cos(yaw), sy = Math.sin(yaw);
       var hw = Math.max(Math.abs(b.max[0]), Math.abs(b.min[0])), hd = Math.max(Math.abs(b.max[2]), Math.abs(b.min[2]));
-      var r = kind === 'booth' ? 0.52 : (kind === 'bike' ? 0.55 : Math.max(hw, hd) * 0.8);
+      var r = kind === 'booth' ? 0.52 : Math.max(hw, hd) * 0.8;
       var col = { min: [pos[0] - r, pos[1], pos[2] - r], max: [pos[0] + r, pos[1] + b.max[1], pos[2] + r] };
       if (kind === 'booth') { col.max[1] = pos[1] + 2.3; it._col = col; }
-      if (kind === 'bike') { col.max[1] = pos[1] + 1.1; it._col = col; }
       this.scene.colliders.push(col);
     }
     if (kind === 'booth') { this._boothRing = true; this.emit('ring'); this.say(L.booth, 0.9); }
@@ -454,18 +439,17 @@
 
   // ----- interaction -----
   Game.prototype.updateAim = function () {
-    if (this.bike) { this.aim = null; return; }
     var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
     this.aim = null;
     var insts = this.scene.insts, best = null, bd = 1e9;
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana' && it.kind !== 'door') continue;
-      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth') continue;
+      var cy = it.kind === 'gun' ? 0.05 : 1.1;
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : (it.kind === 'door' ? 2.6 : 2.8))));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : 2.8);
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -475,7 +459,6 @@
   };
 
   Game.prototype.doAction = function () {
-    if (this.bike) { this.dismountBike(); return; }
     var it = this.aim;
     if (!it) return;
     if (it.kind === 'gun') {
@@ -485,15 +468,6 @@
       this.say(L.gun);
     } else if (it.kind === 'booth') {
       this.enterBooth();
-    } else if (it.kind === 'bike') {
-      this.mountBike(it);
-    } else if (it.kind === 'door') {
-      this.emit('portal');
-    } else if (it.kind === 'katana') {
-      it.loadDir = -1;
-      if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
-      this.held = { mesh: P.heldKatana(), kick: 0, bob: 0, kind: 'katana' };
-      this.emit('pickupBlade');
     }
   };
 
@@ -506,8 +480,6 @@
 
   Game.prototype.doFire = function () {
     var t = this.time;
-    if (this.bike) return; // hands on the bars
-    if (this.held && this.held.kind === 'katana') { this.doSlash(); return; }
     if (this.held) {
       this.held.kick = 1;
       this.emit('shot');
@@ -548,120 +520,8 @@
   // ----- physics -----
   var GRAV = 18, WALK = 4.2, SPRINT = 8.0, R = 0.35, H = 1.7, EYE = 1.62;
   C.PHYS = { GRAV: GRAV, WALK: WALK, SPRINT: SPRINT, JUMP0: 5.0, JUMPK: 0.55, COYOTE: 0.12 };
-  // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
-  // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
-  //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34 };
-
-  Game.prototype.mountBike = function (it) {
-    this.bike = { it: it, speed: 0, lean: 0 };
-    it.loadDir = 0;
-    if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
-    this.held = null;
-    var p = this.player;
-    p.pos = it.pos.slice(); p.vel = [0, 0, 0]; p.grounded = true;
-    p.yaw = it.yaw; // bike nose is +z at yaw=0, same as player forward
-    this.emit('mount');
-    this.say(L.bike, 0.2);
-  };
-  Game.prototype.dismountBike = function () {
-    if (!this.bike) return;
-    var bk = this.bike, p = this.player;
-    var it = bk.it;
-    it.pos = [p.pos[0], this.scene.groundY, p.pos[2]];
-    it.yaw = p.yaw; it._baseYaw = null; it._wob = 0;
-    // step the rider off to the left of the bike
-    var lx = Math.cos(p.yaw), lz = Math.sin(p.yaw);
-    p.pos = [p.pos[0] - lx * 0.9, this.scene.groundY, p.pos[2] - lz * 0.9];
-    p.vel = [0, 0, 0];
-    // re-arm the bike collider so it's solid again once parked
-    var r = 0.55, col = { min: [it.pos[0] - r, it.pos[1], it.pos[2] - r], max: [it.pos[0] + r, it.pos[1] + 1.1, it.pos[2] + r] };
-    it._col = col; this.scene.colliders.push(col);
-    this.bike = null;
-    this.emit('dismount');
-  };
-
-  Game.prototype.moveBike = function (input, dt) {
-    var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
-    // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
-    p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
-    var turbo = !!input.sprint;
-    var throttle = (input.fwd || 0);
-    var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26; // mouse contributes to steering
-    // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
-    var speedFrac = bk.speed / B.BOOST;
-    var steerRate = (turbo ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
-    p.yaw += steerIn * steerRate * dt;
-    bk.lean += (C.clamp(steerIn, -1, 1) * Math.min(1, bk.speed / B.MAX) - bk.lean) * Math.min(1, 6 * dt);
-    // longitudinal
-    var maxv = turbo ? B.BOOST : B.MAX;
-    if (throttle > 0.01) bk.speed += B.ACCEL * throttle * dt;
-    else if (throttle < -0.01) bk.speed += B.BRAKE * throttle * dt; // brake/reverse
-    else bk.speed -= Math.sign(bk.speed) * Math.min(Math.abs(bk.speed), B.COAST * dt);
-    bk.speed = C.clamp(bk.speed, -B.MAX * 0.3, maxv);
-    // integrate along facing (nose +z at yaw 0)
-    var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
-    var step = bk.speed * dt;
-    // substep to avoid tunnelling at high speed (|step| can exceed collider half-widths)
-    var subs = Math.max(1, Math.ceil(Math.abs(step) / 0.4));
-    var ds = step / subs;
-    function blocked(nx, nz) {
-      for (var i = 0; i < cols.length; i++) {
-        var b = cols[i];
-        if (b.max[1] <= p.pos[1] + 0.2) continue;
-        if (b.min[1] >= p.pos[1] + 1.0) continue;
-        if (nx > b.min[0] - 0.5 && nx < b.max[0] + 0.5 && nz > b.min[2] - 0.5 && nz < b.max[2] + 0.5) return b;
-      }
-      return null;
-    }
-    for (var sgi = 0; sgi < subs; sgi++) {
-      var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
-      if (blocked(nx, p.pos[2])) { p.pos[0] += 0; bk.speed *= 0.4; this.emit('scrape'); }
-      else p.pos[0] = nx;
-      if (blocked(p.pos[0], nz)) { bk.speed *= 0.4; this.emit('scrape'); }
-      else p.pos[2] = nz;
-    }
-    p.pos[1] = sc.groundY;
-    p.vel = [dirx * bk.speed, 0, dirz * bk.speed];
-    // sync the bike instance: push it forward so the rider sits on the seat and the
-    // tank + bars + headlamp fill the lower view (otherwise the bike renders under the camera and the frame looks empty)
-    var it = bk.it;
-    var fx0 = Math.sin(p.yaw) * 0.55, fz0 = -Math.cos(p.yaw) * 0.55;
-    it.pos = [p.pos[0] + fx0, sc.groundY, p.pos[2] + fz0];
-    it.yaw = p.yaw;
-    it._wob = 0;
-    bk.it._lean = bk.lean;
-    this.emit('engine', { speed: Math.abs(bk.speed), throttle: Math.max(0, throttle) });
-    // footstep phase off; engine carries the motion
-    p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
-  };
-
-  Game.prototype.doSlash = function () {
-    if (!this.held) return;
-    this.held.kick = 1;
-    this.emit('slash');
-    var B = C.BIKE; // reuse no constants; slash spec below ported from STREET PROTOCOL
-    var range = 3.5, arc = 1.35; // slashRange / slashArc (radians half-angle)
-    var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
-    var insts = this.scene.insts, struck = false;
-    for (var i = 0; i < insts.length; i++) {
-      var it = insts[i];
-      if (it.loadT < 0.5) continue;
-      if (it.kind !== 'dummy' && it.kind !== 'ped' && it.kind !== 'red') continue;
-      var to = [it.pos[0] - eye[0], (it.pos[1] + 1.1) - eye[1], it.pos[2] - eye[2]];
-      var d = C.len(to);
-      if (d > range) continue;
-      var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
-      if (ang > arc) continue;
-      if (it.kind === 'dummy') { it._wob = 1; it._baseYaw = it._baseYaw == null ? it.yaw : it._baseYaw; }
-      this.burst([it.pos[0], it.pos[1] + 1.2, it.pos[2]], 9);
-      struck = true;
-    }
-    if (!struck) this.emit('swishBlade');
-  };
 
   Game.prototype.movePlayer = function (input, dt) {
-    if (this.bike) { this.moveBike(input, dt); return; }
     var p = this.player, sc = this.scene, cols = sc.colliders;
     // look
     p.yaw += input.dyaw || 0;
@@ -902,7 +762,6 @@
       eyeT = C.lerp(0.34, EYE, k); rollT = C.lerp(1.25, 0, k) + Math.sin(this._riseT * 9) * 0.05 * (1 - k);
     } else {
       eyeT = EYE; rollT = 0;
-      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.28; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
     cam.pos[0] = p.pos[0];

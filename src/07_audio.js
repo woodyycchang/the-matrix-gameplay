@@ -8,13 +8,11 @@
 
   if (!hasWindow) {
     A.init = function () {}; A.handle = function () {}; A.setAmbience = function () {};
-    A.speak = function () {}; A.engine = function () {}; A.portal = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
+    A.speak = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
     return;
   }
 
   var ctx = null, master = null, ambGain = null, ambNodes = [], ringTimer = null;
-  // engine drone path (ported from STREET PROTOCOL; gain curve retuned down so idle is quiet)
-  var engOsc = null, engSub = null, engFilt = null, engGain = null, engOn = false;
 
   function noiseBuf(sec) {
     var b = ctx.createBuffer(1, Math.max(1, (sec * ctx.sampleRate) | 0), ctx.sampleRate);
@@ -32,13 +30,6 @@
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
       ambGain = ctx.createGain(); ambGain.gain.value = 0; ambGain.connect(master);
-      // engine drone: sawtooth + sub sine through a lowpass, idle silent until ridden
-      engGain = ctx.createGain(); engGain.gain.value = 0;
-      engFilt = ctx.createBiquadFilter(); engFilt.type = 'lowpass'; engFilt.frequency.value = 200;
-      engOsc = ctx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 44;
-      engSub = ctx.createOscillator(); engSub.type = 'sine'; engSub.frequency.value = 22;
-      engOsc.connect(engFilt); engSub.connect(engFilt); engFilt.connect(engGain); engGain.connect(master);
-      engOsc.start(); engSub.start();
       A.ready = true;
     } catch (e) { A.ready = false; }
   };
@@ -48,27 +39,6 @@
     if (A.muted && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
     return A.muted;
   };
-
-  // continuous engine voice. speed in m/s (0..~34), throttle 0..1.
-  // Retuned quieter than the source: idle is barely there, peak gain capped well below the original.
-  A.engine = function (speed, throttle) {
-    if (!ctx || !engGain) return;
-    var sp = Math.max(0, Math.min(34, speed || 0)), th = Math.max(0, Math.min(1, throttle || 0));
-    var now = ctx.currentTime;
-    engOsc.frequency.setTargetAtTime(40 + sp * 2.2, now, 0.06);
-    engSub.frequency.setTargetAtTime(20 + sp * 1.1, now, 0.06);
-    engFilt.frequency.setTargetAtTime(150 + sp * 24 + th * 180, now, 0.05);
-    // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
-    var g = A.muted ? 0 : Math.min(0.014, 0.0015 + sp * 0.00028 + th * 0.0032);
-    engGain.gain.setTargetAtTime(g, now, 0.05);
-  };
-  A.portal = function (on) {
-    if (!ctx || !master) return;
-    master.gain.setTargetAtTime(on ? 0 : (A.muted ? 0 : 0.6), ctx.currentTime, 0.08);
-    if (on && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
-  };
-  function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
-  function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }
 
   function env(g, t0, a, peak, d, sustain) {
     g.gain.setValueAtTime(0.0001, t0);
@@ -177,12 +147,6 @@
       case 'success': blip(523, 0.18, 0.12, 'triangle'); blip(784, 0.25, 0.12, 'triangle', 0.12); blip(1046, 0.4, 0.1, 'triangle', 0.24); break;
       case 'shot': thump(180, 0.07, 0.7); hiss(0.12, 0.8, 2500, 300, 0.7); hiss(0.5, 0.2, 700, 120, 1, 0.02); break;
       case 'pickup': blip(660, 0.06, 0.12, 'square'); blip(990, 0.08, 0.1, 'square', 0.06); break;
-      case 'pickupBlade': hiss(0.18, 0.22, 1800, 5200, 2.2); blip(1320, 0.06, 0.08, 'triangle', 0.04); break;
-      case 'mount': engineStart(); blip(520, 0.05, 0.1, 'square'); thump(70, 0.18, 0.35, 0.02); break;
-      case 'dismount': engineStop(); blip(360, 0.06, 0.08, 'square'); break;
-      case 'scrape': hiss(0.12, 0.3, 1600, 600, 2.4); blip(180, 0.05, 0.12, 'sawtooth'); break;
-      case 'slash': hiss(0.14, 0.3, 1400, 500, 1.8); blip(300, 0.08, 0.08, 'sawtooth', 0.01); break;
-      case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
       case 'punch': thump(140, 0.09, 0.5); hiss(0.08, 0.35, 900, 300, 1.5); blip(220, 0.12, 0.1, 'triangle', 0.02); break;
       case 'swish': hiss(0.16, 0.22, 1200, 400, 1.6); break;
       case 'freeze': thump(70, 0.4, 0.6); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.12); break;

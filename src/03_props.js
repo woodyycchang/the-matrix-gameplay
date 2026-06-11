@@ -214,65 +214,6 @@
     return fin(m, 1.5, 44, 10);
   };
 
-  // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
-  P.bike = function () { // original naked street bike; nose at +z like every prop front
-    var m = C.newMesh();
-    var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';
-    function wheel(cz) {
-      C.addBox(m, 0, 0.34, cz, 0.16, 0.66, 0.66, dark);            // tire block
-      C.addBox(m, 0, 0.34, cz, 0.18, 0.30, 0.30, '#23262b');       // hub
-      C.addBox(m, 0, 0.34, cz, 0.20, 0.08, 0.50, '#3a3d42');       // spoke v
-      C.addBox(m, 0, 0.34, cz, 0.20, 0.50, 0.08, '#3a3d42');       // spoke h
-    }
-    wheel(-0.62); wheel(0.64);
-    C.addBox(m, 0, 0.40, 0.02, 0.40, 0.34, 0.58, body);            // engine/frame mass
-    C.addBox(m, 0.22, 0.30, -0.34, 0.08, 0.08, 0.66, steel);       // exhaust pipe
-    C.addBox(m, 0, 0.70, 0.08, 0.36, 0.26, 0.52, tank);            // fuel tank (raised)
-    C.addQuadY(m, -0.12, 0.20, 0.12, 0.40, 0.831, accent);         // code-green tank stripe
-    C.addBox(m, 0, 0.66, -0.42, 0.34, 0.12, 0.50, '#191b1f');      // seat
-    C.addBox(m, 0, 0.76, -0.70, 0.30, 0.14, 0.20, body);           // tail cowl
-    C.addBox(m, -0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);       // front forks
-    C.addBox(m,  0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);
-    C.addBox(m, 0, 0.98, 0.52, 0.70, 0.06, 0.07, '#1b1d20');       // handlebar
-    C.addBox(m, -0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');   // grips
-    C.addBox(m,  0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');
-    C.addBox(m, 0, 0.82, 0.70, 0.20, 0.18, 0.07, '#f0ead0', { flat: true }); // headlamp
-    return fin(m, 2.4, 71, 12);
-  };
-  P.katanaStand = function () { // low rack, blade resting across it
-    var m = C.newMesh(), wood = '#3a3026';
-    C.addBox(m, 0, 0, 0, 0.74, 0.06, 0.24, wood);
-    C.addBox(m, -0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
-    C.addBox(m,  0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
-    C.addBox(m, -0.52, 0.33, 0, 0.22, 0.05, 0.05, '#1b1d20');           // handle
-    C.addBox(m, -0.40, 0.305, 0, 0.045, 0.10, 0.09, '#23262b');         // guard
-    C.addBox(m, 0.06, 0.335, 0, 0.88, 0.035, 0.04, '#d6dde2');          // blade
-    return fin(m, 16, 72, 8);
-  };
-  // Viewmodel katana (engine subtracts 0.42 from y; build around y≈0.30–0.58, +x forward)
-  P.heldKatana = function () {
-    var m = C.newMesh();
-    C.addBox(m, 0.05, 0.385, 0, 0.24, 0.055, 0.05, '#1b1d20');          // wrapped handle
-    C.addBox(m, 0.18, 0.355, 0, 0.045, 0.115, 0.095, '#23262b');        // guard
-    C.addBox(m, 0.63, 0.405, 0, 0.86, 0.038, 0.02, '#d6dde2');          // blade
-    C.addBox(m, 0.63, 0.437, 0, 0.86, 0.012, 0.014, '#9aa6ad');         // spine
-    C.meshBounds(m); m.an = [];
-    return m;
-  };
-
-  // Portal door to THE STREET — dark frame in the white void, neon light leaking through
-  P.door = function () {
-    var m = C.newMesh(), frame = '#15171a', slab = '#05050c';
-    C.addBox(m, -0.62, 0, 0, 0.14, 2.3, 0.3, frame);                   // posts
-    C.addBox(m,  0.62, 0, 0, 0.14, 2.3, 0.3, frame);
-    C.addBox(m, 0, 2.3, 0, 1.4, 0.16, 0.34, frame);                    // lintel
-    C.addBox(m, 0, 0.02, -0.02, 1.1, 2.28, 0.08, slab, { flat: true }); // the dark doorway
-    C.addQuadZ(m, -0.55, 0.04, -0.49, 2.26, 0.062, '#ff2bd6', true);   // neon spill (street palette)
-    C.addQuadZ(m,  0.49, 0.04,  0.55, 2.26, 0.062, '#19e3ff', true);
-    C.addQuadY(m, -0.5, -0.18, 0.5, 0.2, 0.012, '#ff2bd6');            // glow pooling underneath
-    return fin(m, 6, 73, 8);
-  };
-
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
   P.human = function (opt) {

@@ -6,7 +6,6 @@
 
   var canvas, ctx, game, hud = {}, started = false;
   var W = 0, H = 0, scale = 1, dpr = 1;
-  var paused = false;
   var reduceMotion = false;
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -46,7 +45,6 @@
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
-    if (paused) { setPaused(false); if (!touch.active) tryLock(); return; }
     if (consoleOpen) return;
     if (!locked && !touch.active) {
       dragging = true; lastMX = e.clientX; lastMY = e.clientY;
@@ -295,14 +293,10 @@
   function updateHUD() {
     hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift turbo';
-    else if (a && game.state === 'play') {
+    if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
-      else if (a.kind === 'bike') label = '[E] ride';
-      else if (a.kind === 'katana') label = '[E] take katana';
-      else if (a.kind === 'door') label = '[E] enter the street';
     }
     if (hud.aim.textContent !== label) hud.aim.textContent = label;
     hud.aim.style.opacity = label ? 1 : 0;
@@ -375,17 +369,10 @@
   function frame(t) {
     requestAnimationFrame(frame);
     if (!started) return;
-    if (portal.open) { lastT = t; return; }
     var t0 = performance.now();
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
-    if (paused) {
-      var opsP = C.render(game, W, H, game.time);
-      paint(opsP);
-      paintPauseOverlay();
-      return;
-    }
     acc += dt;
     var step = 1 / 60, n = 0;
     var inp = buildInput();
@@ -401,8 +388,6 @@
       var e = evs[i];
       if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
-      else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
-      else if (e.name === 'portal') openPortal();
       else A.handle(e.name);
     }
     var ops = C.render(game, W, H, game.time);
@@ -410,85 +395,6 @@
     tickTeletype(dt);
     updateHUD();
     adapt(performance.now() - t0);
-  }
-
-  // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
-  function setPaused(v) {
-    if (paused === v) return;
-    paused = v;
-    if (paused) {
-      if (game && game.bike) A.engine(0, 0);
-      A.handle('ringStop'); // freeze any ringing
-      if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
-      if (window.speechSynthesis) try { window.speechSynthesis.pause(); } catch (e) {}
-    } else {
-      lastT = 0; acc = 0;
-      if (window.speechSynthesis) try { window.speechSynthesis.resume(); } catch (e) {}
-    }
-  }
-  function paintPauseOverlay() {
-    ctx.globalAlpha = 0.55; ctx.fillStyle = '#020803'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
-    setFont(Math.round(Math.min(W, H) * 0.04), true);
-    ctx.fillStyle = '#46ff7a';
-    ctx.fillText('PROGRAM PAUSED', W / 2, H / 2 - 8);
-    setFont(Math.round(Math.min(W, H) * 0.018));
-    ctx.fillStyle = '#2f9e57';
-    ctx.fillText('click to resume', W / 2, H / 2 + Math.min(W, H) * 0.05);
-  }
-  function showError(msg) {
-    try {
-      var d = document.getElementById('errlay');
-      if (!d) {
-        d = document.createElement('div'); d.id = 'errlay';
-        d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(2,8,3,.92);color:#9affc0;' +
-          'font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;' +
-          'align-items:center;justify-content:center;text-align:center;padding:24px;letter-spacing:.04em';
-        document.body.appendChild(d);
-      }
-      d.innerHTML = '<div style="color:#46ff7a;letter-spacing:.3em;margin-bottom:14px">CONSTRUCT FAULT</div>' +
-        '<div style="max-width:70ch;opacity:.85">' + String(msg).replace(/[<>&]/g, ' ') + '</div>' +
-        '<div style="margin-top:18px;opacity:.5">reload the page to recompile</div>';
-      d.style.display = 'flex';
-    } catch (e) {}
-  }
-
-  // ---------- portal to THE STREET (iframe overlay; CONSTRUCT sim sleeps while inside) ----------
-  var portal = { open: false, wrap: null };
-  function openPortal() {
-    if (portal.open) return;
-    if (consoleOpen) closeConsole();
-    setPaused(false);
-    portal.open = true;
-    A.portal(true);
-    A.handle('ringStop');
-    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
-    var w = document.createElement('div');
-    w.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#05050c';
-    var f = document.createElement('iframe');
-    f.src = 'street.html';
-    f.setAttribute('allow', 'pointer-lock; fullscreen; autoplay');
-    f.style.cssText = 'width:100%;height:100%;border:0;display:block;background:#05050c';
-    var b = document.createElement('button');
-    b.textContent = '\u21a9 CONSTRUCT';
-    b.style.cssText = 'position:absolute;top:10px;right:12px;z-index:9001;background:rgba(2,8,3,.85);' +
-      'color:#46ff7a;border:1px solid #1f6b3c;padding:7px 12px;font:12px ui-monospace,Menlo,Consolas,monospace;' +
-      'letter-spacing:.14em;cursor:pointer';
-    b.addEventListener('click', closePortal);
-    w.appendChild(f); w.appendChild(b);
-    document.body.appendChild(w);
-    portal.wrap = w;
-    try { f.addEventListener('load', function () { try { f.contentWindow.focus(); } catch (e) {} }); } catch (e) {}
-  }
-  function closePortal() {
-    if (!portal.open) return;
-    portal.open = false;
-    if (portal.wrap && portal.wrap.parentNode) portal.wrap.parentNode.removeChild(portal.wrap);
-    portal.wrap = null;
-    A.portal(false);
-    lastT = 0; acc = 0;
-    game.fx.flash = 1; game.fx.flashCol = '#ffffff';
-    game.say(C.LINES.portalBack, 0.2);
-    if (!touch.active) tryLock();
   }
 
   // ---------- boot ----------
@@ -530,7 +436,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['the street', 'metaverse'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
@@ -571,11 +477,6 @@
     tbtn('ASK', function () { openConsole(); });
 
     resize();
-    // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
-    window.addEventListener('blur', function () { if (started && !portal.open) setPaused(true); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden && started && !portal.open) setPaused(true); });
-    window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
-    window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);
   }
 
