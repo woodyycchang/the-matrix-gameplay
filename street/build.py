@@ -4,7 +4,7 @@ import re, subprocess, sys, pathlib
 
 ROOT = pathlib.Path(__file__).parent
 PARTS = ['p0_head.html','p1_core.html','p2_audio.html','p3_world.html',
-         'p4_actors.html','p5_combat.html','p5b_boss.html','p6_game.html','p7_boot.html']
+         'p4_actors.html','p5_combat.html','p5b_boss.html','p6_game.html','p6b_codeview.html','p7_boot.html']
 
 html = ''.join((ROOT/'parts'/p).read_text() for p in PARTS)
 

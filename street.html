@@ -2183,6 +2183,174 @@ function updateCamera(dt){
   camera.fov = damp(camera.fov, fovWant, 4, dt);
   camera.updateProjectionMatrix();
 }
+/* ===== MATRIX CODE VIEW (inlined into game script) ===== */
+/* =================== MATRIX CODE VIEW (toggle: C) ===================
+   Re-skins the entire live world as falling green code, then restores it.
+   Geometry, physics, AI, gameplay are untouched — only materials, fog,
+   background, and an added glyph-rain layer change. Fully reversible.
+   Inert under HEADLESS (no GL), but the state machine stays testable. */
+(function () {
+  'use strict';
+
+  var codeMode = false;
+  var saved = null;          // captured original materials + scene fog/bg
+  var rainPts = null;        // THREE.Points glyph rain (built lazily)
+  var rainGeo = null, rainMat = null;
+  var GREEN = 0x39ff8c, GREEN_DIM = 0x1f7d4a, BLACK = 0x020803;
+
+  // ---- procedural glyph texture (one sheet of katakana-ish marks) ----
+  function makeGlyphTexture() {
+    if (typeof document === 'undefined') return null;
+    var S = 64, cols = 8, cv = document.createElement('canvas');
+    cv.width = cv.height = S * cols;
+    var g = cv.getContext('2d');
+    if (!g) return null;
+    g.fillStyle = 'rgba(0,0,0,0)'; g.clearRect(0, 0, cv.width, cv.height);
+    g.fillStyle = '#c8ffd8';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = (S * 0.74 | 0) + 'px ui-monospace, Menlo, Consolas, monospace';
+    var glyphs = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽ0123456789<>=*+-|/[]';
+    for (var i = 0; i < cols * cols; i++) {
+      var ch = glyphs[(Math.random() * glyphs.length) | 0];
+      var cx = (i % cols) * S + S / 2, cy = ((i / cols) | 0) * S + S / 2;
+      g.fillText(ch, cx, cy);
+    }
+    var tex = new THREE.Texture(cv);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  function buildRain() {
+    if (typeof THREE === 'undefined' || HEADLESS) return;
+    var N = 1400, pos = new Float32Array(N * 3), spd = new Float32Array(N);
+    for (var i = 0; i < N; i++) {
+      pos[i * 3]     = (Math.random() - 0.5) * 360;       // x spread across the street
+      pos[i * 3 + 1] = Math.random() * 120;               // y height
+      pos[i * 3 + 2] = -Math.random() * 700 + 40;         // z down the road, near camera band
+      spd[i] = 14 + Math.random() * 40;
+    }
+    rainGeo = new THREE.BufferGeometry();
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    rainGeo._spd = spd;
+    var tex = makeGlyphTexture();
+    rainMat = new THREE.PointsMaterial({
+      color: GREEN, size: 2.6, map: tex, transparent: true,
+      opacity: 0.92, depthWrite: false, fog: false, sizeAttenuation: true
+    });
+    if (tex) rainMat.alphaTest = 0.18;
+    rainPts = new THREE.Points(rainGeo, rainMat);
+    rainPts.frustumCulled = false;
+    rainPts.visible = false;
+    scene.add(rainPts);
+  }
+
+  // advance the rain each frame (called from the render loop hook)
+  function tickRain(dt) {
+    if (!rainPts || !codeMode) return;
+    var p = rainGeo.attributes.position.array, spd = rainGeo._spd;
+    var camZ = (typeof camera !== 'undefined') ? camera.position.z : 0;
+    var camX = (typeof camera !== 'undefined') ? camera.position.x : 0;
+    for (var i = 0; i < spd.length; i++) {
+      p[i * 3 + 1] -= spd[i] * dt;
+      if (p[i * 3 + 1] < 0) {                 // recycle to the top, re-seeded near the camera
+        p[i * 3 + 1] = 110 + Math.random() * 20;
+        p[i * 3]     = camX + (Math.random() - 0.5) * 360;
+        p[i * 3 + 2] = camZ - Math.random() * 680 - 20;
+      }
+    }
+    rainGeo.attributes.position.needsUpdate = true;
+  }
+
+  // ---- material swap: green emissive skin, remembering originals ----
+  function applyCode() {
+    if (typeof scene === 'undefined') return;
+    saved = { mats: [], fog: scene.fog, bg: scene.background, clear: 0x05050c };
+    scene.traverse(function (o) {
+      if (!o.material) return;
+      var list = Array.isArray(o.material) ? o.material : [o.material];
+      for (var k = 0; k < list.length; k++) {
+        var m = list[k];
+        if (!m || m._cvTouched) continue;
+        saved.mats.push({ m: m, color: m.color ? m.color.getHex() : null,
+                          emissive: m.emissive ? m.emissive.getHex() : null,
+                          opacity: m.opacity, transparent: m.transparent, fog: m.fog });
+        var lum = m.color ? (0.3 * m.color.r + 0.6 * m.color.g + 0.1 * m.color.b) : 0.5;
+        if (m.color) m.color.setHex(lum > 0.5 ? GREEN : GREEN_DIM);
+        if (m.emissive) m.emissive.setHex(lum > 0.6 ? GREEN_DIM : 0x06160d);
+        m._cvTouched = true;
+      }
+    });
+    if (rainPts) rainPts.visible = true;
+    if (typeof THREE !== 'undefined') {
+      scene.fog = new THREE.FogExp2(BLACK, 0.0052);
+      if ('background' in scene) scene.background = new THREE.Color(BLACK);
+    }
+    if (!HEADLESS && typeof renderer !== 'undefined') renderer.setClearColor(BLACK);
+  }
+
+  function restore() {
+    if (!saved) return;
+    for (var i = 0; i < saved.mats.length; i++) {
+      var s = saved.mats[i], m = s.m;
+      if (s.color != null && m.color) m.color.setHex(s.color);
+      if (s.emissive != null && m.emissive) m.emissive.setHex(s.emissive);
+      m.opacity = s.opacity; m.transparent = s.transparent; m.fog = s.fog;
+      m._cvTouched = false;
+    }
+    scene.fog = saved.fog;
+    if ('background' in scene) scene.background = saved.bg;
+    if (!HEADLESS && typeof renderer !== 'undefined') renderer.setClearColor(saved.clear);
+    if (rainPts) rainPts.visible = false;
+    saved = null;
+  }
+
+  function toggleCodeView() {
+    codeMode = !codeMode;
+    if (!HEADLESS && !rainPts) buildRain();
+    if (codeMode) applyCode(); else restore();
+    if (typeof els !== 'undefined' && els.scene) {
+      // reflect mode in the HUD scene label if present
+    }
+    if (typeof state !== 'undefined') state.codeView = codeMode;
+    return codeMode;
+  }
+
+  // key binding (C), matching the M/P toggle style
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', function (ev) {
+      if (ev.code === 'KeyC' && !ev.repeat) toggleCodeView();
+    });
+  }
+
+  // expose for the render loop + tests
+  if (typeof window !== 'undefined') {
+    window.CodeView = {
+      toggle: toggleCodeView,
+      tick: tickRain,
+      isOn: function () { return codeMode; },
+      // test/debug hook: sample current scene materials so the swap is verifiable headless
+      _sample: function () {
+        if (typeof scene === 'undefined') return null;
+        var colors = [], greenish = 0, total = 0;
+        scene.traverse(function (o) {
+          if (!o.material) return;
+          var list = Array.isArray(o.material) ? o.material : [o.material];
+          for (var k = 0; k < list.length; k++) {
+            var m = list[k];
+            if (!m || !m.color) continue;
+            total++;
+            // "greenish" = green channel dominates red and blue (the code look)
+            if (m.color.g > m.color.r && m.color.g >= m.color.b) greenish++;
+            if (colors.length < 6) colors.push(m.color.getHex());
+          }
+        });
+        return { total: total, greenish: greenish,
+                 fogHex: scene.fog && scene.fog.color ? scene.fog.color.getHex() : null,
+                 sample: colors };
+      }
+    };
+  }
+})();
 
 /* =================== MAIN LOOP =================== */
 const VERSION = '1.0.0';
@@ -2249,6 +2417,7 @@ function frame(now){
   if(raw < 0) raw = 0;
   perfTick(raw * 1000);
   update(raw);
+  if (typeof window !== 'undefined' && window.CodeView) window.CodeView.tick(raw);
   renderer.render(scene, camera);
 }
 
