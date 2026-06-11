@@ -552,7 +552,7 @@
              TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
 
   Game.prototype.mountBike = function (it) {
-    this.bike = { it: it, speed: 0, lean: 0, turbo: C.BIKE.TURBO_MAX, boosting: false };
+    this.bike = { it: it, speed: 0, lean: 0, turbo: C.BIKE.TURBO_MAX, boosting: false, dist: 0 };
     it.loadDir = 0;
     if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
     this.held = null;
@@ -632,6 +632,7 @@
       else p.pos[2] = nz;
     }
     p.pos[1] = sc.groundY;
+    bk.dist += Math.abs(bk.speed) * dt;   // odometer — visible proof the road never ends
     p.vel = [dirx * bk.speed, 0, dirz * bk.speed];
     // sync the bike instance: push it forward so the rider sits on the seat and the
     // tank + bars + headlamp fill the lower view (otherwise the bike renders under the camera and the frame looks empty)

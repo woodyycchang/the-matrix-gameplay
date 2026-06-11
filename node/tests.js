@@ -807,6 +807,7 @@ section('neon mile is INFINITE (streaming chunks, constant memory)');
 
   // the far-away road is still solid ground + renders without NaN
   ok(g.player.pos[1] === g.scene.groundY, 'still grounded on the far road (no falling through)');
+  ok(g.bike.dist > 100, 'odometer climbs as you ride the endless mile (dist=' + g.bike.dist.toFixed(0) + ')');
   const ops = C.render(g, 480, 270, g.time);
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon renders without NaN');
   g.mode = 'code';

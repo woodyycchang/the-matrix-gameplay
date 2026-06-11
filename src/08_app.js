@@ -321,6 +321,7 @@
     ctx.textAlign = 'right'; ctx.fillStyle = code ? '#7dffaf' : '#9aa0a8';
     ctx.fillText(Math.round(spd / B.BOOST * 180) + ' KM/H', x - 8, y + bh);
     ctx.fillText(bk.boosting ? 'TURBO' : 'NITRO', x - 8, y2 + bh);
+    ctx.fillText('DIST ' + Math.round(bk.dist * 8) + ' m', x - 8, y2 - bh - 4);
     ctx.textAlign = 'left'; ctx.globalAlpha = 1;
   }
 
