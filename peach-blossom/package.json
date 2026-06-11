@@ -1,0 +1,11 @@
+{
+  "name": "peach-blossom-spring",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "three": "^0.128.0",
+    "puppeteer-core": "^22.15.0",
+    "@sparticuz/chromium": "^123.0.1",
+    "pngjs": "^7.0.0"
+  }
+}

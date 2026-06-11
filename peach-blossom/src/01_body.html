@@ -1,0 +1,76 @@
+<canvas id="c" tabindex="0"></canvas>
+
+<div id="vignette" class="ovl"></div>
+<div id="bars" class="ovl"></div>
+
+<div id="obj"><div class="cn"></div><div class="en"></div></div>
+<div id="day"></div>
+<div id="markhint"></div>
+<div id="cap"><div class="cn"></div><div class="en"></div></div>
+<div id="prompt"><b>E</b><span id="ptext"></span></div>
+
+<div id="dlg">
+  <div class="inner" id="dinner">
+    <span id="dspeaker"></span><span id="dmore">▼</span>
+    <div id="dtext"></div>
+    <div id="den"></div>
+  </div>
+  <div id="dchoices"></div>
+</div>
+
+<div id="hud">
+  <button id="bScroll" title="原文 Original text">文</button>
+  <button id="bHelp" title="操作 Controls">？</button>
+  <button id="bMute" title="聲音 Sound">音</button>
+</div>
+
+<div id="stick"><div id="knob"></div></div>
+<button id="btnE">E</button>
+
+<div id="title" class="panel">
+  <div id="petals" class="ovl"></div>
+  <div class="wrap">
+    <div id="ttext">
+      <div id="tseal"><span>武</span><span>陵</span><span>人</span></div>
+      <div><h1><span>桃</span><span>花</span><span>源</span><span>記</span></h1><div class="sub"><span>陶</span><span>淵</span><span>明</span></div></div>
+    </div>
+    <div id="tmenu">
+      <div class="quote">晉太元中，武陵人捕魚為業。<br>緣溪行，忘路之遠近。</div>
+      <div class="en-t">In the Taiyuan years of Jin, a man of Wuling made his living catching fish.</div>
+      <button class="btn primary" id="bStart">入　境<small>BEGIN</small></button>
+      <button class="btn" id="bText0">原　文<small>THE ORIGINAL TEXT</small></button>
+      <button class="btn" id="bHelp0">操　作<small>CONTROLS</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="scroll" class="sheet hidden"><div class="card">
+  <h2>桃花源記</h2><div class="by">〔東晉〕陶淵明</div>
+  <div id="scrollBody"></div>
+  <button class="btn close" id="bScrollClose">回　去</button>
+</div></div>
+
+<div id="help" class="sheet hidden"><div class="card">
+  <h2>操　作</h2><div class="by">CONTROLS</div>
+  <table>
+    <tr><td><span class="kbd">W</span><span class="kbd">S</span></td><td>前進、減速 &nbsp;·&nbsp; forward / slow</td></tr>
+    <tr><td><span class="kbd">A</span><span class="kbd">D</span></td><td>轉向 &nbsp;·&nbsp; steer / turn</td></tr>
+    <tr><td><span class="kbd">E</span></td><td>互動：上岸、交談、赴宴、誌之 &nbsp;·&nbsp; interact</td></tr>
+    <tr><td><span class="kbd">空白鍵</span></td><td>繼續對話 &nbsp;·&nbsp; advance dialogue (or click)</td></tr>
+    <tr><td><span class="kbd">1</span>–<span class="kbd">3</span></td><td>選擇 &nbsp;·&nbsp; choose a reply</td></tr>
+    <tr><td>滑鼠拖曳</td><td>環顧 &nbsp;·&nbsp; drag to look around</td></tr>
+    <tr><td>觸控</td><td>左側搖桿移動，右側 E 鍵互動 &nbsp;·&nbsp; touch: left stick + E button</td></tr>
+  </table>
+  <button class="btn close" id="bHelpClose">回　去</button>
+</div></div>
+
+<div id="epi" class="sheet hidden"><div class="card">
+  <h2 id="epiH">後遂無問津者</h2><div class="by" id="epiSub">AND AFTER THAT, NO ONE EVER ASKED THE WAY AGAIN</div>
+  <div id="epiBody"></div>
+  <div class="seal2"><span>陶</span><span>淵</span><span>明</span></div>
+  <div style="font-size:12px;color:#7a6f5c;letter-spacing:.2em;margin-bottom:18px">桃花源記 · 約西元四二一年</div>
+  <button class="btn close" id="bAgain">重新開始 · PLAY AGAIN</button>
+</div></div>
+
+<div id="fade" class="ovl"></div>
+<div id="loading">入　境　之　中</div>

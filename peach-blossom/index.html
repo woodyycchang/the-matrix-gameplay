@@ -1,0 +1,2009 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>桃花源記 · The Peach Blossom Spring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14181b; --paper:#f3ecdc; --paper-dim:rgba(243,236,220,.94);
+  --seal:#b03a2e; --seal-dk:#8e2e24; --blossom:#f0a8b8; --jade:#5c9e97; --gold:#caa45a;
+  --serif:"Noto Serif TC","Songti TC","Source Han Serif TC","PMingLiU","Microsoft JhengHei",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:var(--serif);color:var(--paper)}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
+.hidden{display:none!important}
+button{font-family:var(--serif);cursor:pointer}
+.ovl{position:fixed;inset:0;pointer-events:none}
+
+/* fade + cinematic */
+#fade{background:#0a0c0d;opacity:1;transition:opacity .6s ease;z-index:60}
+#vignette{z-index:18;opacity:0;transition:opacity 1.4s ease;
+  background:radial-gradient(ellipse at center,transparent 24%,rgba(5,6,7,.97) 80%)}
+#bars{z-index:19}
+#bars::before,#bars::after{content:"";position:absolute;left:0;right:0;height:0;background:#070808;transition:height .8s cubic-bezier(.6,0,.3,1)}
+#bars::before{top:0}#bars::after{bottom:0}
+body.cinema #bars::before,body.cinema #bars::after{height:11vh}
+
+/* HUD: objective + day */
+#obj{position:fixed;top:max(14px,env(safe-area-inset-top));left:16px;max-width:60vw;z-index:20;
+  background:rgba(16,19,21,.55);border-left:3px solid var(--seal);padding:8px 13px;backdrop-filter:blur(3px)}
+#obj .cn{font-size:clamp(14px,2.1vw,17px);letter-spacing:.12em}
+#obj .en{font-size:clamp(10px,1.5vw,12px);opacity:.72;margin-top:2px;letter-spacing:.02em;font-style:italic}
+#day{position:fixed;top:max(14px,env(safe-area-inset-top));right:58px;z-index:20;font-size:clamp(13px,2vw,16px);
+  letter-spacing:.3em;background:rgba(16,19,21,.55);padding:7px 11px 7px 14px;border-right:3px solid var(--gold);opacity:0;transition:.4s}
+#day.show{opacity:1}
+#markhint{position:fixed;left:16px;bottom:14vh;z-index:20;font-size:clamp(12px,1.9vw,15px);letter-spacing:.12em;
+  background:rgba(16,19,21,.5);padding:6px 11px;border-left:2px solid var(--gold);opacity:0;transition:.4s}
+#markhint.show{opacity:1}
+
+/* captions */
+#cap{position:fixed;left:50%;bottom:23vh;transform:translateX(-50%);text-align:center;max-width:88vw;z-index:20;
+  opacity:0;transition:opacity .7s ease;text-shadow:0 1px 12px rgba(0,0,0,.7)}
+#cap.show{opacity:1}
+#cap .cn{font-size:clamp(19px,3.4vw,30px);letter-spacing:.22em;line-height:1.6}
+#cap .en{font-size:clamp(11px,1.7vw,14px);opacity:.82;margin-top:6px;letter-spacing:.04em;font-style:italic}
+#cap.big .cn{font-size:clamp(24px,4.6vw,42px);color:#fdf6e9}
+#cap.big .cn::after{content:"";display:block;width:54px;height:3px;background:var(--seal);margin:13px auto 0}
+
+/* prompt */
+#prompt{position:fixed;left:50%;bottom:13vh;transform:translateX(-50%);z-index:20;
+  background:rgba(16,19,21,.72);border:1px solid rgba(243,236,220,.45);padding:8px 16px;white-space:nowrap;
+  font-size:clamp(14px,2.2vw,17px);letter-spacing:.14em;opacity:0;transition:opacity .25s}
+#prompt.show{opacity:1}
+#prompt b{color:var(--gold);border:1px solid var(--gold);padding:0 7px;margin-right:9px;font-weight:600}
+
+/* dialogue */
+#dlg{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  width:min(860px,94vw);background:var(--paper-dim);color:var(--ink);z-index:30;display:none;
+  border-top:4px solid var(--seal);box-shadow:0 8px 40px rgba(0,0,0,.55);padding:14px 20px 16px;pointer-events:auto}
+#dlg.show{display:block}
+#dspeaker{display:inline-block;color:var(--seal-dk);font-size:clamp(13px,2vw,15px);letter-spacing:.25em;margin-bottom:6px}
+#dspeaker::before{content:"";display:inline-block;width:9px;height:9px;background:var(--seal);margin-right:8px;transform:rotate(45deg)}
+#dtext{font-size:clamp(16px,2.6vw,21px);line-height:1.75;letter-spacing:.1em;min-height:1.8em}
+#den{font-size:clamp(11px,1.7vw,13px);opacity:.62;margin-top:6px;line-height:1.45;font-style:italic}
+#dmore{position:absolute;right:16px;bottom:9px;font-size:12px;opacity:.55;animation:bb 1.2s infinite}
+@keyframes bb{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+#dchoices{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+#dchoices:empty{margin:0}
+#dchoices button{display:block;width:100%;text-align:left;background:rgba(20,24,27,.06);border:1px solid rgba(20,24,27,.35);
+  color:var(--ink);padding:9px 14px;font-size:clamp(14px,2.2vw,17px);letter-spacing:.08em;line-height:1.45}
+#dchoices button:hover{background:var(--seal);color:var(--paper);border-color:var(--seal)}
+#dchoices button small{display:block;font-size:11px;opacity:.6;font-style:italic;margin-top:2px}
+#dchoices button:hover small{opacity:.85}
+
+/* top-right HUD buttons */
+#hud{position:fixed;top:max(14px,env(safe-area-inset-top));right:12px;z-index:31;display:flex;flex-direction:column;gap:8px}
+#hud button{width:36px;height:36px;border:1px solid rgba(243,236,220,.4);background:rgba(16,19,21,.55);
+  color:var(--paper);font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center}
+#hud button:hover{border-color:var(--paper)}
+
+/* panels: title / scroll / help / epilogue */
+.panel,.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:4vmin}
+.panel{background:radial-gradient(ellipse at 50% 34%,#232c31 0%,#101417 62%,#0a0d0f 100%)}
+.sheet{background:rgba(10,12,13,.8);z-index:55}
+.sheet.hidden,.panel.hidden{display:none}
+#title .wrap{display:flex;align-items:center;gap:clamp(26px,7vw,84px);flex-wrap:wrap;justify-content:center}
+#ttext{display:flex;align-items:flex-start;gap:clamp(14px,3vw,30px)}
+#title h1{display:flex;flex-direction:column;align-items:center;line-height:1.0;font-size:clamp(44px,10.5vmin,104px);font-weight:600;
+  letter-spacing:0;color:#f5eedd;text-shadow:0 0 34px rgba(240,168,184,.25)}
+#title .sub{display:flex;flex-direction:column;align-items:center;line-height:1.46;font-size:clamp(14px,2.6vmin,21px);letter-spacing:0;opacity:.74;margin-top:14px}
+#tseal{width:clamp(50px,8.4vmin,78px);height:clamp(50px,8.4vmin,78px);background:var(--seal);color:#f7efe0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.06;
+  font-size:clamp(14px,2.6vmin,21px);letter-spacing:0;box-shadow:inset 0 0 0 2px rgba(247,239,224,.55),0 4px 18px rgba(0,0,0,.5);align-self:flex-end}
+#tmenu{display:flex;flex-direction:column;gap:13px;min-width:min(260px,80vw)}
+#tmenu .quote{font-size:clamp(15px,2.3vw,19px);line-height:1.9;letter-spacing:.16em;color:#e7dcc4}
+#tmenu .en-t{font-size:12px;opacity:.6;font-style:italic;margin:-4px 0 8px;line-height:1.5}
+.btn{background:transparent;border:1px solid rgba(243,236,220,.45);color:var(--paper);
+  padding:13px 22px;font-size:clamp(16px,2.6vmin,20px);letter-spacing:.5em;text-indent:.5em;transition:.2s;text-align:center}
+.btn:hover{background:var(--seal);border-color:var(--seal)}
+.btn.primary{border-color:var(--gold)}
+.btn small{display:block;font-size:11px;letter-spacing:.12em;text-indent:0;opacity:.6;margin-top:3px}
+
+/* scroll/help/epilogue cards */
+.card{background:var(--paper);color:var(--ink);max-width:min(900px,94vw);max-height:88vh;overflow:auto;
+  padding:clamp(20px,4vw,44px);border-top:6px solid var(--seal);box-shadow:0 20px 70px rgba(0,0,0,.6)}
+.card h2{letter-spacing:.4em;font-size:clamp(19px,3vw,26px);color:var(--seal-dk)}
+.card .by{font-size:13px;opacity:.6;letter-spacing:.25em;margin:6px 0 18px}
+.card .ctext,#scrollBody,#epiBody{font-size:clamp(15px,2.1vw,17px);line-height:2.05;letter-spacing:.12em;text-align:justify}
+#scrollBody p,#epiBody p{margin-bottom:.9em}
+#scrollBody .en,#epiBody .en{font-size:12px;opacity:.6;font-style:italic;letter-spacing:.03em;line-height:1.6}
+.card table{width:100%;border-collapse:collapse}
+.card td{padding:8px 6px;border-bottom:1px solid rgba(20,24,27,.14);letter-spacing:.06em;font-size:clamp(13px,2vw,16px)}
+.card td:first-child{width:38%;white-space:nowrap}
+.kbd{display:inline-block;min-width:24px;text-align:center;border:1px solid rgba(20,24,27,.5);border-bottom-width:2px;
+  border-radius:3px;padding:1px 6px;margin-right:4px;font-size:13px}
+.close{margin-top:22px;background:var(--ink)!important;color:var(--paper)!important;border:none!important;
+  padding:10px 30px;letter-spacing:.4em;text-indent:.4em;display:inline-block;width:auto}
+#epi .card{text-align:center;background:linear-gradient(173deg,#f5eedd 0%,#ece2cb 100%)}
+#epiBody{text-align:center}
+.seal2{margin:22px auto 8px;width:62px;height:62px;background:var(--seal);color:#f7efe0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  line-height:1.06;font-size:16px;letter-spacing:0;box-shadow:inset 0 0 0 2px rgba(247,239,224,.55)}
+
+/* touch */
+#stick{position:fixed;left:4vw;bottom:max(5vh,env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;z-index:24;
+  border:1.5px solid rgba(243,236,220,.4);background:rgba(16,19,21,.3);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:50px;height:50px;border-radius:50%;background:rgba(243,236,220,.45);transform:translate(-50%,-50%)}
+#btnE{position:fixed;right:5vw;bottom:max(6vh,env(safe-area-inset-bottom));width:84px;height:84px;border-radius:50%;z-index:24;
+  border:1.5px solid var(--gold);background:rgba(16,19,21,.45);color:var(--gold);font-size:26px;touch-action:manipulation}
+body:not(.touch) #stick,body:not(.touch) #btnE{display:none}
+
+#loading{position:fixed;inset:0;z-index:70;background:var(--ink);display:flex;align-items:center;justify-content:center;
+  color:var(--paper);letter-spacing:.6em;font-size:18px;text-indent:.6em}
+.petalfall{position:absolute;top:-4vh;color:var(--blossom);font-size:15px;opacity:.85;animation:pf linear infinite;pointer-events:none}
+@keyframes pf{to{transform:translate(-9vw,108vh) rotate(540deg);opacity:.12}}
+@media(max-width:640px){#obj{max-width:54vw}#day{right:54px}}
+</style>
+</head>
+<body>
+
+<canvas id="c" tabindex="0"></canvas>
+
+<div id="vignette" class="ovl"></div>
+<div id="bars" class="ovl"></div>
+
+<div id="obj"><div class="cn"></div><div class="en"></div></div>
+<div id="day"></div>
+<div id="markhint"></div>
+<div id="cap"><div class="cn"></div><div class="en"></div></div>
+<div id="prompt"><b>E</b><span id="ptext"></span></div>
+
+<div id="dlg">
+  <div class="inner" id="dinner">
+    <span id="dspeaker"></span><span id="dmore">▼</span>
+    <div id="dtext"></div>
+    <div id="den"></div>
+  </div>
+  <div id="dchoices"></div>
+</div>
+
+<div id="hud">
+  <button id="bScroll" title="原文 Original text">文</button>
+  <button id="bHelp" title="操作 Controls">？</button>
+  <button id="bMute" title="聲音 Sound">音</button>
+</div>
+
+<div id="stick"><div id="knob"></div></div>
+<button id="btnE">E</button>
+
+<div id="title" class="panel">
+  <div id="petals" class="ovl"></div>
+  <div class="wrap">
+    <div id="ttext">
+      <div id="tseal"><span>武</span><span>陵</span><span>人</span></div>
+      <div><h1><span>桃</span><span>花</span><span>源</span><span>記</span></h1><div class="sub"><span>陶</span><span>淵</span><span>明</span></div></div>
+    </div>
+    <div id="tmenu">
+      <div class="quote">晉太元中，武陵人捕魚為業。<br>緣溪行，忘路之遠近。</div>
+      <div class="en-t">In the Taiyuan years of Jin, a man of Wuling made his living catching fish.</div>
+      <button class="btn primary" id="bStart">入　境<small>BEGIN</small></button>
+      <button class="btn" id="bText0">原　文<small>THE ORIGINAL TEXT</small></button>
+      <button class="btn" id="bHelp0">操　作<small>CONTROLS</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="scroll" class="sheet hidden"><div class="card">
+  <h2>桃花源記</h2><div class="by">〔東晉〕陶淵明</div>
+  <div id="scrollBody"></div>
+  <button class="btn close" id="bScrollClose">回　去</button>
+</div></div>
+
+<div id="help" class="sheet hidden"><div class="card">
+  <h2>操　作</h2><div class="by">CONTROLS</div>
+  <table>
+    <tr><td><span class="kbd">W</span><span class="kbd">S</span></td><td>前進、減速 &nbsp;·&nbsp; forward / slow</td></tr>
+    <tr><td><span class="kbd">A</span><span class="kbd">D</span></td><td>轉向 &nbsp;·&nbsp; steer / turn</td></tr>
+    <tr><td><span class="kbd">E</span></td><td>互動：上岸、交談、赴宴、誌之 &nbsp;·&nbsp; interact</td></tr>
+    <tr><td><span class="kbd">空白鍵</span></td><td>繼續對話 &nbsp;·&nbsp; advance dialogue (or click)</td></tr>
+    <tr><td><span class="kbd">1</span>–<span class="kbd">3</span></td><td>選擇 &nbsp;·&nbsp; choose a reply</td></tr>
+    <tr><td>滑鼠拖曳</td><td>環顧 &nbsp;·&nbsp; drag to look around</td></tr>
+    <tr><td>觸控</td><td>左側搖桿移動，右側 E 鍵互動 &nbsp;·&nbsp; touch: left stick + E button</td></tr>
+  </table>
+  <button class="btn close" id="bHelpClose">回　去</button>
+</div></div>
+
+<div id="epi" class="sheet hidden"><div class="card">
+  <h2 id="epiH">後遂無問津者</h2><div class="by" id="epiSub">AND AFTER THAT, NO ONE EVER ASKED THE WAY AGAIN</div>
+  <div id="epiBody"></div>
+  <div class="seal2"><span>陶</span><span>淵</span><span>明</span></div>
+  <div style="font-size:12px;color:#7a6f5c;letter-spacing:.2em;margin-bottom:18px">桃花源記 · 約西元四二一年</div>
+  <button class="btn close" id="bAgain">重新開始 · PLAY AGAIN</button>
+</div></div>
+
+<div id="fade" class="ovl"></div>
+<div id="loading">入　境　之　中</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   桃花源記  ·  DATA
+   Source text verified against Wikisource / 陶淵明集.
+   All dialogue is original game writing in the spirit of the text,
+   written plainly (Traditional Chinese) with literal English glosses.
+   ============================================================ */
+const DATA = {};
+
+/* The full received text of 桃花源記, broken into the canonical sentences. */
+DATA.original = [
+  ["晉太元中，武陵人捕魚為業。", "In the Taiyuan years of Jin, a man of Wuling made his living by fishing."],
+  ["緣溪行，忘路之遠近。", "He rowed along a stream, losing track of how far he had gone."],
+  ["忽逢桃花林，夾岸數百步，中無雜樹，", "Suddenly he came upon a forest of peach blossoms, lining both banks for several hundred paces, with no other kind of tree among them."],
+  ["芳草鮮美，落英繽紛。", "The fragrant grasses were fresh and bright; falling petals drifted everywhere."],
+  ["漁人甚異之，復前行，欲窮其林。", "The fisherman, taken with the strangeness of it, rowed on, wishing to reach the end of the grove."],
+  ["林盡水源，便得一山。", "The grove ended at the stream's source, and there he found a mountain."],
+  ["山有小口，髣髴若有光。", "In the mountain was a small opening, and from it seemed to come a faint light."],
+  ["便舍船，從口入。", "So he left his boat and went in through the opening."],
+  ["初極狹，纔通人。", "At first it was very narrow, barely wide enough for a person."],
+  ["復行數十步，豁然開朗。", "After a few dozen more paces it opened out, broad and bright."],
+  ["土地平曠，屋舍儼然，", "The land lay flat and open; houses stood in neat order."],
+  ["有良田美池桑竹之屬。", "There were fine fields, beautiful ponds, mulberry and bamboo and the like."],
+  ["阡陌交通，雞犬相聞。", "Paths crossed in every direction; the sounds of chickens and dogs answered one another."],
+  ["其中往來種作，男女衣著，悉如外人。", "People came and went, tilling and planting; the dress of the men and women was just like that of folk outside."],
+  ["黃髮垂髫，並怡然自樂。", "The white-haired elderly and the children with loose hanging hair were all content and happy."],
+  ["見漁人，乃大驚，問所從來。", "Seeing the fisherman, they were greatly startled, and asked where he had come from."],
+  ["具答之。便要還家，設酒殺雞作食。", "He answered each question. They invited him home, set out wine, killed a chicken, and made a meal."],
+  ["村中聞有此人，咸來問訊。", "Hearing such a man was in the village, everyone came to ask after him."],
+  ["自云先世避秦時亂，", "They told how their ancestors, fleeing the chaos of the Qin,"],
+  ["率妻子邑人來此絕境，不復出焉，", "had led their wives, children, and townsfolk to this cut-off place, and never left again,"],
+  ["遂與外人間隔。", "and so were sundered from the world outside."],
+  ["問今是何世，乃不知有漢，無論魏晉。", "They asked what age it now was — they did not even know there had been a Han, let alone the Wei or the Jin."],
+  ["此人一一為具言所聞，皆嘆惋。", "The fisherman told them, point by point, all that he had heard; and at each thing they sighed and grieved."],
+  ["餘人各復延至其家，皆出酒食。", "The others each in turn invited him to their homes, and all brought out wine and food."],
+  ["停數日，辭去。", "He stayed several days, then took his leave."],
+  ["此中人語云：「不足為外人道也。」", "The people of the place said to him: \u201cIt is not worth speaking of to those outside.\u201d"],
+  ["既出，得其船，便扶向路，處處誌之。", "Having come out, he found his boat, followed the way he had come, and marked it everywhere."],
+  ["及郡下，詣太守，說如此。", "Reaching the commandery, he called on the prefect and told it just as it was."],
+  ["太守即遣人隨其往，尋向所誌，遂迷，不復得路。", "The prefect at once sent men to go back with him. They looked for the marks he had made — but lost their way, and never found the road again."],
+  ["南陽劉子驥，高尚士也，聞之，欣然規往，", "Liu Ziji of Nanyang, a gentleman of high ideals, heard of it and gladly planned to go,"],
+  ["未果，尋病終。後遂無問津者。", "but it came to nothing; soon he fell ill and died. And after that, no one ever asked the way again."]
+];
+
+/* Captions shown on screen during each phase (classical line + gloss). */
+DATA.caps = {
+  stream:    ["緣溪行，忘路之遠近", "Rowing along the stream, he forgot how far he had come"],
+  grove:     ["忽逢桃花林　夾岸數百步", "Suddenly, a forest of peach blossoms lining both banks"],
+  grove2:    ["芳草鮮美　落英繽紛", "Fresh grasses, fragrant — and a confusion of falling petals"],
+  source:    ["林盡水源，便得一山", "The grove ends at the water's source; a mountain appears"],
+  opening:   ["山有小口，髣髴若有光", "A small opening in the hill — and from it, a faint light"],
+  squeeze:   ["初極狹，纔通人", "At first so narrow it barely lets a person through"],
+  reveal:    ["豁然開朗", "Then all at once — open, and bright"],
+  village:   ["土地平曠，屋舍儼然", "Level open land; houses standing in good order"],
+  warned:    ["不足為外人道也", "\u201cIt is not worth telling to those outside.\u201d"],
+  marking:   ["既出　扶向路　處處誌之", "Going out, he follows the old way and marks it everywhere"],
+  report:    ["及郡下，詣太守，說如此", "He reaches the commandery and tells the prefect all of it"],
+  lost:      ["尋向所誌　遂迷　不復得路", "They seek the marks he left — and lose the way, for good"]
+};
+
+/* Objective-banner text per phase. */
+DATA.obj = {
+  stream:   ["沿溪而上，尋桃花林", "Row upstream. Find the peach grove."],
+  grove:    ["穿過桃花林，尋水之源", "Pass through the blossoms to the stream's source."],
+  source:   ["棄舟，尋山中小口", "Leave the boat. Find the small opening in the hill."],
+  squeeze:  ["擠身入內", "Squeeze through."],
+  village:  ["探訪村莊，與村人交談", "Explore the village. Speak with its people."],
+  feast:    ["挨家挨戶，赴其酒食", "Be feasted, house by house."],
+  leave:    ["辭去，沿路處處誌之", "Take your leave. Mark the way at every turn."],
+  report:   ["回返，稟報太守", "Return and report to the prefect."],
+  lost:     ["領太守之人，尋舊路", "Lead the prefect's men back along the marked road."]
+};
+
+/* ---- Dialogue trees ----
+   Each node: speaker(cn), s(speaker label), lines:[[cn,en],...], then either
+   choices:[{t,en,go}] or next:id or end:true / action:'...'                 */
+DATA.dlg = {
+
+  /* The first villager — the man who is startled, then invites you home. */
+  startled_1: {
+    s:"村人　驚", lines:[
+      ["（一人正引水灌田，忽見生人，桶墜於地。）", "(A man irrigating his field looks up, sees a stranger, and drops his pail.)"],
+      ["你⋯⋯你從何而來？此處外人從不曾至。", "You... where have you come from? No outsider has ever reached this place."]
+    ],
+    choices:[
+      {t:"我順著一條溪水上來，溪邊盡是桃花。", en:"I came up a stream — its banks all peach blossom.", go:"startled_2"},
+      {t:"我是個漁人，迷了路，不意至此。", en:"I'm only a fisherman. I lost my way and came here by chance.", go:"startled_2b"}
+    ]
+  },
+  startled_2: {
+    s:"村人　驚", lines:[
+      ["桃花⋯⋯那片桃花還在。先祖手植，已不知幾世了。", "The peach trees... so they still stand. Our ancestors planted them. How many lifetimes ago, none of us know."],
+      ["你莫怕。隨我還家，且歇一歇。", "Don't be afraid. Come home with me and rest a while."]
+    ],
+    next:"startled_invite"
+  },
+  startled_2b: {
+    s:"村人　驚", lines:[
+      ["迷路而至⋯⋯也好，也好。能尋來此地的，必非惡人。", "Lost your way and arrived here... well. Whoever could find this place is no ill-meaning man."],
+      ["隨我還家。設些酒食，與你壓驚。", "Come home with me. We'll set out wine and food to settle your nerves."]
+    ],
+    next:"startled_invite"
+  },
+  startled_invite: {
+    s:"村人", lines:[
+      ["（他喚來鄰人，殺雞、溫酒，引你入屋。）", "(He calls his neighbours, kills a chicken, warms the wine, and leads you inside.)"]
+    ],
+    action:"first_feast"
+  },
+
+  /* The elder — explains the founding, asks what age it is. The story's core. */
+  elder_1: {
+    s:"村中長者", lines:[
+      ["後生，坐。先飲一杯。", "Sit, young man. Drink first."],
+      ["我等先世，本是秦人。", "Our ancestors were people of the Qin."]
+    ],
+    next:"elder_2"
+  },
+  elder_2: {
+    s:"村中長者", lines:[
+      ["秦時苛政如虎，賦役無窮，殺伐不止。", "Under the Qin the laws were cruel as tigers — endless taxes, endless levies, killing without end."],
+      ["先祖率妻子鄉鄰，避亂入此山中，自此不復出焉。", "So our forebears led their families and neighbours, fled the chaos into this mountain, and never went out again."]
+    ],
+    choices:[
+      {t:"你們在此⋯⋯多少年了？", en:"And how long have you been here?", go:"elder_howlong"},
+      {t:"如今是何朝何代，你們可知？", en:"Do you know what dynasty it now is?", go:"elder_whatage"}
+    ]
+  },
+  elder_howlong: {
+    s:"村中長者", lines:[
+      ["數不清了。只記得春去秋來，桃花開了又謝。", "We've lost count. We mark only the springs and autumns, the peach trees blooming and falling."],
+      ["你且說說，外頭如今是何世道？", "Tell us — what is the world like now, out there?"]
+    ],
+    next:"elder_whatage"
+  },
+  elder_whatage: {
+    s:"村中長者", lines:[
+      ["請問如今是何世？可還是大秦的天下？", "What age is it now, may I ask? Is it still the realm of the great Qin?"]
+    ],
+    choices:[
+      {t:"秦早已亡了。後來有漢，國祚四百餘年。", en:"The Qin fell long ago. Then came the Han — four hundred years and more.", go:"elder_han"},
+      {t:"秦之後是漢，漢之後又有魏、有晉。", en:"After Qin came Han; after Han, the Wei, and then the Jin.", go:"elder_han"}
+    ]
+  },
+  elder_han: {
+    s:"村中長者", lines:[
+      ["漢？⋯⋯竟不知有漢。", "Han...? We never knew there had been a Han."],
+      ["（眾人面面相覷，低聲驚問。）那魏、晉，又是什麼？", "(The others exchange looks, murmuring.) And this Wei, this Jin — what are they?"]
+    ],
+    choices:[
+      {t:"漢亡之後，天下三分，是為魏、蜀、吳。後歸於晉。", en:"After Han fell, the realm split three ways — Wei, Shu, Wu. In time all passed to Jin.", go:"elder_sigh"},
+      {t:"說來話長。改朝換代，已歷數百寒暑。", en:"It's a long tale. Dynasty has given way to dynasty over many hundred years.", go:"elder_sigh"}
+    ]
+  },
+  elder_sigh: {
+    s:"村中長者", lines:[
+      ["（聽罷，滿座皆嘆惋。）", "(Hearing this, the whole gathering sighs and grieves.)"],
+      ["外頭竟換了這許多人間。我等卻在此，渾然不知。", "So the world outside has turned over so many times — and here we sat, knowing none of it."],
+      ["既來之，便多住幾日。家家都要請你嚐一杯的。", "Since you've come, stay a few days more. Every house will want you at its table."]
+    ],
+    action:"elder_done"
+  },
+
+  /* The farmer — colour, daily life, the no-tax wonder. */
+  farmer_1: {
+    s:"耕者", lines:[
+      ["客人嚐嚐這新米。今年的稻子，沉甸甸的。", "Try this new rice, traveller. This year the ears hang heavy."]
+    ],
+    choices:[
+      {t:"你們的田，賦稅重不重？", en:"Your fields — are the taxes heavy?", go:"farmer_tax"},
+      {t:"這溪裡，可有魚？", en:"Are there fish in this stream?", go:"farmer_fish"}
+    ]
+  },
+  farmer_tax: {
+    s:"耕者", lines:[
+      ["賦稅？那是什麼？我等耕食鑿飲，所種皆自取。", "Taxes? What are those? We till and eat, dig wells and drink; what we grow, we keep."],
+      ["（你想起外頭的徭役賦斂，一時竟不知如何說起。）", "(You think of the levies and corvée outside, and find you cannot begin to explain.)"]
+    ],
+    end:true
+  },
+  farmer_fish: {
+    s:"耕者", lines:[
+      ["有的，肥得很。只是我等不善捕，多半養著看。", "Plenty, and fat ones. We're poor at catching them, so mostly we just let them be."],
+      ["你既是漁人，改日教教孩子們罷。", "Since you're a fisherman, teach the children one day, won't you."]
+    ],
+    end:true
+  },
+
+  /* A child — wonder, innocence. */
+  child_1: {
+    s:"垂髫小兒", lines:[
+      ["外面的人，外面也有桃花嗎？也有天嗎？", "Person from outside — are there peach trees outside too? Is there sky?"]
+    ],
+    choices:[
+      {t:"有天，也有桃花。只是外頭，沒有這般安寧。", en:"There is sky, and peach trees too. Only outside, there isn't this peace.", go:"child_end"},
+      {t:"外面很大很大，大得會叫人害怕。", en:"Outside is very, very big — big enough to frighten you.", go:"child_end"}
+    ]
+  },
+  child_end: {
+    s:"垂髫小兒", lines:[
+      ["（小兒眨眨眼，似懂非懂，又跑開去追雞了。）", "(The child blinks, half-understanding, then runs off chasing a chicken.)"]
+    ],
+    end:true
+  },
+
+  /* The weaver woman — hospitality, the warning seed. */
+  weaver_1: {
+    s:"織婦", lines:[
+      ["客人來得巧，飯剛熟。坐下，莫客氣。", "You've come at a good moment, traveller — the rice is just done. Sit, don't stand on courtesy."],
+      ["我織我的布，你說你的話，都好。", "I'll weave my cloth, you tell your tales — both are fine."]
+    ],
+    choices:[
+      {t:"叨擾了。你們待客，竟這般厚。", en:"I'm imposing. Yet you treat a guest so generously.", go:"weaver_warm"},
+      {t:"我若回去，與人說起此地⋯⋯", en:"If I go back and tell people of this place...", go:"weaver_warn"}
+    ]
+  },
+  weaver_warm: {
+    s:"織婦", lines:[
+      ["厚什麼。難得有生人來，是喜事。", "Generous, nothing. It's rare a stranger comes — it's a glad thing."]
+    ],
+    end:true
+  },
+  weaver_warn: {
+    s:"織婦", lines:[
+      ["（她停了梭，神色一沉。）", "(She stops the shuttle; her face turns grave.)"],
+      ["這話，村裡長者要與你說的。此中事，不足為外人道也。", "The elder will speak to you of that. What happens here — it is not worth telling to those outside."]
+    ],
+    end:true
+  },
+
+  /* On leaving — the parting warning, then the marking instruction. */
+  farewell: {
+    s:"此中人", lines:[
+      ["送你到水邊。船還在那兒。", "We'll see you to the water. Your boat is still there."],
+      ["記著一句話：不足為外人道也。", "Remember one thing: it is not worth speaking of to those outside."]
+    ],
+    choices:[
+      {t:"我記下了。多謝款待。", en:"I'll remember. Thank you for your kindness.", go:"farewell_go"},
+      {t:"（默然不答，心中卻已另有打算。）", en:"(You say nothing — but already, you mean to do otherwise.)", go:"farewell_go"}
+    ]
+  },
+  farewell_go: {
+    s:"此中人", lines:[
+      ["（他們立在桃花下，目送你登舟。）", "(They stand beneath the blossoms, watching you board.)"]
+    ],
+    action:"begin_marking"
+  },
+
+  /* At the prefect's seat. */
+  prefect: {
+    s:"太守", lines:[
+      ["你是說，山中有一村，避秦至今，不知漢晉？", "You say there is a village in the hills — fled since the Qin, ignorant of Han and Jin?"],
+      ["此事奇甚。來人！隨這漁人前往，循其所誌。", "A most strange matter. Guards! Go back with this fisherman, and follow the marks he left."]
+    ],
+    action:"set_out_again"
+  }
+};
+
+
+/* ============================================================
+   桃花源記  ·  ENGINE  (part 1: scene, materials, audio, input)
+   Three.js r128, fully procedural — no external assets.
+   ============================================================ */
+const G = {
+  THREE:null, scene:null, cam:null, renderer:null, clock:null,
+  boat:null, fisher:null, oar:null,
+  water:null, riverPath:[], riverLen:0,
+  trees:[], petals:[], petalGeo:null,
+  village:null, villagers:[], livestock:[],
+  marks:[], markMeshes:[],
+  colliders:[],            // {x,z,r} soft cylinders for the valley
+  interactables:[],        // {pos,r,label,labelEn,kind,id,done}
+  phase:"boot",
+  t:0, dt:0,
+  yaw:0, pitch:0,          // free-look offset
+  input:{f:0,t:0},         // forward / turn  (-1..1)
+  keys:{},
+  camMode:"boat",          // boat | walk | fixed
+  walkPos:null, walkYaw:0,
+  ready:false, paused:true,
+  audio:null, muted:false,
+  api:{}                   // exposed to story layer
+};
+
+/* ---------------- procedural canvas textures ---------------- */
+function makeCanvas(s){const c=document.createElement("canvas");c.width=c.height=s;return c;}
+
+function texWater(){
+  const s=256,c=makeCanvas(s),x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,s);
+  g.addColorStop(0,"#3f5a52");g.addColorStop(1,"#28403a");
+  x.fillStyle=g;x.fillRect(0,0,s,s);
+  for(let i=0;i<900;i++){x.globalAlpha=Math.random()*0.06;x.fillStyle=Math.random()<.5?"#9fd0c4":"#16241f";
+    x.fillRect(Math.random()*s,Math.random()*s,Math.random()*3+1,1);}
+  x.globalAlpha=1;return texFrom(c,4,1);
+}
+function texBark(){
+  const s=128,c=makeCanvas(s),x=c.getContext("2d");
+  x.fillStyle="#5a463a";x.fillRect(0,0,s,s);
+  for(let i=0;i<140;i++){x.strokeStyle=`rgba(${30+Math.random()*30},${22+Math.random()*22},${16+Math.random()*16},${.4+Math.random()*.4})`;
+    x.lineWidth=Math.random()*2+0.5;x.beginPath();const xx=Math.random()*s;x.moveTo(xx,0);
+    x.bezierCurveTo(xx+Math.random()*10-5,s*.3,xx+Math.random()*12-6,s*.7,xx+Math.random()*10-5,s);x.stroke();}
+  return texFrom(c,1,3);
+}
+function texGround(top,spd){
+  const s=256,c=makeCanvas(s),x=c.getContext("2d");
+  x.fillStyle=top;x.fillRect(0,0,s,s);
+  for(let i=0;i<2600;i++){x.globalAlpha=Math.random()*0.5;x.fillStyle=Math.random()<.5?spd:"#000";
+    x.fillRect(Math.random()*s,Math.random()*s,Math.random()*2+1,Math.random()*2+1);}
+  // faint petal flecks
+  x.globalAlpha=.5;x.fillStyle="#e89fb0";
+  for(let i=0;i<60;i++)x.fillRect(Math.random()*s,Math.random()*s,2,2);
+  x.globalAlpha=1;return texFrom(c,10,10);
+}
+function texRock(){
+  const s=256,c=makeCanvas(s),x=c.getContext("2d");
+  x.fillStyle="#6d6a63";x.fillRect(0,0,s,s);
+  for(let i=0;i<1400;i++){x.globalAlpha=Math.random()*.4;x.fillStyle=Math.random()<.5?"#4a4842":"#8b877e";
+    x.fillRect(Math.random()*s,Math.random()*s,Math.random()*4+1,Math.random()*4+1);}
+  for(let i=0;i<26;i++){x.globalAlpha=.3;x.strokeStyle="#3a3833";x.lineWidth=Math.random()*2+1;
+    x.beginPath();x.moveTo(Math.random()*s,Math.random()*s);x.lineTo(Math.random()*s,Math.random()*s);x.stroke();}
+  x.globalAlpha=1;return texFrom(c,3,3);
+}
+function texPetalSprite(){
+  const s=64,c=makeCanvas(s),x=c.getContext("2d");
+  x.translate(s/2,s/2);
+  const grd=x.createRadialGradient(0,-6,1,0,0,18);
+  grd.addColorStop(0,"#fff0f4");grd.addColorStop(.6,"#f3aabb");grd.addColorStop(1,"rgba(230,150,170,0)");
+  x.fillStyle=grd;
+  x.beginPath();
+  // simple petal: two arcs
+  x.moveTo(0,16);x.quadraticCurveTo(15,2,0,-16);x.quadraticCurveTo(-15,2,0,16);x.fill();
+  return texFrom(c,1,1);
+}
+function texFrom(c,rx,ry){
+  const T=new G.THREE.CanvasTexture(c);
+  T.wrapS=T.wrapT=G.THREE.RepeatWrapping;T.repeat.set(rx,ry);
+  T.anisotropy=4;return T;
+}
+
+/* ---------------- audio: procedural guzheng-ish ambience ---------------- */
+function Audio(){
+  let ctx=null,master=null,pad=null,running=false,scaleT=null,waterNode=null;
+  const penta=[0,2,4,7,9]; // pentatonic
+  function init(){
+    if(ctx)return;
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    master=ctx.createGain();master.gain.value=0.0;master.connect(ctx.destination);
+    // soft water noise bed
+    const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);
+    const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*0.4;
+    waterNode=ctx.createBufferSource();waterNode.buffer=buf;waterNode.loop=true;
+    const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=420;
+    const wg=ctx.createGain();wg.gain.value=0.06;
+    waterNode.connect(lp);lp.connect(wg);wg.connect(master);waterNode.start();
+  }
+  function pluck(freq,when,dur,gain){
+    const o=ctx.createOscillator(),g=ctx.createGain(),o2=ctx.createOscillator();
+    o.type="triangle";o2.type="sine";o.frequency.value=freq;o2.frequency.value=freq*2.001;
+    const f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=2200;
+    g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(gain,when+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+    o.connect(f);o2.connect(f);f.connect(g);g.connect(master);
+    o.start(when);o2.start(when);o.stop(when+dur);o2.stop(when+dur);
+  }
+  let mood="calm";
+  function schedule(){
+    if(!running)return;
+    const base=mood==="tense"?146.83:(mood==="warm"?196:174.61); // D3 / G3 / F3
+    const now=ctx.currentTime;
+    const n=2+(Math.random()*2|0);
+    for(let i=0;i<n;i++){
+      const deg=penta[(Math.random()*penta.length)|0];
+      const oct=Math.random()<0.35?2:1;
+      const f=base*Math.pow(2,deg/12)*oct;
+      pluck(f,now+i*0.34+Math.random()*0.1,1.6+Math.random()*1.2,0.10);
+    }
+    const gap=mood==="tense"?1300:2400;
+    scaleT=setTimeout(schedule,gap+Math.random()*1200);
+  }
+  return {
+    start(){ if(G.muted)return; init(); if(ctx.state==="suspended")ctx.resume();
+      running=true; master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.9,ctx.currentTime+2.5); schedule(); },
+    setMood(m){mood=m;},
+    sting(kind){ if(!ctx||G.muted)return; const now=ctx.currentTime;
+      if(kind==="reveal"){[0,4,7,12].forEach((d,i)=>pluck(196*Math.pow(2,d/12),now+i*0.12,2.4,0.14));}
+      else if(kind==="lost"){[0,-1,-3].forEach((d,i)=>pluck(146.83*Math.pow(2,d/12),now+i*0.5,3.2,0.13));}
+      else if(kind==="mark"){pluck(523.25,now,0.5,0.09);}
+      else if(kind==="enter"){pluck(261.63,now,1.4,0.12);}
+    },
+    mute(m){G.muted=m; if(master)master.gain.linearRampToValueAtTime(m?0:0.9,(ctx?ctx.currentTime:0)+0.3);
+      if(m&&scaleT){clearTimeout(scaleT);} else if(!m&&running){schedule();} },
+    resumeCtx(){ if(ctx&&ctx.state==="suspended")ctx.resume(); }
+  };
+}
+
+/* ---------------- renderer bootstrap ---------------- */
+function initEngine(THREE,canvas,W,H){
+  G.THREE=THREE;
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:"high-performance",preserveDrawingBuffer:true});
+  r.setSize(W,H,false); r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  r.shadowMap.enabled=true; r.shadowMap.type=THREE.PCFSoftShadowMap;
+  r.outputEncoding=THREE.sRGBEncoding; r.toneMapping=THREE.ACESFilmicToneMapping; r.toneMappingExposure=1.05;
+  G.renderer=r;
+  G.scene=new THREE.Scene();
+  G.scene.background=new THREE.Color(0x9fb0a8);
+  G.scene.fog=new THREE.FogExp2(0x9fb0a8,0.014);
+  G.cam=new THREE.PerspectiveCamera(58,W/H,0.1,600);
+  G.cam.position.set(0,3,8);
+  G.clock=new THREE.Clock();
+
+  // lighting: soft overcast + warm key
+  const hemi=new THREE.HemisphereLight(0xdfe7e0,0x4a5247,0.85); G.scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xfff1d8,1.15); sun.position.set(-40,70,30);
+  sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+  const d=120; sun.shadow.camera.left=-d;sun.shadow.camera.right=d;sun.shadow.camera.top=d;sun.shadow.camera.bottom=-d;
+  sun.shadow.camera.far=300; sun.shadow.bias=-0.0004; G.sun=sun; G.scene.add(sun);
+  G.hemi=hemi;
+
+  G.audio=Audio();
+  G.petalGeo=new THREE.PlaneGeometry(0.34,0.34);
+  G.petalTex=texPetalSprite();
+
+  return r;
+}
+
+/* ---------------- input ---------------- */
+function bindInput(canvas){
+  const onKey=(e,v)=>{
+    const k=e.key.toLowerCase();
+    if(["w","a","s","d"," ","arrowup","arrowdown","arrowleft","arrowright","1","2","3","e"].includes(k)){
+      if(k===" "||k.startsWith("arrow"))e.preventDefault();
+    }
+    G.keys[k]=v;
+    if(v&&!e.repeat) handleKeyPress(k);
+  };
+  window.addEventListener("keydown",e=>onKey(e,true),{passive:false});
+  window.addEventListener("keyup",e=>onKey(e,false));
+
+  // mouse / touch look (drag)
+  let dragging=false,px=0,py=0;
+  const start=(x,y)=>{dragging=true;px=x;py=y;};
+  const move=(x,y)=>{ if(!dragging)return; const dx=x-px,dy=y-py;px=x;py=y;
+    G.yaw  -= dx*0.0032; G.pitch -= dy*0.0026;
+    G.pitch=Math.max(-0.5,Math.min(0.5,G.pitch));
+    G.yaw=Math.max(-1.0,Math.min(1.0,G.yaw)); };
+  const end=()=>{dragging=false;};
+  canvas.addEventListener("mousedown",e=>start(e.clientX,e.clientY));
+  window.addEventListener("mousemove",e=>move(e.clientX,e.clientY));
+  window.addEventListener("mouseup",end);
+
+  // touch joystick
+  const stick=document.getElementById("stick"),knob=document.getElementById("knob");
+  let sid=null,scx=0,scy=0;
+  const sRect=()=>stick.getBoundingClientRect();
+  stick.addEventListener("touchstart",e=>{e.preventDefault();const t=e.changedTouches[0];sid=t.identifier;
+    const r=sRect();scx=r.left+r.width/2;scy=r.top+r.height/2;},{passive:false});
+  stick.addEventListener("touchmove",e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier!==sid)continue;
+    let dx=t.clientX-scx,dy=t.clientY-scy;const mag=Math.hypot(dx,dy),max=52;
+    if(mag>max){dx*=max/mag;dy*=max/mag;}
+    knob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+    G.input.t=dx/max; G.input.f=-dy/max;}},{passive:false});
+  const sEnd=e=>{for(const t of e.changedTouches){if(t.identifier===sid){sid=null;G.input.f=0;G.input.t=0;
+    knob.style.transform="translate(-50%,-50%)";}}};
+  stick.addEventListener("touchend",sEnd);stick.addEventListener("touchcancel",sEnd);
+
+  // touch look on canvas
+  let tlid=null;
+  canvas.addEventListener("touchstart",e=>{const t=e.changedTouches[0];if(t.clientX>window.innerWidth*0.4){tlid=t.identifier;start(t.clientX,t.clientY);}},{passive:true});
+  canvas.addEventListener("touchmove",e=>{for(const t of e.changedTouches){if(t.identifier===tlid)move(t.clientX,t.clientY);}},{passive:true});
+  canvas.addEventListener("touchend",e=>{for(const t of e.changedTouches){if(t.identifier===tlid){tlid=null;end();}}},{passive:true});
+
+  document.getElementById("btnE").addEventListener("click",()=>handleKeyPress("e"));
+}
+
+
+/* ============================================================
+   桃花源記  ·  ENGINE  (part 2: world geometry)
+   ============================================================ */
+const T = () => G.THREE;
+
+/* ---- helpers ---- */
+function mat(color,opts={}){return new (T().MeshStandardMaterial)(Object.assign({color,roughness:0.92,metalness:0.0},opts));}
+function rand(a,b){return a+Math.random()*(b-a);}
+function group(parent){const g=new (T().Group)();(parent||G.scene).add(g);return g;}
+
+/* ---------- the river path (a gentle S, heading -Z = upstream) ---------- */
+function buildRiverPath(){
+  // Control points from start (z=0) upstream to the source (z=-360).
+  // x meanders; this single source of truth drives water, banks, boat autopilot.
+  const pts=[];
+  const seg=[
+    [0,0],[6,-30],[-4,-62],[8,-96],[-6,-130],   // ordinary stream
+    [3,-165],[-2,-200],[5,-238],[-3,-275],       // peach grove begins ~ -150
+    [1,-308],[0,-336],[0,-360]                   // narrows to the source
+  ];
+  for(const[x,z]of seg)pts.push(new (T().Vector3)(x,0,z));
+  G.curve=new (T().CatmullRomCurve3)(pts,false,"catmullrom",0.5);
+  G.riverLen=G.curve.getLength();
+  // sample for quick lookups
+  G.sampleN=400; G.samples=[];
+  for(let i=0;i<=G.sampleN;i++){G.samples.push(G.curve.getPointAt(i/G.sampleN));}
+  G.GROVE_START_U=0.40;   // u along curve where pure peach grove begins
+  G.SOURCE_U=0.965;       // where the mountain/opening is
+}
+function curveAt(u){return G.curve.getPointAt(Math.max(0,Math.min(1,u)));}
+function curveTangent(u){return G.curve.getTangentAt(Math.max(0,Math.min(1,u)));}
+
+/* ---------- water ribbon following the path ---------- */
+function buildWater(){
+  const N=G.sampleN, width=11, half=width/2;
+  const pos=[],uv=[],idx=[];
+  for(let i=0;i<=N;i++){
+    const u=i/N,p=curveAt(u),tg=curveTangent(u);
+    const nx=-tg.z,nz=tg.x; const L=Math.hypot(nx,nz)||1;
+    // widen the channel inside the canyon a touch
+    const w=half*(u<0.40?1.0:(u<0.95?0.92:0.5));
+    pos.push(p.x+nx/L*w,0,p.z+nz/L*w);
+    pos.push(p.x-nx/L*w,0,p.z-nz/L*w);
+    uv.push(0,u*40);uv.push(1,u*40);
+  }
+  for(let i=0;i<N;i++){const a=i*2,b=i*2+1,c=i*2+2,d=i*2+3;idx.push(a,b,c, b,d,c);}
+  const g=new (T().BufferGeometry)();
+  g.setAttribute("position",new (T().Float32BufferAttribute)(pos,3));
+  g.setAttribute("uv",new (T().Float32BufferAttribute)(uv,2));
+  g.setIndex(idx); g.computeVertexNormals();
+  G.waterBase=Float32Array.from(pos);
+  const m=new (T().MeshStandardMaterial)({map:texWater(),transparent:true,opacity:0.9,
+    roughness:0.32,metalness:0.18,color:0xbfe0d6});
+  const mesh=new (T().Mesh)(g,m); mesh.receiveShadow=true; mesh.position.y=0.02;
+  G.scene.add(mesh); G.water=mesh;
+}
+
+/* ---------- terrain: canyon walls + banks following the river ---------- */
+function buildTerrain(){
+  const N=G.sampleN;
+  const grpL=group(),grpR=group();
+  const groundMat=texGround("#4f6a3c","#33502a"); // grassy green
+  const rockMat=new (T().MeshStandardMaterial)({map:texRock(),roughness:1.0,color:0x8a857b});
+  // build two long bank strips + rising cliffs
+  const bankPos=[],bankUv=[],bankIdx=[];
+  const innerHalf=5.6, bankW=26;
+  for(let side=0;side<2;side++){
+    const s=side===0?1:-1, base=bankPos.length/3;
+    for(let i=0;i<=N;i++){
+      const u=i/N,p=curveAt(u),tg=curveTangent(u);
+      let nx=-tg.z,nz=tg.x;const L=Math.hypot(nx,nz)||1;nx/=L;nz/=L;
+      const wIn=innerHalf*(u<0.40?1.0:(u<0.95?0.92:0.55));
+      // bank edge
+      bankPos.push(p.x+s*nx*wIn,0.0,p.z+s*nz*wIn); bankUv.push(0,u*30);
+      // outer, raised — higher in the canyon section to read as cliffs
+      const rise=u<0.38?1.2:(u<0.93?ramp(u,0.38,0.6)*9+2:14);
+      bankPos.push(p.x+s*nx*(wIn+bankW),rise,p.z+s*nz*(wIn+bankW)); bankUv.push(1,u*30);
+    }
+    for(let i=0;i<N;i++){const a=base+i*2,b=base+i*2+1,c=base+i*2+2,d=base+i*2+3;
+      if(s>0)bankIdx.push(a,b,c, b,d,c); else bankIdx.push(a,c,b, b,c,d);}
+  }
+  const bg=new (T().BufferGeometry)();
+  bg.setAttribute("position",new (T().Float32BufferAttribute)(bankPos,3));
+  bg.setAttribute("uv",new (T().Float32BufferAttribute)(bankUv,2));
+  bg.setIndex(bankIdx); bg.computeVertexNormals();
+  const bank=new (T().Mesh)(bg,groundMat); bank.receiveShadow=true; G.scene.add(bank);
+
+  // tall rock backdrop walls further out (so canyon feels enclosed in grove section)
+  for(let side=0;side<2;side++){
+    const s=side===0?1:-1;
+    const wp=[],wi=[],wu=[];
+    for(let i=0;i<=N;i++){
+      const u=i/N,p=curveAt(u),tg=curveTangent(u);
+      let nx=-tg.z,nz=tg.x;const L=Math.hypot(nx,nz)||1;nx/=L;nz/=L;
+      const off=innerHalf+bankW+rand(-1,1);
+      const h=u<0.36?2:(u<0.94?ramp(u,0.36,0.55)*26+4:40);
+      wp.push(p.x+s*nx*off,0,p.z+s*nz*off);wu.push(0,u*20);
+      wp.push(p.x+s*nx*(off+6),h,p.z+s*nz*(off+6));wu.push(1,u*20);
+    }
+    for(let i=0;i<N;i++){const a=i*2,b=i*2+1,c=i*2+2,d=i*2+3;
+      if(s>0)wp&&wi.push(a,b,c,b,d,c);else wi.push(a,c,b,b,c,d);}
+    const wg=new (T().BufferGeometry)();
+    wg.setAttribute("position",new (T().Float32BufferAttribute)(wp,3));
+    wg.setAttribute("uv",new (T().Float32BufferAttribute)(wu,2));
+    wg.setIndex(wi);wg.computeVertexNormals();
+    const wall=new (T().Mesh)(wg,rockMat);wall.receiveShadow=true;G.scene.add(wall);
+  }
+}
+function ramp(u,a,b){return Math.max(0,Math.min(1,(u-a)/(b-a)));}
+
+/* ---------- trees: ordinary mixed before grove, PURE peach inside (中無雜樹) ---------- */
+function makePeachTree(bloom){
+  const g=group(null);
+  const h=rand(2.6,4.2);
+  const trunk=new (T().Mesh)(new (T().CylinderGeometry)(0.12,0.22,h,6),
+    new (T().MeshStandardMaterial)({map:texBark(),roughness:1,color:0x7a5f4c}));
+  trunk.position.y=h/2;trunk.castShadow=true;g.add(trunk);
+  // a few boughs
+  const boughMat=new (T().MeshStandardMaterial)({color:0x6b5240,roughness:1});
+  for(let i=0;i<3;i++){const b=new (T().Mesh)(new (T().CylinderGeometry)(0.05,0.1,rand(1,1.7),5),boughMat);
+    const a=rand(0,6.28);b.position.set(Math.cos(a)*0.5,h*0.7+rand(0,0.5),Math.sin(a)*0.5);
+    b.rotation.set(rand(-0.6,0.6),a,rand(0.6,1.1));b.castShadow=true;g.add(b);}
+  // blossom canopy: clustered spheres, soft pink
+  const canopy=group(g);
+  const pinks=[0xf6c3d0,0xf2a8bd,0xf7d4de,0xefb6c8];
+  const nC=bloom?7:5;
+  for(let i=0;i<nC;i++){
+    const r=rand(0.6,1.15);
+    const m=new (T().Mesh)(new (T().IcosahedronGeometry)(r,1),
+      new (T().MeshStandardMaterial)({color:pinks[i%pinks.length],roughness:0.95,flatShading:true}));
+    m.position.set(rand(-1,1),h*0.78+rand(-0.2,0.9),rand(-1,1));
+    m.scale.y=0.82;m.castShadow=true;canopy.add(m);
+  }
+  g.userData.canopy=canopy;
+  return g;
+}
+function makeOrdinaryTree(){
+  // willow/pine-ish greens — deliberately NOT peach, only outside the grove
+  const g=group(null);const h=rand(3,5.5);
+  const kind=Math.random();
+  const trunk=new (T().Mesh)(new (T().CylinderGeometry)(0.14,0.3,h,6),
+    new (T().MeshStandardMaterial)({map:texBark(),roughness:1,color:0x5b4a3a}));
+  trunk.position.y=h/2;trunk.castShadow=true;g.add(trunk);
+  const greens=[0x3f5e36,0x4a6b3c,0x33502c,0x556f3e];
+  if(kind<0.5){ // rounded broadleaf
+    for(let i=0;i<5;i++){const r=rand(0.8,1.5);
+      const m=new (T().Mesh)(new (T().IcosahedronGeometry)(r,1),
+        new (T().MeshStandardMaterial)({color:greens[i%greens.length],roughness:1,flatShading:true}));
+      m.position.set(rand(-1.1,1.1),h*0.8+rand(-0.3,1),rand(-1.1,1.1));m.castShadow=true;g.add(m);}
+  }else{ // conifer cones
+    for(let i=0;i<3;i++){const m=new (T().Mesh)(new (T().ConeGeometry)(rand(1,1.6)-i*0.25,rand(1.6,2.2),7),
+      new (T().MeshStandardMaterial)({color:greens[(i+1)%greens.length],roughness:1,flatShading:true}));
+      m.position.y=h*0.6+i*1.1;m.castShadow=true;g.add(m);}
+  }
+  return g;
+}
+function plantTrees(){
+  const N=600;
+  for(let i=0;i<N;i++){
+    const u=Math.random();
+    const p=curveAt(u),tg=curveTangent(u);
+    let nx=-tg.z,nz=tg.x;const L=Math.hypot(nx,nz)||1;nx/=L;nz/=L;
+    const side=Math.random()<0.5?1:-1;
+    const off=rand(6.5,26)*side;
+    const x=p.x+nx*off, z=p.z+nz*off;
+    // skip where the valley will be
+    if(u>0.95) continue;
+    let tree;
+    if(u>=G.GROVE_START_U){ tree=makePeachTree(true); }      // 中無雜樹 — only peach
+    else { tree = Math.random()<0.78 ? makeOrdinaryTree() : makePeachTree(false); } // a few stray peaches downstream
+    tree.position.set(x,0,z);
+    tree.rotation.y=rand(0,6.28);
+    const s=rand(0.85,1.25);tree.scale.setScalar(s);
+    tree.userData.u=u;
+    G.scene.add(tree);G.trees.push(tree);
+  }
+  // a dense double row right at the grove mouth so the transition reads instantly
+  for(let i=0;i<60;i++){
+    const u=G.GROVE_START_U+ (i/60)*0.5;
+    const p=curveAt(u),tg=curveTangent(u);let nx=-tg.z,nz=tg.x;const L=Math.hypot(nx,nz)||1;nx/=L;nz/=L;
+    for(const side of [1,-1]){
+      const off=rand(6.2,9)*side;
+      const tr=makePeachTree(true);tr.position.set(p.x+nx*off,0,p.z+nz*off);
+      tr.rotation.y=rand(0,6.28);tr.scale.setScalar(rand(0.9,1.2));G.scene.add(tr);G.trees.push(tr);
+    }
+  }
+}
+
+/* ---------- the mountain face + the small glowing opening ---------- */
+function buildOpening(){
+  const u=G.SOURCE_U, p=curveAt(u), tg=curveTangent(u);
+  // mountain wall blocking the end of the river
+  const wall=new (T().Mesh)(new (T().BoxGeometry)(80,46,14),
+    new (T().MeshStandardMaterial)({map:texRock(),roughness:1,color:0x736f66}));
+  const ahead=curveAt(0.99);
+  wall.position.set(ahead.x, 21, ahead.z-7);
+  wall.castShadow=wall.receiveShadow=true;
+  G.scene.add(wall); G.mountain=wall;
+
+  // the opening: a dark recessed slot with a warm glow behind it
+  // (the wall's boat-side face sits exactly at ahead.z, so these must sit proud of it)
+  const slot=new (T().Mesh)(new (T().BoxGeometry)(2.0,3.2,2),
+    new (T().MeshBasicMaterial)({color:0x0a0805}));
+  slot.position.set(ahead.x+0.4, 1.7, ahead.z+0.1);
+  G.scene.add(slot);
+  const glow=new (T().Mesh)(new (T().PlaneGeometry)(1.7,2.9),
+    new (T().MeshBasicMaterial)({color:0xffd27a,transparent:true,opacity:0.0,side:T().DoubleSide,fog:false,toneMapped:false}));
+  glow.position.set(ahead.x+0.4,1.7,ahead.z+1.25);
+  G.scene.add(glow); G.openingGlow=glow;
+  const light=new (T().PointLight)(0xffd98a,0.0,18,2); light.position.copy(glow.position);
+  G.scene.add(light); G.openingLight=light;
+  G.openingPos=new (T().Vector3)(ahead.x+0.4,0,ahead.z+1.25);
+
+  // landing spot just before the opening (where the boat is left)
+  G.landingU=0.95;
+  // interactable to leave the boat / enter
+  G.api.openingInteract={pos:G.openingPos.clone(),r:5.5};
+}
+
+/* ---------- petals drifting in the grove ---------- */
+function buildPetals(){
+  const N=260;
+  const tex=G.petalTex;
+  const mat=new (T().MeshBasicMaterial)({map:tex,transparent:true,side:T().DoubleSide,depthWrite:false});
+  const mesh=new (T().InstancedMesh)(G.petalGeo,mat,N);
+  mesh.instanceMatrix.setUsage(T().DynamicDrawUsage);
+  const dummy=new (T().Object3D)();
+  G.petalData=[];
+  for(let i=0;i<N;i++){
+    const u=rand(G.GROVE_START_U,0.97),p=curveAt(u);
+    const px=p.x+rand(-14,14),pz=p.z+rand(-14,14),py=rand(0.5,8);
+    G.petalData.push({x:px,y:py,z:pz,u, vx:rand(-0.3,0.3),vy:rand(-0.5,-1.1),vz:rand(-0.3,0.3),
+      rot:rand(0,6.28),vr:rand(-1,1),sp:rand(0.7,1.3)});
+    dummy.position.set(px,py,pz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  }
+  mesh.frustumCulled=false; mesh.visible=false;
+  G.scene.add(mesh);G.petalMesh=mesh;G.petalDummy=dummy;
+}
+function updatePetals(dt){
+  if(!G.petalMesh)return;
+  const m=G.petalMesh,du=G.petalDummy;
+  for(let i=0;i<G.petalData.length;i++){
+    const d=G.petalData[i];
+    d.x+=d.vx*dt;d.y+=d.vy*dt;d.z+=d.vz*dt;d.rot+=d.vr*dt;
+    if(d.y<0.1){const p=curveAt(rand(G.GROVE_START_U,0.97));d.x=p.x+rand(-14,14);d.z=p.z+rand(-14,14);d.y=rand(6,9);}
+    du.position.set(d.x,d.y,d.z);du.rotation.set(d.rot*0.5,d.rot,d.rot*0.3);du.scale.setScalar(d.sp);
+    du.updateMatrix();m.setMatrixAt(i,du.matrix);
+  }
+  m.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- the boat and the fisherman ---------- */
+function buildBoat(){
+  const g=group(null);
+  const woodD=new (T().MeshStandardMaterial)({map:texBark(),color:0x6b4f37,roughness:0.9});
+  const woodL=new (T().MeshStandardMaterial)({color:0x8a6a48,roughness:0.85});
+  // hull: a shallow sampan from a scaled box + tapered bow/stern
+  const hull=new (T().Mesh)(new (T().BoxGeometry)(1.5,0.42,4.0),woodD);
+  hull.position.y=0.21;hull.castShadow=true;g.add(hull);
+  const floor=new (T().Mesh)(new (T().BoxGeometry)(1.3,0.06,3.7),woodL);floor.position.y=0.34;g.add(floor);
+  for(const zz of [-2.0,2.0]){
+    const cap=new (T().Mesh)(new (T().CylinderGeometry)(0.32,0.32,1.5,6,1,false,0,Math.PI),woodD);
+    cap.rotation.z=Math.PI/2;cap.rotation.y=Math.PI/2;cap.position.set(0,0.21,zz);
+    cap.scale.set(1,1,zz<0?1.1:1.4);cap.castShadow=true;g.add(cap);
+  }
+  // little canopy hoop at stern
+  const hoopMat=new (T().MeshStandardMaterial)({color:0x4f6b3a,roughness:1});
+  const hoop=new (T().Mesh)(new (T().TorusGeometry)(0.6,0.05,6,12,Math.PI),hoopMat);
+  hoop.position.set(0,0.7,-1.2);hoop.rotation.x=Math.PI/2;hoop.rotation.z=Math.PI/2;g.add(hoop);
+
+  // fisherman (low-poly, conical hat)
+  const fisher=group(g);
+  const skin=new (T().MeshStandardMaterial)({color:0xc98f63,roughness:0.8});
+  const robe=new (T().MeshStandardMaterial)({color:0x6b7b6a,roughness:0.95});
+  const body=new (T().Mesh)(new (T().CylinderGeometry)(0.22,0.34,0.8,8),robe);body.position.y=0.4;body.castShadow=true;fisher.add(body);
+  const head=new (T().Mesh)(new (T().SphereGeometry)(0.16,10,8),skin);head.position.y=0.95;head.castShadow=true;fisher.add(head);
+  const hat=new (T().Mesh)(new (T().ConeGeometry)(0.34,0.22,12),new (T().MeshStandardMaterial)({color:0xc9a86a,roughness:1}));
+  hat.position.y=1.06;fisher.add(hat);
+  // arms holding oar
+  const armL=new (T().Mesh)(new (T().CylinderGeometry)(0.05,0.05,0.5,5),robe);armL.position.set(0.2,0.62,0.1);armL.rotation.z=0.7;fisher.add(armL);
+  const armR=new (T().Mesh)(new (T().CylinderGeometry)(0.05,0.05,0.5,5),robe);armR.position.set(-0.2,0.62,0.1);armR.rotation.z=-0.7;fisher.add(armR);
+  fisher.position.set(0,0.34,-0.4);
+  G.fisher=fisher;
+
+  // oar
+  const oar=group(g);
+  const shaft=new (T().Mesh)(new (T().CylinderGeometry)(0.035,0.035,2.4,6),woodL);
+  shaft.rotation.z=Math.PI/2.4;oar.add(shaft);
+  const blade=new (T().Mesh)(new (T().BoxGeometry)(0.5,0.04,0.18),woodD);blade.position.set(-1.05,-0.5,0);oar.add(blade);
+  oar.position.set(0.5,0.55,-0.2);
+  G.oar=oar;
+
+  g.position.copy(curveAt(0.0));
+  G.boat=g; G.boatU=0.0; G.boatSpeed=0; G.boatHeading=0;
+  // orient down the path
+  const tg=curveTangent(0.0); G.boat.rotation.y=Math.atan2(tg.x,tg.z);
+  G.scene.add(g);
+}
+
+/* ---------- a visible route-mark (cut branch / cloth tie) the fisherman leaves ---------- */
+function dropMark(pos){
+  const g=group(null);
+  // a stake with a strip of red cloth — unmistakable, story-accurate 處處誌之
+  const stake=new (T().Mesh)(new (T().CylinderGeometry)(0.04,0.05,1.1,5),
+    new (T().MeshStandardMaterial)({color:0x6b4f37,roughness:1}));
+  stake.position.y=0.55;stake.castShadow=true;g.add(stake);
+  const cloth=new (T().Mesh)(new (T().PlaneGeometry)(0.4,0.26),
+    new (T().MeshStandardMaterial)({color:0xb03a2e,roughness:0.8,side:T().DoubleSide}));
+  cloth.position.set(0.18,0.95,0);cloth.rotation.y=rand(-0.4,0.4);g.add(cloth);
+  g.position.set(pos.x,0,pos.z);
+  g.userData.cloth=cloth;
+  G.scene.add(g);G.markMeshes.push(g);G.marks.push({x:pos.x,z:pos.z});
+  return g;
+}
+function vanishMarks(){
+  // the heart of the ending — every mark simply gone
+  G.markMeshes.forEach(m=>{G.scene.remove(m);});
+  G.markMeshes.length=0;
+  G.marks.length=0;
+}
+
+
+/* ============================================================
+   桃花源記  ·  ENGINE  (part 3: the hidden village 豁然開朗)
+   The valley sits beyond the opening, centred at VC.
+   ============================================================ */
+
+function buildVillage(){
+  const VC=new (T().Vector3)(G.openingPos.x, 0, G.openingPos.z-44); // valley centre, past the mountain
+  G.villageCenter=VC;
+  const V=group(null); G.village=V; V.position.set(0,0,0);
+
+  // ---- valley floor: flat, open (土地平曠) ----
+  const floor=new (T().Mesh)(new (T().CircleGeometry)(58,48),texGround("#5c7a40","#3c5a2c"));
+  floor.rotation.x=-Math.PI/2; floor.position.set(VC.x,0.01,VC.z); floor.receiveShadow=true; V.add(floor);
+
+  // ---- ring of hills enclosing the valley (so it feels sealed) ----
+  const hillMat=new (T().MeshStandardMaterial)({map:texRock(),color:0x6f7560,roughness:1,flatShading:true});
+  for(let i=0;i<26;i++){
+    const a=i/26*Math.PI*2, rr=56+rand(-3,4);
+    const h=rand(16,30);
+    const hill=new (T().Mesh)(new (T().ConeGeometry)(rand(12,20),h,6),hillMat);
+    hill.position.set(VC.x+Math.cos(a)*rr, h/2-3, VC.z+Math.sin(a)*rr);
+    hill.rotation.y=rand(0,6.28); hill.castShadow=true; V.add(hill);
+    G.colliders.push({x:VC.x+Math.cos(a)*rr,z:VC.z+Math.sin(a)*rr,r:13});
+  }
+  // forested backdrop band of peach + green inside the rim
+  for(let i=0;i<70;i++){
+    const a=rand(0,6.28),rr=rand(40,52);
+    const tr=Math.random()<0.5?makePeachTree(true):makeOrdinaryTree();
+    tr.position.set(VC.x+Math.cos(a)*rr,0,VC.z+Math.sin(a)*rr);
+    tr.scale.setScalar(rand(0.8,1.2));V.add(tr);
+  }
+
+  // ---- the pond (美池) ----
+  const pondC=new (T().Vector3)(VC.x+14,0,VC.z+10);
+  const pond=new (T().Mesh)(new (T().CircleGeometry)(7,32),
+    new (T().MeshStandardMaterial)({color:0x4f7d77,roughness:0.3,metalness:0.2,transparent:true,opacity:0.92}));
+  pond.rotation.x=-Math.PI/2;pond.position.set(pondC.x,0.05,pondC.z);V.add(pond);
+  // reeds
+  for(let i=0;i<24;i++){const a=rand(0,6.28),r=rand(7,8.2);
+    const reed=new (T().Mesh)(new (T().CylinderGeometry)(0.02,0.03,rand(0.6,1.3),4),mat(0x6f8a4a));
+    reed.position.set(pondC.x+Math.cos(a)*r,reed.geometry.parameters.height/2,pondC.z+Math.sin(a)*r);V.add(reed);}
+  G.colliders.push({x:pondC.x,z:pondC.z,r:7.6});
+
+  // ---- fields (良田): low striped rows ----
+  function field(cx,cz,w,d,rot){
+    const fg=group(V);fg.position.set(cx,0,cz);fg.rotation.y=rot;
+    const soil=new (T().Mesh)(new (T().PlaneGeometry)(w,d),mat(0x6b5538,{roughness:1}));
+    soil.rotation.x=-Math.PI/2;soil.position.y=0.02;fg.add(soil);
+    const rows=Math.floor(w/0.7);
+    for(let i=0;i<rows;i++){const x=-w/2+0.4+i*0.7;
+      const crop=new (T().Mesh)(new (T().BoxGeometry)(0.18,0.4,d-0.6),mat(rand()<0.5?0x7c9a4a:0x90a64f,{roughness:1}));
+      crop.position.set(x,0.22,0);fg.add(crop);}
+    G.colliders.push({x:cx,z:cz,r:Math.max(w,d)/2*0.7});
+  }
+  field(VC.x-16,VC.z+12,14,10,0.1);
+  field(VC.x-13,VC.z-14,12,9,-0.3);
+  field(VC.x+18,VC.z-12,11,9,0.4);
+
+  // ---- houses (屋舍儼然): neat rows of thatched cottages ----
+  function house(cx,cz,rot){
+    const hg=group(V);hg.position.set(cx,0,cz);hg.rotation.y=rot;
+    const w=rand(3.4,4.4),d=rand(3,3.8),wh=rand(1.9,2.3);
+    const wallMat=new (T().MeshStandardMaterial)({color:0xcdbb95,roughness:1});
+    const body=new (T().Mesh)(new (T().BoxGeometry)(w,wh,d),wallMat);body.position.y=wh/2;body.castShadow=body.receiveShadow=true;hg.add(body);
+    // dark timber frame accents
+    const beamMat=new (T().MeshStandardMaterial)({color:0x4a3a2c,roughness:1});
+    const beam=new (T().Mesh)(new (T().BoxGeometry)(w+0.1,0.15,d+0.1),beamMat);beam.position.y=wh;hg.add(beam);
+    // thatched hip roof (two stacked pyramids)
+    const roofMat=new (T().MeshStandardMaterial)({color:0x6e5a3a,roughness:1,flatShading:true});
+    const roof=new (T().Mesh)(new (T().ConeGeometry)(Math.hypot(w,d)/1.7,1.5,4),roofMat);
+    roof.position.y=wh+0.75;roof.rotation.y=Math.PI/4;roof.castShadow=true;hg.add(roof);
+    // door
+    const door=new (T().Mesh)(new (T().PlaneGeometry)(0.8,1.3),beamMat);
+    door.position.set(0,0.65,d/2+0.01);hg.add(door);
+    G.colliders.push({x:cx,z:cz,r:Math.max(w,d)/2+0.3});
+    return hg;
+  }
+  const houseSpots=[
+    [VC.x-6,VC.z-4,0.0],[VC.x-1,VC.z-6,0.2],[VC.x+5,VC.z-3,-0.2],
+    [VC.x-7,VC.z+6,0.1],[VC.x+2,VC.z+8,-0.15],[VC.x+9,VC.z+4,0.3],
+    [VC.x-2,VC.z+2,0.0]
+  ];
+  G.houseSpots=houseSpots.map(h=>({x:h[0],z:h[2]!==undefined?h[1]:h[1]}));
+  houseSpots.forEach(h=>house(h[0],h[1],h[2]));
+
+  // ---- mulberry & bamboo (桑竹) ----
+  for(let i=0;i<10;i++){ // mulberry: short, broad, dark green
+    const a=rand(0,6.28),r=rand(20,34);
+    const mg=group(V);mg.position.set(VC.x+Math.cos(a)*r,0,VC.z+Math.sin(a)*r);
+    const tr=new (T().Mesh)(new (T().CylinderGeometry)(0.16,0.24,1.6,6),mat(0x5a4636));tr.position.y=0.8;tr.castShadow=true;mg.add(tr);
+    for(let j=0;j<4;j++){const m=new (T().Mesh)(new (T().IcosahedronGeometry)(rand(0.8,1.2),1),mat([0x2f4a26,0x3a5a2e][j%2],{flatShading:true}));
+      m.position.set(rand(-0.6,0.6),1.6+rand(0,0.6),rand(-0.6,0.6));m.castShadow=true;mg.add(m);}
+  }
+  for(let c=0;c<8;c++){ // bamboo clumps
+    const a=rand(0,6.28),r=rand(18,36),cx=VC.x+Math.cos(a)*r,cz=VC.z+Math.sin(a)*r;
+    const bg=group(V);bg.position.set(cx,0,cz);
+    for(let i=0;i<rand(5,9);i++){const h=rand(3,5.5);
+      const cane=new (T().Mesh)(new (T().CylinderGeometry)(0.06,0.08,h,6),mat(0x6f8f3e));
+      cane.position.set(rand(-0.7,0.7),h/2,rand(-0.7,0.7));cane.castShadow=true;bg.add(cane);
+      const leaf=new (T().Mesh)(new (T().IcosahedronGeometry)(rand(0.5,0.8),0),mat(0x5c8636,{flatShading:true}));
+      leaf.position.set(cane.position.x,h*0.9,cane.position.z);bg.add(leaf);}
+  }
+
+  // ---- crisscross paths (阡陌交通) ----
+  const pathMat=new (T().MeshStandardMaterial)({color:0xb6a378,roughness:1});
+  function path(x1,z1,x2,z2,w){
+    const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);
+    const p=new (T().Mesh)(new (T().PlaneGeometry)(w,len),pathMat);
+    p.rotation.x=-Math.PI/2;p.rotation.z=-Math.atan2(dz,dx)+Math.PI/2;
+    p.position.set((x1+x2)/2,0.03,(z1+z2)/2);V.add(p);
+  }
+  path(VC.x-24,VC.z,VC.x+24,VC.z,1.6);
+  path(VC.x,VC.z-22,VC.x,VC.z+22,1.6);
+  path(VC.x-18,VC.z-12,VC.x+18,VC.z+12,1.1);
+  // path from the opening into the village
+  path(G.openingPos.x,G.openingPos.z-10,VC.x,VC.z-8,1.8);
+
+  // ---- villagers ----
+  function villager(cx,cz,robeCol,scale,kind,id,labelCn,labelEn){
+    const vg=group(V);vg.position.set(cx,0,cz);vg.scale.setScalar(scale||1);
+    const robe=new (T().MeshStandardMaterial)({color:robeCol,roughness:0.95});
+    const skin=new (T().MeshStandardMaterial)({color:0xceac86,roughness:0.85});
+    const body=new (T().Mesh)(new (T().CylinderGeometry)(0.2,0.32,0.85,8),robe);body.position.y=0.42;body.castShadow=true;vg.add(body);
+    const head=new (T().Mesh)(new (T().SphereGeometry)(0.15,10,8),skin);head.position.y=0.98;head.castShadow=true;vg.add(head);
+    // hair bun
+    const bun=new (T().Mesh)(new (T().SphereGeometry)(0.08,8,6),new (T().MeshStandardMaterial)({color:0x222018,roughness:1}));
+    bun.position.set(0,1.1,-0.02);vg.add(bun);
+    vg.userData={kind,id,base:body.position.y,head};
+    G.villagers.push(vg);
+    if(labelCn){
+      G.interactables.push({pos:new (T().Vector3)(cx,0,cz),r:2.6,label:labelCn,labelEn:labelEn,kind,id,done:false,mesh:vg});
+    }
+    return vg;
+  }
+  // first villager (the startled one) — set near the path from the opening, alone
+  G.firstVillagerSpot=new (T().Vector3)(VC.x-2,0,VC.z-14);
+  villager(VC.x-2,VC.z-14,0x7a5848,1.05,"first","startled_1","與此人攀談","Speak to the startled man");
+  // elder — central, by the largest house
+  villager(VC.x-2,VC.z+2.6,0x4a5560,1.1,"elder","elder_1","拜見長者","Greet the village elder");
+  // farmer — at the near edge of a field (clear of the field's collider)
+  villager(VC.x-10,VC.z+10,0x6b6e4a,1.0,"farmer","farmer_1","與耕者說話","Talk with the farmer");
+  // weaver — by a house
+  villager(VC.x+5.5,VC.z+5,0x8a6a72,1.0,"weaver","weaver_1","向織婦問好","Greet the weaver");
+  // child — running about
+  const child=villager(VC.x+3,VC.z-3,0x9a7a4a,0.7,"child","child_1","逗弄小兒","Speak with the child");
+  G.childRef=child;
+  // a few silent extras for life
+  for(let i=0;i<5;i++){const a=rand(0,6.28),r=rand(6,16);
+    villager(VC.x+Math.cos(a)*r,VC.z+Math.sin(a)*r,[0x66614f,0x755f50,0x556070][i%3],rand(0.95,1.1),"extra",null,null,null);}
+
+  // ---- livestock: chickens & dogs (雞犬相聞) ----
+  for(let i=0;i<10;i++){chicken(VC.x+rand(-18,18),VC.z+rand(-16,16));}
+  for(let i=0;i<3;i++){dog(VC.x+rand(-14,14),VC.z+rand(-12,12));}
+
+  // hide the whole valley until reveal
+  V.visible=false;
+}
+
+function chicken(x,z){
+  const g=group(G.village);g.position.set(x,0,z);
+  const bodyCol=Math.random()<0.5?0xe8e2d4:0xc98f63;
+  const body=new (T().Mesh)(new (T().SphereGeometry)(0.14,8,6),mat(bodyCol));body.position.y=0.16;body.scale.z=1.3;body.castShadow=true;g.add(body);
+  const head=new (T().Mesh)(new (T().SphereGeometry)(0.07,6,5),mat(bodyCol));head.position.set(0,0.3,0.12);g.add(head);
+  const comb=new (T().Mesh)(new (T().SphereGeometry)(0.03,5,4),mat(0xb03a2e));comb.position.set(0,0.37,0.12);g.add(comb);
+  g.userData={kind:"chicken",t:rand(0,6.28),hx:x,hz:z,head};
+  G.livestock.push(g);
+}
+function dog(x,z){
+  const g=group(G.village);g.position.set(x,0,z);
+  const col=0x8a6a48;
+  const Cap=T().CapsuleGeometry;
+  const bodyGeo = Cap ? new Cap(0.12,0.4,4,8) : new (T().CylinderGeometry)(0.12,0.12,0.5,8);
+  const body=new (T().Mesh)(bodyGeo,mat(col));
+  body.rotation.z=Math.PI/2;body.position.y=0.28;body.castShadow=true;g.add(body);
+  const head=new (T().Mesh)(new (T().SphereGeometry)(0.12,8,6),mat(col));head.position.set(0,0.36,0.28);g.add(head);
+  const tail=new (T().Mesh)(new (T().CylinderGeometry)(0.02,0.04,0.3,5),mat(col));tail.position.set(0,0.34,-0.3);tail.rotation.x=-0.6;g.add(tail);
+  for(const lx of[-0.08,0.08])for(const lz of[0.18,-0.18]){
+    const leg=new (T().Mesh)(new (T().CylinderGeometry)(0.03,0.03,0.28,5),mat(col));leg.position.set(lx,0.14,lz);g.add(leg);}
+  g.userData={kind:"dog",t:rand(0,6.28),hx:x,hz:z,tail,head};
+  G.livestock.push(g);
+}
+
+function updateLife(t,dt){
+  // chickens peck/wander, dogs wag and amble
+  for(const a of G.livestock){
+    const u=a.userData;u.t+=dt;
+    if(u.kind==="chicken"){
+      a.position.x=u.hx+Math.sin(u.t*0.6)*0.6;a.position.z=u.hz+Math.cos(u.t*0.5)*0.6;
+      a.rotation.y=Math.sin(u.t*0.5)*1.2;
+      if(u.head)u.head.position.y=0.3-Math.abs(Math.sin(u.t*3))*0.12; // pecking
+    } else {
+      a.position.x=u.hx+Math.sin(u.t*0.3)*1.4;a.position.z=u.hz+Math.cos(u.t*0.22)*1.4;
+      a.rotation.y=u.t*0.3;
+      if(u.tail)u.tail.rotation.z=Math.sin(u.t*6)*0.5;
+    }
+  }
+  // villagers: gentle idle bob + face the player when near
+  for(const v of G.villagers){
+    const u=v.userData;
+    v.children[0].position.y=u.base+Math.sin(t*1.5+v.position.x)*0.02;
+    if(G.camMode==="walk"&&G.walkPos){
+      const dx=G.walkPos.x-v.position.x,dz=G.walkPos.z-v.position.z;
+      if(dx*dx+dz*dz<60){v.rotation.y=Math.atan2(dx,dz);}
+    }
+  }
+}
+
+
+/* ============================================================
+   桃花源記  ·  STORY  (phases, movement, camera, dialogue, UI, loop)
+   Ties the data + world + village modules into a playable whole.
+   ============================================================ */
+
+/* ---- small DOM + math helpers ---- */
+function byId(id){return document.getElementById(id);}
+function V3(x,y,z){return new (T().Vector3)(x,y,z);}
+function clamp01(v){return v<0?0:v>1?1:v;}
+function dist2(ax,az,bx,bz){const dx=ax-bx,dz=az-bz;return Math.sqrt(dx*dx+dz*dz);}
+function easeIO(k){return k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;}
+
+/* ---- story state ---- */
+const ST = {
+  visited:{}, day:0, firstFeastDone:false, leaveReady:false,
+  travel:+1,            // +1 rowing upstream (in), -1 rowing downstream (out)
+  boatV:0, latOff:0, rowPh:0,
+  lastMarkU:99, lostArrived:false,
+  promptAction:null,
+  capUntil:0, capPersist:false, capSeen:{},
+  started:false
+};
+G.story = ST;
+G.cine = {active:false,t:0,dur:1,from:null,to:null,onDone:null};
+
+/* ============================================================
+   PASSAGE + WALKER  (built once, on top of the world modules)
+   ============================================================ */
+function buildPassage(){
+  // a short rough crevice between the cliff opening and the valley (初極狹)
+  const op=G.openingPos, VC=G.villageCenter;
+  const rockMat=new (T().MeshStandardMaterial)({map:texRock(),color:0x6a665d,roughness:1,flatShading:true});
+  const gate=V3(op.x, 0, op.z-12); G.gate=gate;
+  // two flanking walls running from the cliff toward the gate
+  for(const s of [1,-1]){
+    const wall=new (T().Mesh)(new (T().BoxGeometry)(1.6,9,13),rockMat);
+    wall.position.set(op.x + s*2.2, 4.2, op.z-6);
+    wall.rotation.y=s*0.06; wall.castShadow=wall.receiveShadow=true;
+    G.scene.add(wall);
+  }
+  // soft collider at the cliff base so walkers can't clip into the mountain
+  G.colliders.push({x:op.x, z:op.z, r:7});
+}
+
+function buildWalker(){
+  const g=new (T().Group)();
+  const skin=new (T().MeshStandardMaterial)({color:0xc98f63,roughness:0.8});
+  const robe=new (T().MeshStandardMaterial)({color:0x6b7b6a,roughness:0.95});
+  const body=new (T().Mesh)(new (T().CylinderGeometry)(0.2,0.32,0.82,8),robe);body.position.y=0.42;body.castShadow=true;g.add(body);
+  const head=new (T().Mesh)(new (T().SphereGeometry)(0.15,10,8),skin);head.position.y=0.98;head.castShadow=true;g.add(head);
+  const hat=new (T().Mesh)(new (T().ConeGeometry)(0.32,0.2,12),new (T().MeshStandardMaterial)({color:0xc9a86a,roughness:1}));
+  hat.position.y=1.08;g.add(hat);
+  const legM=robe;
+  const lL=new (T().Mesh)(new (T().CylinderGeometry)(0.06,0.06,0.42,6),legM);lL.position.set(0.09,0.2,0);g.add(lL);
+  const lR=new (T().Mesh)(new (T().CylinderGeometry)(0.06,0.06,0.42,6),legM);lR.position.set(-0.09,0.2,0);g.add(lR);
+  g.userData={legL:lL,legR:lR,body};
+  g.visible=false; G.scene.add(g); G.walker=g;
+}
+
+/* nudge the startled villager to greet the player right at the gate */
+function relocateFirstVillager(){
+  const op=G.openingPos;
+  const fx=op.x-1, fz=op.z-22;
+  for(const v of G.villagers){ if(v.userData.kind==="first"){ v.position.set(fx,0,fz); v.__home=V3(fx,0,fz);} }
+  for(const it of G.interactables){ if(it.kind==="first"){ it.pos.set(fx,0,fz); } }
+  // a red "!" that appears when you first come near him (大驚)
+  const ex=new (T().Group)();
+  const stalk=new (T().Mesh)(new (T().BoxGeometry)(0.07,0.34,0.07),new (T().MeshBasicMaterial)({color:0xb03a2e}));
+  stalk.position.y=0.22;ex.add(stalk);
+  const dot=new (T().Mesh)(new (T().BoxGeometry)(0.09,0.09,0.09),new (T().MeshBasicMaterial)({color:0xb03a2e}));
+  dot.position.y=-0.04;ex.add(dot);
+  ex.position.set(fx,1.7,fz);ex.visible=false;G.scene.add(ex);G.exclMark=ex;
+}
+
+/* ============================================================
+   CAMERA
+   ============================================================ */
+function chase(target, headAng, dist, height, lookH, lookAhead, dt){
+  const yaw=headAng + G.yaw;
+  const fx=Math.sin(yaw), fz=Math.cos(yaw);
+  const ty=(target.y||0);
+  const want=V3(target.x - fx*dist, ty + height + G.pitch*6, target.z - fz*dist);
+  const a=Math.min(1, dt*6.5);
+  G.cam.position.lerp(want, a);
+  G.cam.lookAt(target.x + fx*lookAhead, ty + lookH, target.z + fz*lookAhead);
+}
+function camStep(dt){
+  if(G.cine.active) return;            // cinematic drives the camera
+  if(G.camMode==="boat" && G.boat){
+    const dir=ST.travel>0?1:0;
+    const tg=curveTangent(G.boatU);
+    const head=Math.atan2(tg.x,tg.z)+(ST.travel<0?Math.PI:0);
+    chase(G.boat.position, head, 9.5, 4.4, 1.1, 7, dt);
+  } else if(G.camMode==="walk" && G.walker){
+    chase(G.walker.position, G.walkYaw, 6.6, 3.7, 1.35, 3.2, dt);
+  }
+}
+
+function startCine(fromP,fromL,toP,toL,dur,onDone){
+  G.cine={active:true,t:0,dur,from:{p:fromP.clone(),l:fromL.clone()},to:{p:toP.clone(),l:toL.clone()},onDone:onDone||null};
+  G.camMode="cine";
+}
+function cineStep(dt){
+  const c=G.cine; c.t+=dt; const k=clamp01(c.t/c.dur), e=easeIO(k);
+  G.cam.position.copy(c.from.p.clone().lerp(c.to.p,e));
+  const l=c.from.l.clone().lerp(c.to.l,e); G.cam.lookAt(l.x,l.y,l.z);
+  if(k>=1){ c.active=false; if(c.onDone)c.onDone(); }
+}
+
+/* ============================================================
+   FADE / VIGNETTE / CAPTIONS / OBJECTIVE / DAY / PROMPT
+   ============================================================ */
+function fade(to,ms){ const f=byId("fade"); f.style.transition=`opacity ${ms||600}ms ease`; f.style.opacity=to; }
+function vignette(on){ byId("vignette").style.opacity=on?1:0; }
+
+function showCap(key,opts){
+  opts=opts||{}; const d=DATA.caps[key]; if(!d)return;
+  const cap=byId("cap");
+  cap.querySelector(".cn").textContent=d[0];
+  cap.querySelector(".en").textContent=d[1];
+  cap.classList.toggle("big",!!opts.big);
+  cap.classList.add("show");
+  ST.capPersist=!!opts.persist;
+  ST.capUntil=G.t+(opts.dur||4.2);
+}
+function capOnce(key,opts){ if(ST.capSeen[key])return; ST.capSeen[key]=true; showCap(key,opts); }
+function capStep(){
+  if(ST.capPersist)return;
+  if(byId("cap").classList.contains("show") && G.t>ST.capUntil){ byId("cap").classList.remove("show"); }
+}
+function setObjective(objKey){
+  const d=DATA.obj[objKey]; if(!d)return;
+  const o=byId("obj"); o.querySelector(".cn").textContent=d[0]; o.querySelector(".en").textContent=d[1];
+}
+function updateDay(){
+  const el=byId("day"); el.textContent=`第 ${cnNum(ST.day)} 日　DAY ${ST.day}`; el.classList.add("show");
+}
+function cnNum(n){return ["零","一","二","三","四","五","六","七","八","九","十"][n]||(""+n);}
+function showPrompt(txt){ byId("ptext").textContent=" "+txt; byId("prompt").classList.add("show"); }
+function hidePrompt(){ byId("prompt").classList.remove("show"); }
+function showMarkHint(){ const el=byId("markhint"); el.textContent=`誌之　${ST.markCount()}／8`; el.classList.add("show"); }
+function hideMarkHint(){ byId("markhint").classList.remove("show"); }
+ST.markCount=()=>G.marks.length;
+
+/* ============================================================
+   DIALOGUE
+   ============================================================ */
+const DLG = { active:false, node:null, nodeId:null, line:0, full:null, shown:0, typing:false, onClose:null, onCloseSaved:null };
+const CPS = 46; // characters per second
+
+function startDialogue(id,onClose){
+  const node=DATA.dlg[id]; if(!node)return;
+  DLG.active=true; DLG.node=node; DLG.nodeId=id; DLG.onClose=onClose||null; DLG.onCloseSaved=DLG.onClose;
+  byId("dchoices").innerHTML=""; byId("dlg").classList.add("show");
+  setLine(0);
+}
+function setLine(idx){
+  const node=DLG.node; DLG.line=idx;
+  const ln=node.lines[idx]; DLG.full=ln; DLG.shown=0; DLG.typing=true;
+  byId("dspeaker").textContent=node.s||"";
+  byId("dtext").textContent="";
+  byId("den").textContent=ln[1]||"";
+  byId("dmore").style.display="none";
+  byId("dchoices").innerHTML="";
+}
+function renderTyping(){ byId("dtext").textContent=DLG.full[0].slice(0,Math.floor(DLG.shown)); }
+function lineComplete(){
+  DLG.typing=false; DLG.shown=DLG.full[0].length; renderTyping();
+  const node=DLG.node; if(!node)return;
+  const last = DLG.line>=node.lines.length-1;
+  if(last && node.choices){ renderChoices(node.choices); byId("dmore").style.display="none"; }
+  else { byId("dmore").style.display="block"; }
+}
+function renderChoices(choices){
+  const box=byId("dchoices"); box.innerHTML="";
+  choices.forEach((c,i)=>{
+    const b=document.createElement("button");
+    b.innerHTML=`<span>${i+1}.　${c.t}</span><small>${c.en||""}</small>`;
+    b.onclick=()=>chooseDialogue(i);
+    box.appendChild(b);
+  });
+}
+function chooseDialogue(i){
+  const node=DLG.node; if(!node||!node.choices||!node.choices[i])return;
+  if(DLG.line<node.lines.length-1||DLG.typing)return;   // choices not active yet
+  const go=node.choices[i].go; byId("dchoices").innerHTML="";
+  if(go && DATA.dlg[go]){ DLG.node=DATA.dlg[go]; DLG.nodeId=go; setLine(0); }
+}
+function finishNode(){
+  const node=DLG.node;                 // choices already handled in lineComplete
+  closeDialogue();
+  if(node.next){ startDialogue(node.next, DLG.onCloseSaved); }
+  else { if(node.action) doAction(node.action); if(DLG.onCloseSaved) DLG.onCloseSaved(); }
+}
+function closeDialogue(){
+  DLG.active=false; DLG.node=null; DLG.typing=false;
+  byId("dlg").classList.remove("show"); byId("dchoices").innerHTML="";
+}
+function advanceDialogue(){
+  if(!DLG.active)return;
+  if(DLG.typing){ lineComplete(); return; }
+  const node=DLG.node; if(!node)return;
+  if(node.choices && DLG.line>=node.lines.length-1){ return; }   // waiting on a choice
+  if(DLG.line < node.lines.length-1){ setLine(DLG.line+1); }
+  else finishNode();
+}
+function dialogueStep(dt){
+  if(!DLG.active||!DLG.typing)return;
+  DLG.shown+=dt*CPS;
+  if(DLG.shown>=DLG.full[0].length){ lineComplete(); } else renderTyping();
+}
+function doAction(a){
+  if(a==="first_feast"){ recordVisit("first"); }
+  else if(a==="elder_done"){ recordVisit("elder"); }
+  else if(a==="begin_marking"){ leaveVillage(); }
+  else if(a==="set_out_again"){ startLost(); }
+}
+
+/* ============================================================
+   PHASE MACHINE
+   ============================================================ */
+const OBJ_FOR={stream:"stream",grove:"grove",source:"source",squeeze:"squeeze",reveal:"village",
+  village:"village",leave:"leave",marking:"leave",report:"report",lost:"lost"};
+
+function setPhase(p){
+  G.phase=p;
+  const ok=OBJ_FOR[p]; if(ok) setObjective(ok);
+}
+
+function startGame(){
+  ST.started=true;
+  byId("title").classList.add("hidden");
+  byId("scroll").classList.add("hidden"); byId("help").classList.add("hidden");
+  G.paused=false;
+  // boat at the very start, rowing upstream
+  G.camMode="boat"; ST.travel=+1; G.boatU=0; ST.boatV=0; ST.latOff=0;
+  G.boat.position.copy(curveAt(0)); G.fisher.visible=true;
+  setPhase("stream");
+  G.audio.start(); G.audio.setMood("calm");
+  fade(0,900);
+  capOnce("stream",{dur:5});
+}
+
+function enterGrove(){
+  if(G.phase!=="stream")return;
+  setPhase("grove");
+  G.petalMesh.visible=true;
+  G.audio.setMood("warm");
+  capOnce("grove",{dur:4.5});
+  setTimeout(()=>{ if(G.phase==="grove") showCap("grove2",{dur:4.5}); },4800);
+}
+function enterSource(){
+  if(G.phase==="source")return;
+  setPhase("source");
+  G.audio.setMood("calm");
+  capOnce("source",{dur:4.2});
+  setTimeout(()=>{ if(G.phase==="source") showCap("opening",{dur:5}); },4400);
+}
+
+/* leaving the boat at the cliff mouth → the squeeze → the reveal */
+function leaveBoat(){
+  if(G.phase!=="source")return;
+  G.audio.sting("enter");
+  hidePrompt(); ST.promptAction=null;
+  G.paused=true;                       // freeze sim during the transit
+  fade(1,650);
+  setTimeout(()=>{
+    // black moment in the crevice
+    vignette(true);
+    showCap("squeeze",{dur:3.2,persist:true});
+    // prep the valley behind the curtain
+    G.village.visible=true;
+    G.gate; const op=G.openingPos;
+    G.walkPos=G.gate.clone(); G.walkYaw=Math.PI;   // facing into the valley (-Z)
+    G.walker.visible=true; G.walker.position.copy(G.walkPos); G.walker.rotation.y=G.walkYaw;
+    G.petalMesh.visible=false;
+    setTimeout(doReveal,2200);
+  },700);
+}
+function doReveal(){
+  // emerge from the crevice: camera lifts from the gate out over the valley
+  const op=G.openingPos;
+  const fromP=V3(op.x, 1.6, op.z-2), fromL=V3(G.gate.x, 1.2, G.gate.z-4);
+  // target = the walk chase pose
+  const fx=Math.sin(G.walkYaw), fz=Math.cos(G.walkYaw);
+  const toP=V3(G.walkPos.x - fx*6.6, 3.7, G.walkPos.z - fz*6.6);
+  const toL=V3(G.walkPos.x + fx*3.2, 1.35, G.walkPos.z + fz*3.2);
+  ST.capPersist=false; byId("cap").classList.remove("show");
+  G.audio.sting("reveal"); G.audio.setMood("warm");
+  fade(0,1100); vignette(false);
+  showCap("reveal",{big:true,dur:3.6});
+  G.paused=false;
+  startCine(fromP,fromL,toP,toL,3.6,()=>{
+    G.camMode="walk";
+    setPhase("village");
+    ST.day=1; updateDay();
+    setTimeout(()=>{ if(G.phase==="village") showCap("village",{dur:4.2}); },300);
+  });
+}
+
+/* ---- village visit bookkeeping ---- */
+function recordVisit(kind){
+  const fresh=!ST.visited[kind];
+  ST.visited[kind]=true;
+  ST.day=Math.max(1,Object.keys(ST.visited).length);
+  updateDay();
+  if(!ST.firstFeastDone){ ST.firstFeastDone=true; setObjective("feast"); }
+  const ready = ST.visited.first && ST.visited.elder && Object.keys(ST.visited).length>=4;
+  if(ready && !ST.leaveReady){
+    ST.leaveReady=true; setObjective("leave");
+    showCap("warned",{dur:5.5});
+    G.audio.sting("enter");
+  }
+  return fresh;
+}
+
+/* ---- leaving the village: farewell → board → mark the way ---- */
+function leaveVillage(){
+  fade(1,650);
+  setTimeout(()=>{
+    G.walker.visible=false; G.village.visible=false;
+    // boat back at the landing, now pointed downstream
+    ST.travel=-1; G.boatU=G.landingU; ST.boatV=0; ST.latOff=0;
+    G.boat.position.copy(curveAt(G.landingU)); G.fisher.visible=true;
+    // the opening light fades behind you
+    G.camMode="boat"; setPhase("marking");
+    G.petalMesh.visible=true; G.audio.setMood("calm");
+    ST.lastMarkU=99;
+    showMarkHint();
+    showCap("marking",{dur:5});
+    fade(0,900);
+  },680);
+}
+
+function canMark(){
+  // allow a fresh mark only after moving a little down the river
+  return Math.abs(G.boatU-ST.lastMarkU)>0.022 || ST.lastMarkU>1;
+}
+function placeMark(){
+  if(G.phase!=="marking")return;
+  const p=curveAt(G.boatU), tg=curveTangent(G.boatU);
+  let nx=-tg.z,nz=tg.x; const L=Math.hypot(nx,nz)||1; nx/=L; nz/=L;
+  const side=(G.marks.length%2===0)?1:-1;
+  const w=5.0;
+  dropMark(V3(p.x+nx*w*side, 0, p.z+nz*w*side));
+  G.audio.sting("mark");
+  ST.lastMarkU=G.boatU;
+  showMarkHint();
+}
+
+/* ---- reaching the prefect, then the doomed return ---- */
+function reachReport(){
+  if(G.phase!=="marking")return;
+  hidePrompt(); ST.promptAction=null; hideMarkHint();
+  fade(0.45,700);
+  G.paused=true;
+  setTimeout(()=>{
+    setPhase("report"); showCap("report",{dur:4,persist:true});
+    startDialogue("prefect", ()=>{});
+  },720);
+}
+function startLost(){
+  // 尋向所誌，遂迷，不復得路 — the marks are gone, the way cannot be found
+  byId("cap").classList.remove("show"); ST.capPersist=false;
+  vanishMarks();
+  G.petalMesh.visible=false;
+  // the faint light at the cliff mouth is simply not there anymore
+  if(G.openingGlow) G.openingGlow.material.opacity=0;
+  if(G.openingLight) G.openingLight.intensity=0;
+  // a deeper haze over everything
+  G.scene.fog.density=0.030;
+  G.scene.background=new (T().Color)(0x8a958d);
+  // seal the mouth with rock so it reads as ordinary cliff
+  if(!G.sealRock){
+    const op=G.openingPos;
+    const r=new (T().Mesh)(new (T().BoxGeometry)(3.2,4.2,2.4),
+      new (T().MeshStandardMaterial)({map:texRock(),color:0x6f6b62,roughness:1,flatShading:true}));
+    r.position.set(op.x+0.4,2.0,op.z-1.2); r.castShadow=true; G.scene.add(r); G.sealRock=r;
+  } else G.sealRock.visible=true;
+
+  G.audio.setMood("tense"); G.audio.sting("lost");
+  // back on the water, rowing up to look — but it will lead nowhere
+  fade(1,700);
+  setTimeout(()=>{
+    ST.travel=+1; G.boatU=0.10; ST.boatV=0; ST.latOff=0; ST.lostArrived=false;
+    G.boat.position.copy(curveAt(0.10)); G.camMode="boat";
+    setPhase("lost"); showCap("lost",{dur:5});
+    G.paused=false;            // back in control: row up to search (the way is gone)
+    fade(0,1000);
+  },720);
+}
+function triggerEpilogue(){
+  fade(0.0,400);
+  fillEpilogue();
+  byId("epi").classList.remove("hidden");
+  G.audio.sting("lost");
+  G.paused=true;
+}
+
+/* ============================================================
+   PER-PHASE WATCHERS + INTERACTION SCAN
+   ============================================================ */
+function phaseWatch(dt){
+  if(G.camMode==="boat"){
+    if(ST.travel>0){
+      if(G.phase==="stream" && G.boatU>=G.GROVE_START_U) enterGrove();
+      if((G.phase==="stream"||G.phase==="grove") && G.boatU>=0.86) enterSource();
+      if(G.phase==="source") G.boatU=Math.min(G.boatU,G.landingU);
+      if(G.phase==="lost"){
+        G.boatU=Math.min(G.boatU,0.93);
+        if(G.boatU>=0.9 && !ST.lostArrived){
+          ST.lostArrived=true;
+          showCap("lost",{dur:4,persist:true});
+          setTimeout(triggerEpilogue,2600);
+        }
+      }
+    } else {
+      G.boatU=Math.max(G.boatU,0.0);
+    }
+  }
+  // ramp the cliff-mouth glow as you near the source (only before the loss)
+  if(G.openingGlow && G.phase==="source"){
+    const t=clamp01((G.boatU-0.7)/0.22);
+    G.openingGlow.material.opacity=0.15+t*0.7;
+    if(G.openingLight) G.openingLight.intensity=t*2.4;
+  }
+}
+
+function nearestInteractable(){
+  let best=null,bd=1e9;
+  for(const it of G.interactables){
+    const d=dist2(G.walkPos.x,G.walkPos.z,it.pos.x,it.pos.z);
+    if(d<it.r && d<bd){ bd=d; best=it; }
+  }
+  return best;
+}
+function interactScan(){
+  if(DLG.active||G.cine.active){ hidePrompt(); ST.promptAction=null; return; }
+  let a=null;
+  if(G.phase==="source"){
+    if(G.boatU>=G.landingU-0.012) a={fn:leaveBoat,cn:"棄舟，從口入"};
+  }else if(G.phase==="village"){
+    if(ST.leaveReady && dist2(G.walkPos.x,G.walkPos.z,G.gate.x,G.gate.z)<3.4){
+      a={fn:()=>startDialogue("farewell",()=>{}),cn:"辭去，循原路而出"};
+    }else{
+      const it=nearestInteractable();
+      if(it) a={fn:()=>startDialogue(it.id,()=>recordVisit(it.kind)),cn:it.label};
+    }
+  }else if(G.phase==="marking"){
+    if(G.marks.length>=8 && G.boatU<=0.07){ a={fn:reachReport,cn:"上岸，稟報太守"}; }
+    else if(canMark()){ a={fn:placeMark,cn:"誌之（留下記號）"}; }
+  }
+  ST.promptAction=a;
+  if(a) showPrompt(a.cn); else hidePrompt();
+
+  // startled "!" over the first villager
+  if(G.exclMark){
+    const show = (G.phase==="village" && !ST.visited.first &&
+      dist2(G.walkPos.x,G.walkPos.z,G.exclMark.position.x,G.exclMark.position.z)<7);
+    G.exclMark.visible=show;
+    if(show) G.exclMark.position.y=1.75+Math.sin(G.t*3)*0.06;
+  }
+}
+
+/* ============================================================
+   MOVEMENT
+   ============================================================ */
+function fwdInput(){ return (G.keys["w"]||G.keys["arrowup"]?1:0) - (G.keys["s"]||G.keys["arrowdown"]?1:0) + (G.input.f||0); }
+function turnInput(){ return (G.keys["a"]||G.keys["arrowleft"]?1:0) - (G.keys["d"]||G.keys["arrowright"]?1:0) - (G.input.t||0); }
+
+function boatStep(dt){
+  const f=fwdInput();
+  const target=f>0.05?1:(f<-0.05?-0.45:0);
+  ST.boatV += (target-ST.boatV)*Math.min(1,dt*2.2);
+  const uRate=ST.boatV*0.05;
+  G.boatU=clamp01(G.boatU + ST.travel*uRate*dt);
+
+  // steer → lateral offset within the channel
+  const ti=turnInput();
+  ST.latOff += ti*4.2*dt; ST.latOff*= (1-Math.min(1,dt*1.6));
+  const lim = (G.boatU<0.40?3.4:(G.boatU<0.95?2.6:1.2));
+  ST.latOff=Math.max(-lim,Math.min(lim,ST.latOff));
+
+  const p=curveAt(G.boatU), tg=curveTangent(G.boatU);
+  let nx=-tg.z,nz=tg.x; const L=Math.hypot(nx,nz)||1; nx/=L; nz/=L;
+  const bob=Math.sin(G.t*1.25)*0.03;
+  G.boat.position.set(p.x+nx*ST.latOff, bob, p.z+nz*ST.latOff);
+  const head=Math.atan2(tg.x,tg.z)+(ST.travel<0?Math.PI:0);
+  G.boat.rotation.y=head - ST.latOff*0.04*ST.travel;
+
+  // rowing animation
+  ST.rowPh += (0.6+Math.abs(ST.boatV))*dt*5;
+  if(G.oar) G.oar.rotation.x=Math.sin(ST.rowPh)*0.45;
+  if(G.fisher) G.fisher.rotation.x=Math.sin(ST.rowPh)*0.05;
+}
+
+function walkStep(dt){
+  const turn=turnInput();
+  G.walkYaw += turn*1.9*dt;
+  const f=fwdInput();
+  const sp=4.3;
+  const nx=Math.sin(G.walkYaw), nz=Math.cos(G.walkYaw);
+  let px=G.walkPos.x + nx*f*sp*dt;
+  let pz=G.walkPos.z + nz*f*sp*dt;
+
+  // collide with houses / pond / hills / fields / cliff
+  for(let pass=0;pass<2;pass++){
+    for(const c of G.colliders){
+      const dx=px-c.x, dz=pz-c.z; const d=Math.hypot(dx,dz), rr=c.r+0.55;
+      if(d<rr && d>0.0001){ px=c.x+dx/d*rr; pz=c.z+dz/d*rr; }
+    }
+  }
+  // keep inside the valley bowl
+  const VC=G.villageCenter; const dx=px-VC.x, dz=pz-VC.z; const rv=Math.hypot(dx,dz);
+  if(rv>50){ px=VC.x+dx/rv*50; pz=VC.z+dz/rv*50; }
+
+  G.walkPos.set(px,0,pz);
+  G.walker.position.set(px,0.0,pz);
+  G.walker.rotation.y=G.walkYaw;
+  // walk bob + leg swing
+  const moving=Math.abs(f)>0.05;
+  const ph=G.t*9;
+  if(G.walker.userData.body) G.walker.userData.body.position.y=0.42+(moving?Math.abs(Math.sin(ph))*0.03:0);
+  if(G.walker.userData.legL){ const s=moving?Math.sin(ph)*0.4:0; G.walker.userData.legL.rotation.x=s; G.walker.userData.legR.rotation.x=-s; }
+}
+
+/* ============================================================
+   AMBIENT (water flow)
+   ============================================================ */
+function waterFlow(dt){
+  if(G.water&&G.water.material&&G.water.material.map){ G.water.material.map.offset.y -= dt*0.035; }
+}
+
+/* ============================================================
+   INPUT HANDLER  (called by the engine on keydown + E button)
+   ============================================================ */
+function handleKeyPress(k){
+  // sheets first
+  if(!byId("scroll").classList.contains("hidden")){ if(k==="escape")byId("scroll").classList.add("hidden"); return; }
+  if(!byId("help").classList.contains("hidden")){ if(k==="escape")byId("help").classList.add("hidden"); return; }
+  if(!byId("title").classList.contains("hidden")){ if(k==="enter"||k===" ")byId("bStart").click(); return; }
+
+  if(DLG.active){
+    if(k===" "||k==="enter"){ advanceDialogue(); }
+    else if(k==="1"||k==="2"||k==="3"){ chooseDialogue(parseInt(k,10)-1); }
+    return;
+  }
+  if(k==="e"){ if(ST.promptAction&&ST.promptAction.fn) ST.promptAction.fn(); }
+}
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+function frame(dt){
+  if(!G.paused){
+    if(G.cine.active) cineStep(dt);
+    else if(G.camMode==="boat") boatStep(dt);
+    else if(G.camMode==="walk") walkStep(dt);
+    phaseWatch(dt);
+    interactScan();
+  }
+  dialogueStep(dt);
+  waterFlow(dt);
+  if(G.petalMesh && G.petalMesh.visible) updatePetals(dt);
+  if(G.village && G.village.visible) updateLife(G.t,dt);
+  camStep(dt);
+  capStep();
+}
+function tick(){
+  requestAnimationFrame(tick);
+  let dt=G.clock.getDelta(); if(dt>0.05)dt=0.05;
+  G.t+=dt; frame(dt);
+  G.renderer.render(G.scene,G.cam);
+}
+
+/* ============================================================
+   UI WIRING + TEXT FILL
+   ============================================================ */
+function fillScrollText(){
+  const box=byId("scrollBody"); box.innerHTML="";
+  DATA.original.forEach(s=>{
+    const p=document.createElement("p");
+    p.innerHTML=`${s[0]}<span class="en">${s[1]}</span>`;
+    box.appendChild(p);
+  });
+}
+function fillEpilogue(){
+  const box=byId("epiBody"); if(box.dataset.done)return; box.dataset.done="1";
+  const lines=[DATA.original[29],DATA.original[30]];
+  box.innerHTML=lines.map(s=>`<p>${s[0]}<span class="en">${s[1]}</span></p>`).join("");
+}
+function openSheet(id){ byId(id).classList.remove("hidden"); }
+function closeSheet(id){ byId(id).classList.add("hidden"); }
+
+function bindUI(){
+  byId("bStart").addEventListener("click",startGame);
+  byId("bText0").addEventListener("click",()=>openSheet("scroll"));
+  byId("bHelp0").addEventListener("click",()=>openSheet("help"));
+  byId("bScroll").addEventListener("click",()=>openSheet("scroll"));
+  byId("bHelp").addEventListener("click",()=>openSheet("help"));
+  byId("bScrollClose").addEventListener("click",()=>closeSheet("scroll"));
+  byId("bHelpClose").addEventListener("click",()=>closeSheet("help"));
+  byId("bAgain").addEventListener("click",()=>location.reload());
+  byId("bMute").addEventListener("click",()=>{
+    G.muted=!G.muted; G.audio.mute(G.muted);
+    byId("bMute").textContent=G.muted?"啞":"音";
+    byId("bMute").style.opacity=G.muted?0.5:1;
+  });
+  // make dialogue advance on click/tap of the box
+  byId("dlg").addEventListener("click",e=>{ if(e.target.closest("#dchoices"))return; advanceDialogue(); });
+}
+
+function onResize(){
+  const w=window.innerWidth,h=window.innerHeight;
+  G.renderer.setSize(w,h,false);
+  G.cam.aspect=w/h; G.cam.updateProjectionMatrix();
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  const THREE=window.THREE;
+  if(!THREE){ byId("loading").textContent="THREE failed to load"; return; }
+  const canvas=byId("c");
+  initEngine(THREE,canvas,window.innerWidth,window.innerHeight);
+  if(("ontouchstart" in window)|| (navigator.maxTouchPoints>0)) document.body.classList.add("touch");
+
+  buildRiverPath();
+  buildTerrain();
+  buildWater();
+  plantTrees();
+  buildOpening();
+  buildPetals();
+  buildBoat();
+  buildVillage();
+  buildPassage();
+  buildWalker();
+  relocateFirstVillager();
+
+  bindInput(canvas);
+  bindUI();
+  fillScrollText();
+
+  // title decorative petals
+  const pf=byId("petals");
+  for(let i=0;i<12;i++){ const s=document.createElement("div"); s.className="petalfall"; s.textContent="❀";
+    s.style.left=(Math.random()*100)+"%"; s.style.animationDuration=(7+Math.random()*8)+"s";
+    s.style.animationDelay=(-Math.random()*10)+"s"; s.style.fontSize=(10+Math.random()*12)+"px"; pf.appendChild(s); }
+
+  G.camMode="boat"; ST.travel=+1; G.boatU=0;
+  // park the camera on the opening valley/river for the menu backdrop
+  G.cam.position.set(8,5,12); G.cam.lookAt(0,1,-6);
+  setPhase("title"); G.paused=true;
+
+  window.addEventListener("resize",onResize); onResize();
+  byId("loading").classList.add("hidden");
+  fade(0,800);
+  G.clock.start();
+  tick();
+  if(window.__ON_BOOT__) window.__ON_BOOT__();
+}
+
+/* ============================================================
+   TEST HOOKS  (used by the headless harness; harmless in production)
+   ============================================================ */
+window.__test = {
+  boot,
+  state(){ return {
+    phase:G.phase, paused:G.paused, camMode:G.camMode, travel:ST.travel,
+    boatU:+G.boatU.toFixed(4), day:ST.day, marks:G.marks.length,
+    visited:Object.keys(ST.visited), leaveReady:ST.leaveReady,
+    dlg:DLG.active, dlgNode:DLG.nodeId, cine:G.cine.active,
+    villageVisible:!!(G.village&&G.village.visible),
+    walkerVisible:!!(G.walker&&G.walker.visible),
+    petals:!!(G.petalMesh&&G.petalMesh.visible),
+    glow:G.openingGlow?+G.openingGlow.material.opacity.toFixed(3):null,
+    lostArrived:ST.lostArrived,
+    epiOpen:!byId("epi").classList.contains("hidden"),
+    prompt: ST.promptAction?ST.promptAction.cn:null,
+    walkPos: G.walkPos?[+G.walkPos.x.toFixed(1),+G.walkPos.z.toFixed(1)]:null,
+    interactables: G.interactables.map(it=>({kind:it.kind,id:it.id,x:+it.pos.x.toFixed(1),z:+it.pos.z.toFixed(1)}))
+  };},
+  step(dt,n){ n=n||1; for(let i=0;i<n;i++){ G.t+=dt; frame(dt); } G.renderer.render(G.scene,G.cam); },
+  frames(dt,n){ n=n||1; for(let i=0;i<n;i++){ G.t+=dt; frame(dt); } }, // advance logic, no render (fast)
+  hold(k,v){ G.keys[k]=!!v; },
+  release(){ G.keys={}; G.input.f=0; G.input.t=0; },
+  key(k){ handleKeyPress(k); },
+  press(id){ byId(id).click(); },
+  setU(u){ G.boatU=clamp01(u); },
+  teleport(x,z){ if(G.walkPos){ G.walkPos.set(x,0,z); if(G.walker)G.walker.position.set(x,0,z);} },
+  walkTo(kind){ const it=G.interactables.find(i=>i.kind===kind); if(it&&G.walkPos){ G.walkPos.set(it.pos.x,0,it.pos.z+0.1); if(G.walker)G.walker.position.copy(G.walkPos);} return !!it; },
+  toGate(){ if(G.walkPos){ G.walkPos.set(G.gate.x,0,G.gate.z); if(G.walker)G.walker.position.copy(G.walkPos);} },
+  finishDialogue(maxSteps){ // advance & auto-pick first choice until closed
+    maxSteps=maxSteps||60; let i=0;
+    while(DLG.active && i++<maxSteps){
+      if(DLG.node && DLG.node.choices && !DLG.typing && DLG.line>=DLG.node.lines.length-1){ chooseDialogue(0); }
+      else advanceDialogue();
+    }
+    return !DLG.active;
+  },
+  groveAudit(){ // verify 中無雜樹: inside the grove band, every tree is a peach
+    let bad=0,inGrove=0;
+    for(const t of G.trees){
+      const u=t.userData.u; if(u===undefined)continue;
+      if(u>=G.GROVE_START_U && u<0.95){ inGrove++;
+        // peach trees carry a userData.canopy; ordinary ones do not
+        if(!t.userData.canopy) bad++;
+      }
+    }
+    return {inGrove,bad};
+  },
+  motionAudit(n){ // hold W for n frames; measure facing/camera vs actual velocity
+    n=n||90;
+    const obj=(G.camMode==="walk")?G.walker:G.boat;
+    const p0=obj.position.clone();
+    G.keys["w"]=true;
+    for(let i=0;i<n;i++){ G.t+=1/60; frame(1/60); }
+    G.keys={};
+    const p1=obj.position.clone();
+    const v=p1.clone().sub(p0); v.y=0;
+    const fwd=V3(0,0,1).applyQuaternion(obj.quaternion); fwd.y=0;   // model bow/front (local +Z)
+    const cf=new (T().Vector3)(); G.cam.getWorldDirection(cf); cf.y=0;
+    const co=p1.clone().sub(G.cam.position); co.y=0;
+    const nz=(a)=>{ if(a.length()>1e-6) a.normalize(); return a; };
+    nz(v); nz(fwd); nz(cf); nz(co);
+    return { moved:+p1.distanceTo(p0).toFixed(2),
+             facingDotVel:+fwd.dot(v).toFixed(3),   // >0: it faces the way it moves
+             camDotVel:+cf.dot(v).toFixed(3),       // >0: it moves into the screen
+             camSeesIt:+cf.dot(co).toFixed(3) };    // >0: it is in front of the camera
+  },
+  glowOnScreen(){ // is the cliff-mouth light actually in frame?
+    const p=V3(G.openingPos.x, 1.7, G.openingPos.z);
+    const cf=new (T().Vector3)(); G.cam.getWorldDirection(cf);
+    const inFront=cf.dot(p.clone().sub(G.cam.position))>0;
+    const ndc=p.clone().project(G.cam);
+    return { inFront, x:+ndc.x.toFixed(2), y:+ndc.y.toFixed(2) };
+  },
+  glowState(){ // material + visibility chain of the glow plane
+    const g=G.openingGlow; if(!g) return null;
+    let vis=true,o=g; while(o){ if(!o.visible){vis=false;break;} o=o.parent; }
+    return { opacity:+g.material.opacity.toFixed(2), transparent:g.material.transparent,
+             ownVisible:g.visible, chainVisible:vis, inScene:!!g.parent,
+             pos:[+g.position.x.toFixed(2),+g.position.y.toFixed(2),+g.position.z.toFixed(2)] };
+  },
+  lookAtOpening(d){ // park the camera d units straight off the glow and render
+    d=d||6; const p=G.openingGlow.position;
+    G.cam.position.set(p.x, p.y+0.3, p.z+d);
+    G.cam.lookAt(p.x,p.y,p.z);
+    G.renderer.render(G.scene,G.cam);
+  },
+  rayToOpening(){ // what sits between the camera and the glow? (first hits, nearest first)
+    const o=G.cam.position.clone();
+    const t=V3(G.openingPos.x,1.7,G.openingPos.z);
+    const d=t.clone().sub(o); const dist=d.length(); d.normalize();
+    const rc=new (T().Raycaster)(o,d,0.1,dist+6);
+    const hits=rc.intersectObjects(G.scene.children,true).slice(0,8).map(h=>({
+      d:+h.distance.toFixed(2),
+      g:h.object.geometry?h.object.geometry.type:"?",
+      col:(h.object.material&&h.object.material.color)?"#"+h.object.material.color.getHexString():"?",
+      at:[+h.object.position.x.toFixed(1),+h.object.position.y.toFixed(1),+h.object.position.z.toFixed(1)]
+    }));
+    return {cam:[+o.x.toFixed(1),+o.y.toFixed(1),+o.z.toFixed(1)],
+            glow:[+t.x.toFixed(2),+t.y.toFixed(2),+t.z.toFixed(2)],dist:+dist.toFixed(2),hits};
+  },
+  setCamForShot(kind){ // place camera nicely for screenshots of a given phase
+    if(kind==="boat"){ const tg=curveTangent(G.boatU); const h=Math.atan2(tg.x,tg.z)+(ST.travel<0?Math.PI:0);
+      const fx=Math.sin(h),fz=Math.cos(h); G.cam.position.set(G.boat.position.x-fx*9.5,4.4,G.boat.position.z-fz*9.5);
+      G.cam.lookAt(G.boat.position.x+fx*7,1.1,G.boat.position.z+fz*7); }
+    else if(kind==="walk" && G.walkPos){ const fx=Math.sin(G.walkYaw),fz=Math.cos(G.walkYaw);
+      G.cam.position.set(G.walkPos.x-fx*6.6,3.7,G.walkPos.z-fz*6.6); G.cam.lookAt(G.walkPos.x+fx*3.2,1.35,G.walkPos.z+fz*3.2); }
+    G.renderer.render(G.scene,G.cam);
+  }
+};
+
+/* auto-boot in the browser (DOM is ready: script sits at end of body) */
+if(!window.__NO_AUTOBOOT__){ if(document.readyState==="loading") window.addEventListener("DOMContentLoaded",boot); else boot(); }
+
+</script>
+</body></html>
