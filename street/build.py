@@ -15,7 +15,8 @@ assert cdn_tag, 'CDN placeholder tag not found'
 html = html.replace(cdn_tag.group(0),
     '<script id="vendor-three">\n' + vendor + '\n</script>')
 
-(ROOT.parent/'street.html').write_text(html)  # repo-root tab
+(ROOT.parent/'index.html').write_text(html)   # THE game at the front door
+(ROOT.parent/'street.html').write_text(html)  # same build, kept for old links + the construct door
 
 m = re.search(r'<script id="game">([\s\S]*?)</script>', html)
 assert m, 'game script missing'
