@@ -294,7 +294,10 @@
       var grey = 0.28 + r() * 0.4;
       var gs = C.rgb2hex(grey * 255, grey * 255, grey * 258 > 255 ? 255 : grey * 258);
       var sk = r();
-      var mesh = P.human({ suit: gs, skin: C.rgb2hex(170 + sk * 44, 162 + sk * 40, 152 + sk * 36), hair: r() < 0.5 ? '#2c2c2e' : '#55504a', shirt: r() < 0.4 ? '#dddbd4' : null, seed: 300 + i });
+      // render-tier mix: most pedestrians are low/mid budget, a few are full detail.
+      // in a simulated world, background extras don't get rendered at full fidelity.
+      var roll = r(), tier = roll < 0.45 ? 'terminal' : (roll < 0.8 ? 'retail' : 'custom');
+      var mesh = P.human({ tier: tier, suit: gs, skin: C.rgb2hex(170 + sk * 44, 162 + sk * 40, 152 + sk * 36), hair: r() < 0.5 ? '#2c2c2e' : '#55504a', shirt: r() < 0.4 ? '#dddbd4' : null, seed: 300 + i });
       var dir = r() < 0.5 ? 1 : -1;
       var it = C.inst(mesh, [-44 + r() * 88, 0, lanes[(i % lanes.length)] + (r() - 0.5) * 0.7], dir > 0 ? Math.PI / 2 : -Math.PI / 2, { kind: 'ped', label: 'pedestrian' });
       it.pose = [0, 0, 0, 0, 0, 0];

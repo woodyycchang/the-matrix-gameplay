@@ -262,8 +262,12 @@
 
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
+  // Render tiers — the principle lifted from STREET PROTOCOL (not its WebGL code):
+  // geometry detail encodes a figure's status. 'terminal' = lowest-detail (a few coarse
+  // blocks), 'retail' = mid, 'custom' = full detail (the original P.human look).
   P.human = function (opt) {
     opt = opt || {};
+    var tier = opt.tier || 'custom';
     var m = C.newMesh();
     m.vp = []; m.pivots = [];
     function part(pid, pivot, fn) {
@@ -275,23 +279,37 @@
     var suit = opt.suit || '#5a5c60', pants = opt.pants || C.scaleHex(suit, 0.8);
     var skin = opt.skin || '#b7b2aa', hair = opt.hair || '#3a3a3c', shoe = '#222428';
     var dress = !!opt.dress;
+
+    if (tier === 'terminal') {
+      // lowest render budget: a blocky torso, two stub legs, a cube head — no shoes, hands, hair detail
+      part(0, [0, 0, 0], function () {
+        C.addBox(m, 0, 0.78, 0, 0.5, 0.7, 0.32, suit, { flat: true });     // slab torso
+      });
+      part(1, [-0.12, 0.78, 0], function () { C.addBox(m, -0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
+      part(2, [0.12, 0.78, 0], function () { C.addBox(m, 0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
+      part(3, [-0.3, 1.34, 0], function () { C.addBox(m, -0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
+      part(4, [0.3, 1.34, 0], function () { C.addBox(m, 0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
+      part(5, [0, 1.4, 0], function () { C.addBox(m, 0, 1.42, 0, 0.3, 0.32, 0.3, skin, { flat: true }); }); // cube head
+      return fin(m, 2.0, opt.seed || 45, 4);
+    }
+
     part(0, [0, 0, 0], function () {
       if (dress) {
         C.addBox(m, 0, 0.42, 0, 0.52, 0.55, 0.34, opt.suit || '#c1121f'); // skirt
         C.addBox(m, 0, 0.97, 0, 0.4, 0.45, 0.26, opt.suit || '#c1121f');  // bodice
       } else {
         C.addBox(m, 0, 0.84, 0, 0.44, 0.58, 0.26, suit);                  // jacket
-        if (opt.shirt) C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
+        if (opt.shirt && tier === 'custom') C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
       }
     });
     var legY = dress ? 0.42 : 0.86, legH = legY - 0.02;
     part(1, [-0.11, legY, 0], function () {
       C.addBox(m, -0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      if (tier === 'custom') C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     part(2, [0.11, legY, 0], function () {
       C.addBox(m, 0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      if (tier === 'custom') C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     var shY = 1.36;
     part(3, [-0.28, shY, 0], function () {
@@ -306,13 +324,13 @@
       if (opt.longhair) C.addBox(m, 0, 1.3, -0.13, 0.26, 0.36, 0.08, hair);
       if (opt.glasses) C.addQuadZ(m, -0.11, 1.5, 0.11, 1.57, 0.125, '#0b0d0f', true);
     });
-    return fin(m, 4.5, opt.seed || 45, 6);
+    return fin(m, tier === 'retail' ? 3.2 : 4.5, opt.seed || 45, 6);
   };
 
   P.agent = function () {
-    return P.human({ suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
+    return P.human({ tier: 'custom', suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
   };
   P.redDress = function () {
-    return P.human({ dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
+    return P.human({ tier: 'custom', dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -670,6 +670,25 @@ section('riding state cleared on scene change');
   near(g.player.pos[1], C.ROOF.y, 0.1, 'spawned correctly on the new scene');
 }
 
+section('avatar render tiers (principle ported from STREET PROTOCOL)');
+{
+  const P = C.props;
+  const t = P.human({ tier: 'terminal' }), r = P.human({ tier: 'retail' }), c = P.human({ tier: 'custom' });
+  ok(t.v.length < r.v.length, 'terminal is lower-detail than retail (' + t.v.length + ' < ' + r.v.length + ')');
+  ok(r.v.length <= c.v.length, 'retail is at-or-below custom detail (' + r.v.length + ' <= ' + c.v.length + ')');
+  ok(t.pivots.length === 6 && r.pivots.length === 6 && c.pivots.length === 6, 'all tiers keep 6 animatable parts (low-detail still walks)');
+  ok(P.human({}).v.length === c.v.length, 'default tier is custom (no regression to existing humans)');
+
+  // the city crowd mixes tiers; key characters (agent, red dress) stay full detail
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('crowded city street, lunch hour');
+  step(g, null, 0.5);
+  const tiers = {};
+  for (const pd of g.crowd.peds) { const n = pd.it.mesh.v.length; tiers[n] = (tiers[n] || 0) + 1; }
+  ok(Object.keys(tiers).length >= 2, 'crowd contains more than one render tier (' + Object.keys(tiers).length + ' distinct detail levels)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

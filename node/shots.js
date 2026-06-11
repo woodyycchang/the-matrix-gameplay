@@ -241,4 +241,26 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   step(g, { fireEdge: true }, 0.08);
   shoot(g, '26_katana_strike', g.time);
 }
+
+
+// ---- 28 render-tier lineup: terminal | retail | custom side by side ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  // hand-place three humans of different tiers in the void by pushing instances
+  const P = C.props;
+  function place(mesh, x, label) {
+    const it = C.inst(mesh, [x, 0, -3.2], Math.PI, { kind: 'ped', label: label });
+    it.pose = [0, 0.3, -0.3, -0.2, 0.2, 0]; it.loadT = 1; it.loadDir = 0;
+    g.scene.insts.push(it);
+  }
+  place(P.human({ tier: 'terminal', suit: '#6a6f76' }), -1.6, 'terminal');
+  place(P.human({ tier: 'retail',   suit: '#5a5c60' }),  0.0, 'retail');
+  place(P.human({ tier: 'custom',   suit: '#4a4c50', shirt: '#dddbd4' }), 1.6, 'custom');
+  at(g, 0, 1.0, 0.8); look(g, 0, -0.05);
+  step(g, null, 0.05);
+  shoot(g, '28_render_tiers', g.time);
+  g.mode = 'code';
+  shoot(g, '29_render_tiers_code', g.time);
+}
 console.log('done');
