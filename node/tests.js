@@ -847,6 +847,27 @@ section('neon mile is INFINITE (streaming chunks, constant memory)');
   ok(opsC.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon code-view without NaN');
 }
 
+section('wall-grind does not roar (scrape throttled at the boundary)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  // grind the right wall at full speed for ~3s, counting scrape events
+  let scrapes = 0; const frames = 180;
+  for (let i = 0; i < frames; i++) {
+    const evs = step(g, { fwd: 1, sprint: true, strafe: 1 }, 1 / 60);
+    scrapes += evs.filter(e => e.name === 'scrape').length;
+  }
+  // throttled to <=0.15s apart -> at most ~7/s; the un-throttled bug fired per-substep (hundreds)
+  ok(scrapes > 0, 'grinding the wall still makes some scrape sound (' + scrapes + ')');
+  ok(scrapes <= frames / 60 * 7, 'scrape is throttled, not a per-substep roar (' + scrapes + ' over 3s, was ~540 before)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

@@ -624,12 +624,19 @@
       }
       return null;
     }
+    var hitWall = false;
     for (var sgi = 0; sgi < subs; sgi++) {
       var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
-      if (blocked(nx, p.pos[2])) { p.pos[0] += 0; bk.speed *= 0.4; this.emit('scrape'); }
+      if (blocked(nx, p.pos[2])) { hitWall = true; }
       else p.pos[0] = nx;
-      if (blocked(p.pos[0], nz)) { bk.speed *= 0.4; this.emit('scrape'); }
+      if (blocked(p.pos[0], nz)) { hitWall = true; }
       else p.pos[2] = nz;
+    }
+    if (hitWall) {
+      bk.speed *= 0.6;                       // bleed speed once per frame, not per substep
+      // throttle the scrape sound: at most one every 0.15s, so grinding the wall
+      // can't stack dozens of hisses into a roar
+      if (this.time - (bk._lastScrape || -1) > 0.15) { this.emit('scrape'); bk._lastScrape = this.time; }
     }
     p.pos[1] = sc.groundY;
     bk.dist += Math.abs(bk.speed) * dt;   // odometer — visible proof the road never ends
