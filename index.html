@@ -575,6 +575,52 @@
     return fin(m, 1.5, 44, 10);
   };
 
+  // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
+  P.bike = function () { // original naked street bike; nose at +z like every prop front
+    var m = C.newMesh();
+    var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';
+    function wheel(cz) {
+      C.addBox(m, 0, 0.34, cz, 0.16, 0.66, 0.66, dark);            // tire block
+      C.addBox(m, 0, 0.34, cz, 0.18, 0.30, 0.30, '#23262b');       // hub
+      C.addBox(m, 0, 0.34, cz, 0.20, 0.08, 0.50, '#3a3d42');       // spoke v
+      C.addBox(m, 0, 0.34, cz, 0.20, 0.50, 0.08, '#3a3d42');       // spoke h
+    }
+    wheel(-0.62); wheel(0.64);
+    C.addBox(m, 0, 0.40, 0.02, 0.40, 0.34, 0.58, body);            // engine/frame mass
+    C.addBox(m, 0.22, 0.30, -0.34, 0.08, 0.08, 0.66, steel);       // exhaust pipe
+    C.addBox(m, 0, 0.70, 0.08, 0.36, 0.26, 0.52, tank);            // fuel tank (raised)
+    C.addQuadY(m, -0.12, 0.20, 0.12, 0.40, 0.831, accent);         // code-green tank stripe
+    C.addBox(m, 0, 0.66, -0.42, 0.34, 0.12, 0.50, '#191b1f');      // seat
+    C.addBox(m, 0, 0.76, -0.70, 0.30, 0.14, 0.20, body);           // tail cowl
+    C.addBox(m, -0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);       // front forks
+    C.addBox(m,  0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);
+    C.addBox(m, 0, 0.98, 0.52, 0.70, 0.06, 0.07, '#1b1d20');       // handlebar
+    C.addBox(m, -0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');   // grips
+    C.addBox(m,  0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');
+    C.addBox(m, 0, 0.82, 0.70, 0.20, 0.18, 0.07, '#f0ead0', { flat: true }); // headlamp
+    return fin(m, 2.4, 71, 12);
+  };
+  P.katanaStand = function () { // low rack, blade resting across it
+    var m = C.newMesh(), wood = '#3a3026';
+    C.addBox(m, 0, 0, 0, 0.74, 0.06, 0.24, wood);
+    C.addBox(m, -0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
+    C.addBox(m,  0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
+    C.addBox(m, -0.52, 0.33, 0, 0.22, 0.05, 0.05, '#1b1d20');           // handle
+    C.addBox(m, -0.40, 0.305, 0, 0.045, 0.10, 0.09, '#23262b');         // guard
+    C.addBox(m, 0.06, 0.335, 0, 0.88, 0.035, 0.04, '#d6dde2');          // blade
+    return fin(m, 16, 72, 8);
+  };
+  // Viewmodel katana (engine subtracts 0.42 from y; build around y≈0.30–0.58, +x forward)
+  P.heldKatana = function () {
+    var m = C.newMesh();
+    C.addBox(m, 0.05, 0.385, 0, 0.24, 0.055, 0.05, '#1b1d20');          // wrapped handle
+    C.addBox(m, 0.18, 0.355, 0, 0.045, 0.115, 0.095, '#23262b');        // guard
+    C.addBox(m, 0.63, 0.405, 0, 0.86, 0.038, 0.02, '#d6dde2');          // blade
+    C.addBox(m, 0.63, 0.437, 0, 0.86, 0.012, 0.014, '#9aa6ad');         // spine
+    C.meshBounds(m); m.an = [];
+    return m;
+  };
+
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
   P.human = function (opt) {
@@ -1175,6 +1221,8 @@
     hangup: 'Hanging up. Back to white.',
     lesson: 'You looked. Everyone looks — that is the lesson.',
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
+    bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
+    katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -1194,6 +1242,8 @@
     bench: 'bench', benches: 'bench',
     lamppost: 'lamppost', streetlight: 'lamppost',
     fountain: 'fountain',
+    motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', bike: 'bike', bikes: 'bike',
+    katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
     pedestal: 'pedestal'
   };
   var SCENEKEYS = [
@@ -1266,6 +1316,7 @@
     this.flags = { firstFallDone: false, lessonDone: false, attempts: 0, successDone: false, hinted: false };
     this.fx = { flash: 0, flashCol: '#ffffff', vig: 0, vigCol: '#7a1010', cracks: null, crackA: 0, slowmo: 1, slowTarget: 1, bars: 0, stamp: null, stampA: 0, bursts: [], heart: 0, painLinger: 0, camDip: 0, codeFlash: 0 };
     this.held = null;
+    this.bike = null;
     this.msgs = [];
     this.events = [];
     this.trans = null;
@@ -1336,6 +1387,7 @@
     p.pos = sc.spawn.pos.slice(); p.vel = [0, 0, 0];
     p.yaw = sc.spawn.yaw; p.pitch = 0; p.grounded = true; p.coyote = 0;
     this.held = null;
+    this.bike = null;
     this.state = 'play';
     this._fallFromRoof = false; this._airFromA = false;
     this.flags.successDone = false;
@@ -1404,6 +1456,8 @@
       case 'booth': mesh = P.booth(); k = 'booth'; lbl = 'exit'; break;
       case 'dummy': mesh = P.dummy(); k = 'dummy'; break;
       case 'mirror': mesh = P.mirror(); this.say(L.mirror); break;
+      case 'bike': mesh = P.bike(); k = 'bike'; lbl = 'motorcycle'; this.say(L.bike, 0.6); break;
+      case 'katana': mesh = P.katanaStand(); k = 'katana'; lbl = 'katana'; this.say(L.katana, 0.6); break;
       case 'bench': mesh = P.bench(); break;
       case 'lamppost': mesh = P.lamppost(); break;
       case 'fountain': mesh = P.fountain(); break;
@@ -1413,12 +1467,13 @@
     it.loadT = 0; it.loadDir = 1; it._delay = delay || 0;
     this.scene.insts.push(it);
     var b = mesh.bounds;
-    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv') {
+    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv' || kind === 'bike') {
       var cy = Math.cos(yaw), sy = Math.sin(yaw);
       var hw = Math.max(Math.abs(b.max[0]), Math.abs(b.min[0])), hd = Math.max(Math.abs(b.max[2]), Math.abs(b.min[2]));
-      var r = kind === 'booth' ? 0.52 : Math.max(hw, hd) * 0.8;
+      var r = kind === 'booth' ? 0.52 : (kind === 'bike' ? 0.55 : Math.max(hw, hd) * 0.8);
       var col = { min: [pos[0] - r, pos[1], pos[2] - r], max: [pos[0] + r, pos[1] + b.max[1], pos[2] + r] };
       if (kind === 'booth') { col.max[1] = pos[1] + 2.3; it._col = col; }
+      if (kind === 'bike') { col.max[1] = pos[1] + 1.1; it._col = col; }
       this.scene.colliders.push(col);
     }
     if (kind === 'booth') { this._boothRing = true; this.emit('ring'); this.say(L.booth, 0.9); }
@@ -1588,17 +1643,18 @@
 
   // ----- interaction -----
   Game.prototype.updateAim = function () {
+    if (this.bike) { this.aim = null; return; }
     var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
     this.aim = null;
     var insts = this.scene.insts, best = null, bd = 1e9;
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth') continue;
-      var cy = it.kind === 'gun' ? 0.05 : 1.1;
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
+      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : 2.8);
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -1608,6 +1664,7 @@
   };
 
   Game.prototype.doAction = function () {
+    if (this.bike) { this.dismountBike(); return; }
     var it = this.aim;
     if (!it) return;
     if (it.kind === 'gun') {
@@ -1617,6 +1674,13 @@
       this.say(L.gun);
     } else if (it.kind === 'booth') {
       this.enterBooth();
+    } else if (it.kind === 'bike') {
+      this.mountBike(it);
+    } else if (it.kind === 'katana') {
+      it.loadDir = -1;
+      if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
+      this.held = { mesh: P.heldKatana(), kick: 0, bob: 0, kind: 'katana' };
+      this.emit('pickupBlade');
     }
   };
 
@@ -1629,6 +1693,8 @@
 
   Game.prototype.doFire = function () {
     var t = this.time;
+    if (this.bike) return; // hands on the bars
+    if (this.held && this.held.kind === 'katana') { this.doSlash(); return; }
     if (this.held) {
       this.held.kick = 1;
       this.emit('shot');
@@ -1669,8 +1735,120 @@
   // ----- physics -----
   var GRAV = 18, WALK = 4.2, SPRINT = 8.0, R = 0.35, H = 1.7, EYE = 1.62;
   C.PHYS = { GRAV: GRAV, WALK: WALK, SPRINT: SPRINT, JUMP0: 5.0, JUMPK: 0.55, COYOTE: 0.12 };
+  // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
+  // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
+  //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
+  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34 };
+
+  Game.prototype.mountBike = function (it) {
+    this.bike = { it: it, speed: 0, lean: 0 };
+    it.loadDir = 0;
+    if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
+    this.held = null;
+    var p = this.player;
+    p.pos = it.pos.slice(); p.vel = [0, 0, 0]; p.grounded = true;
+    p.yaw = it.yaw; // bike nose is +z at yaw=0, same as player forward
+    this.emit('mount');
+    this.say(L.bike, 0.2);
+  };
+  Game.prototype.dismountBike = function () {
+    if (!this.bike) return;
+    var bk = this.bike, p = this.player;
+    var it = bk.it;
+    it.pos = [p.pos[0], this.scene.groundY, p.pos[2]];
+    it.yaw = p.yaw; it._baseYaw = null; it._wob = 0;
+    // step the rider off to the left of the bike
+    var lx = Math.cos(p.yaw), lz = Math.sin(p.yaw);
+    p.pos = [p.pos[0] - lx * 0.9, this.scene.groundY, p.pos[2] - lz * 0.9];
+    p.vel = [0, 0, 0];
+    // re-arm the bike collider so it's solid again once parked
+    var r = 0.55, col = { min: [it.pos[0] - r, it.pos[1], it.pos[2] - r], max: [it.pos[0] + r, it.pos[1] + 1.1, it.pos[2] + r] };
+    it._col = col; this.scene.colliders.push(col);
+    this.bike = null;
+    this.emit('dismount');
+  };
+
+  Game.prototype.moveBike = function (input, dt) {
+    var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
+    // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
+    p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
+    var turbo = !!input.sprint;
+    var throttle = (input.fwd || 0);
+    var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26; // mouse contributes to steering
+    // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
+    var speedFrac = bk.speed / B.BOOST;
+    var steerRate = (turbo ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
+    p.yaw += steerIn * steerRate * dt;
+    bk.lean += (C.clamp(steerIn, -1, 1) * Math.min(1, bk.speed / B.MAX) - bk.lean) * Math.min(1, 6 * dt);
+    // longitudinal
+    var maxv = turbo ? B.BOOST : B.MAX;
+    if (throttle > 0.01) bk.speed += B.ACCEL * throttle * dt;
+    else if (throttle < -0.01) bk.speed += B.BRAKE * throttle * dt; // brake/reverse
+    else bk.speed -= Math.sign(bk.speed) * Math.min(Math.abs(bk.speed), B.COAST * dt);
+    bk.speed = C.clamp(bk.speed, -B.MAX * 0.3, maxv);
+    // integrate along facing (nose +z at yaw 0)
+    var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
+    var step = bk.speed * dt;
+    // substep to avoid tunnelling at high speed (|step| can exceed collider half-widths)
+    var subs = Math.max(1, Math.ceil(Math.abs(step) / 0.4));
+    var ds = step / subs;
+    function blocked(nx, nz) {
+      for (var i = 0; i < cols.length; i++) {
+        var b = cols[i];
+        if (b.max[1] <= p.pos[1] + 0.2) continue;
+        if (b.min[1] >= p.pos[1] + 1.0) continue;
+        if (nx > b.min[0] - 0.5 && nx < b.max[0] + 0.5 && nz > b.min[2] - 0.5 && nz < b.max[2] + 0.5) return b;
+      }
+      return null;
+    }
+    for (var sgi = 0; sgi < subs; sgi++) {
+      var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
+      if (blocked(nx, p.pos[2])) { p.pos[0] += 0; bk.speed *= 0.4; this.emit('scrape'); }
+      else p.pos[0] = nx;
+      if (blocked(p.pos[0], nz)) { bk.speed *= 0.4; this.emit('scrape'); }
+      else p.pos[2] = nz;
+    }
+    p.pos[1] = sc.groundY;
+    p.vel = [dirx * bk.speed, 0, dirz * bk.speed];
+    // sync the bike instance: push it forward so the rider sits on the seat and the
+    // tank + bars + headlamp fill the lower view (otherwise the bike renders under the camera and the frame looks empty)
+    var it = bk.it;
+    var fx0 = Math.sin(p.yaw) * 0.55, fz0 = -Math.cos(p.yaw) * 0.55;
+    it.pos = [p.pos[0] + fx0, sc.groundY, p.pos[2] + fz0];
+    it.yaw = p.yaw;
+    it._wob = 0;
+    bk.it._lean = bk.lean;
+    this.emit('engine', { speed: Math.abs(bk.speed), throttle: Math.max(0, throttle) });
+    // footstep phase off; engine carries the motion
+    p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
+  };
+
+  Game.prototype.doSlash = function () {
+    if (!this.held) return;
+    this.held.kick = 1;
+    this.emit('slash');
+    var B = C.BIKE; // reuse no constants; slash spec below ported from STREET PROTOCOL
+    var range = 3.5, arc = 1.35; // slashRange / slashArc (radians half-angle)
+    var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
+    var insts = this.scene.insts, struck = false;
+    for (var i = 0; i < insts.length; i++) {
+      var it = insts[i];
+      if (it.loadT < 0.5) continue;
+      if (it.kind !== 'dummy' && it.kind !== 'ped' && it.kind !== 'red') continue;
+      var to = [it.pos[0] - eye[0], (it.pos[1] + 1.1) - eye[1], it.pos[2] - eye[2]];
+      var d = C.len(to);
+      if (d > range) continue;
+      var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
+      if (ang > arc) continue;
+      if (it.kind === 'dummy') { it._wob = 1; it._baseYaw = it._baseYaw == null ? it.yaw : it._baseYaw; }
+      this.burst([it.pos[0], it.pos[1] + 1.2, it.pos[2]], 9);
+      struck = true;
+    }
+    if (!struck) this.emit('swishBlade');
+  };
 
   Game.prototype.movePlayer = function (input, dt) {
+    if (this.bike) { this.moveBike(input, dt); return; }
     var p = this.player, sc = this.scene, cols = sc.colliders;
     // look
     p.yaw += input.dyaw || 0;
@@ -1911,6 +2089,7 @@
       eyeT = C.lerp(0.34, EYE, k); rollT = C.lerp(1.25, 0, k) + Math.sin(this._riseT * 9) * 0.05 * (1 - k);
     } else {
       eyeT = EYE; rollT = 0;
+      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.28; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
     cam.pos[0] = p.pos[0];
@@ -1954,11 +2133,13 @@
 
   if (!hasWindow) {
     A.init = function () {}; A.handle = function () {}; A.setAmbience = function () {};
-    A.speak = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
+    A.speak = function () {}; A.engine = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
     return;
   }
 
   var ctx = null, master = null, ambGain = null, ambNodes = [], ringTimer = null;
+  // engine drone path (ported from STREET PROTOCOL; gain curve retuned down so idle is quiet)
+  var engOsc = null, engSub = null, engFilt = null, engGain = null, engOn = false;
 
   function noiseBuf(sec) {
     var b = ctx.createBuffer(1, Math.max(1, (sec * ctx.sampleRate) | 0), ctx.sampleRate);
@@ -1976,6 +2157,13 @@
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
       ambGain = ctx.createGain(); ambGain.gain.value = 0; ambGain.connect(master);
+      // engine drone: sawtooth + sub sine through a lowpass, idle silent until ridden
+      engGain = ctx.createGain(); engGain.gain.value = 0;
+      engFilt = ctx.createBiquadFilter(); engFilt.type = 'lowpass'; engFilt.frequency.value = 200;
+      engOsc = ctx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 44;
+      engSub = ctx.createOscillator(); engSub.type = 'sine'; engSub.frequency.value = 22;
+      engOsc.connect(engFilt); engSub.connect(engFilt); engFilt.connect(engGain); engGain.connect(master);
+      engOsc.start(); engSub.start();
       A.ready = true;
     } catch (e) { A.ready = false; }
   };
@@ -1985,6 +2173,22 @@
     if (A.muted && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
     return A.muted;
   };
+
+  // continuous engine voice. speed in m/s (0..~34), throttle 0..1.
+  // Retuned quieter than the source: idle is barely there, peak gain capped well below the original.
+  A.engine = function (speed, throttle) {
+    if (!ctx || !engGain) return;
+    var sp = Math.max(0, Math.min(34, speed || 0)), th = Math.max(0, Math.min(1, throttle || 0));
+    var now = ctx.currentTime;
+    engOsc.frequency.setTargetAtTime(40 + sp * 2.2, now, 0.06);
+    engSub.frequency.setTargetAtTime(20 + sp * 1.1, now, 0.06);
+    engFilt.frequency.setTargetAtTime(150 + sp * 24 + th * 180, now, 0.05);
+    // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
+    var g = A.muted ? 0 : Math.min(0.014, 0.0015 + sp * 0.00028 + th * 0.0032);
+    engGain.gain.setTargetAtTime(g, now, 0.05);
+  };
+  function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
+  function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }
 
   function env(g, t0, a, peak, d, sustain) {
     g.gain.setValueAtTime(0.0001, t0);
@@ -2093,6 +2297,12 @@
       case 'success': blip(523, 0.18, 0.12, 'triangle'); blip(784, 0.25, 0.12, 'triangle', 0.12); blip(1046, 0.4, 0.1, 'triangle', 0.24); break;
       case 'shot': thump(180, 0.07, 0.7); hiss(0.12, 0.8, 2500, 300, 0.7); hiss(0.5, 0.2, 700, 120, 1, 0.02); break;
       case 'pickup': blip(660, 0.06, 0.12, 'square'); blip(990, 0.08, 0.1, 'square', 0.06); break;
+      case 'pickupBlade': hiss(0.18, 0.22, 1800, 5200, 2.2); blip(1320, 0.06, 0.08, 'triangle', 0.04); break;
+      case 'mount': engineStart(); blip(520, 0.05, 0.1, 'square'); thump(70, 0.18, 0.35, 0.02); break;
+      case 'dismount': engineStop(); blip(360, 0.06, 0.08, 'square'); break;
+      case 'scrape': hiss(0.12, 0.3, 1600, 600, 2.4); blip(180, 0.05, 0.12, 'sawtooth'); break;
+      case 'slash': hiss(0.14, 0.3, 1400, 500, 1.8); blip(300, 0.08, 0.08, 'sawtooth', 0.01); break;
+      case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
       case 'punch': thump(140, 0.09, 0.5); hiss(0.08, 0.35, 900, 300, 1.5); blip(220, 0.12, 0.1, 'triangle', 0.02); break;
       case 'swish': hiss(0.16, 0.22, 1200, 400, 1.6); break;
       case 'freeze': thump(70, 0.4, 0.6); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.12); break;
@@ -2127,6 +2337,7 @@
 
   var canvas, ctx, game, hud = {}, started = false;
   var W = 0, H = 0, scale = 1, dpr = 1;
+  var paused = false;
   var reduceMotion = false;
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -2166,6 +2377,7 @@
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
+    if (paused) { setPaused(false); if (!touch.active) tryLock(); return; }
     if (consoleOpen) return;
     if (!locked && !touch.active) {
       dragging = true; lastMX = e.clientX; lastMY = e.clientY;
@@ -2414,10 +2626,13 @@
   function updateHUD() {
     hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (a && game.state === 'play') {
+    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift turbo';
+    else if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
+      else if (a.kind === 'bike') label = '[E] ride';
+      else if (a.kind === 'katana') label = '[E] take katana';
     }
     if (hud.aim.textContent !== label) hud.aim.textContent = label;
     hud.aim.style.opacity = label ? 1 : 0;
@@ -2494,6 +2709,12 @@
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
+    if (paused) {
+      var opsP = C.render(game, W, H, game.time);
+      paint(opsP);
+      paintPauseOverlay();
+      return;
+    }
     acc += dt;
     var step = 1 / 60, n = 0;
     var inp = buildInput();
@@ -2509,6 +2730,7 @@
       var e = evs[i];
       if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
+      else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
     }
     var ops = C.render(game, W, H, game.time);
@@ -2516,6 +2738,46 @@
     tickTeletype(dt);
     updateHUD();
     adapt(performance.now() - t0);
+  }
+
+  // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
+  function setPaused(v) {
+    if (paused === v) return;
+    paused = v;
+    if (paused) {
+      if (game && game.bike) A.engine(0, 0);
+      A.handle('ringStop'); // freeze any ringing
+      if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
+      if (window.speechSynthesis) try { window.speechSynthesis.pause(); } catch (e) {}
+    } else {
+      lastT = 0; acc = 0;
+      if (window.speechSynthesis) try { window.speechSynthesis.resume(); } catch (e) {}
+    }
+  }
+  function paintPauseOverlay() {
+    ctx.globalAlpha = 0.55; ctx.fillStyle = '#020803'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+    setFont(Math.round(Math.min(W, H) * 0.04), true);
+    ctx.fillStyle = '#46ff7a';
+    ctx.fillText('PROGRAM PAUSED', W / 2, H / 2 - 8);
+    setFont(Math.round(Math.min(W, H) * 0.018));
+    ctx.fillStyle = '#2f9e57';
+    ctx.fillText('click to resume', W / 2, H / 2 + Math.min(W, H) * 0.05);
+  }
+  function showError(msg) {
+    try {
+      var d = document.getElementById('errlay');
+      if (!d) {
+        d = document.createElement('div'); d.id = 'errlay';
+        d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(2,8,3,.92);color:#9affc0;' +
+          'font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;' +
+          'align-items:center;justify-content:center;text-align:center;padding:24px;letter-spacing:.04em';
+        document.body.appendChild(d);
+      }
+      d.innerHTML = '<div style="color:#46ff7a;letter-spacing:.3em;margin-bottom:14px">CONSTRUCT FAULT</div>' +
+        '<div style="max-width:70ch;opacity:.85">' + String(msg).replace(/[<>&]/g, ' ') + '</div>' +
+        '<div style="margin-top:18px;opacity:.5">reload the page to recompile</div>';
+      d.style.display = 'flex';
+    } catch (e) {}
   }
 
   // ---------- boot ----------
@@ -2557,7 +2819,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
@@ -2598,6 +2860,11 @@
     tbtn('ASK', function () { openConsole(); });
 
     resize();
+    // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
+    window.addEventListener('blur', function () { if (started) setPaused(true); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
+    window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
+    window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);
   }
 

@@ -6,6 +6,7 @@
 
   var canvas, ctx, game, hud = {}, started = false;
   var W = 0, H = 0, scale = 1, dpr = 1;
+  var paused = false;
   var reduceMotion = false;
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -45,6 +46,7 @@
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
+    if (paused) { setPaused(false); if (!touch.active) tryLock(); return; }
     if (consoleOpen) return;
     if (!locked && !touch.active) {
       dragging = true; lastMX = e.clientX; lastMY = e.clientY;
@@ -293,10 +295,13 @@
   function updateHUD() {
     hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (a && game.state === 'play') {
+    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift turbo';
+    else if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
+      else if (a.kind === 'bike') label = '[E] ride';
+      else if (a.kind === 'katana') label = '[E] take katana';
     }
     if (hud.aim.textContent !== label) hud.aim.textContent = label;
     hud.aim.style.opacity = label ? 1 : 0;
@@ -373,6 +378,12 @@
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
+    if (paused) {
+      var opsP = C.render(game, W, H, game.time);
+      paint(opsP);
+      paintPauseOverlay();
+      return;
+    }
     acc += dt;
     var step = 1 / 60, n = 0;
     var inp = buildInput();
@@ -388,6 +399,7 @@
       var e = evs[i];
       if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
+      else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
     }
     var ops = C.render(game, W, H, game.time);
@@ -395,6 +407,46 @@
     tickTeletype(dt);
     updateHUD();
     adapt(performance.now() - t0);
+  }
+
+  // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
+  function setPaused(v) {
+    if (paused === v) return;
+    paused = v;
+    if (paused) {
+      if (game && game.bike) A.engine(0, 0);
+      A.handle('ringStop'); // freeze any ringing
+      if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
+      if (window.speechSynthesis) try { window.speechSynthesis.pause(); } catch (e) {}
+    } else {
+      lastT = 0; acc = 0;
+      if (window.speechSynthesis) try { window.speechSynthesis.resume(); } catch (e) {}
+    }
+  }
+  function paintPauseOverlay() {
+    ctx.globalAlpha = 0.55; ctx.fillStyle = '#020803'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+    setFont(Math.round(Math.min(W, H) * 0.04), true);
+    ctx.fillStyle = '#46ff7a';
+    ctx.fillText('PROGRAM PAUSED', W / 2, H / 2 - 8);
+    setFont(Math.round(Math.min(W, H) * 0.018));
+    ctx.fillStyle = '#2f9e57';
+    ctx.fillText('click to resume', W / 2, H / 2 + Math.min(W, H) * 0.05);
+  }
+  function showError(msg) {
+    try {
+      var d = document.getElementById('errlay');
+      if (!d) {
+        d = document.createElement('div'); d.id = 'errlay';
+        d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(2,8,3,.92);color:#9affc0;' +
+          'font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;' +
+          'align-items:center;justify-content:center;text-align:center;padding:24px;letter-spacing:.04em';
+        document.body.appendChild(d);
+      }
+      d.innerHTML = '<div style="color:#46ff7a;letter-spacing:.3em;margin-bottom:14px">CONSTRUCT FAULT</div>' +
+        '<div style="max-width:70ch;opacity:.85">' + String(msg).replace(/[<>&]/g, ' ') + '</div>' +
+        '<div style="margin-top:18px;opacity:.5">reload the page to recompile</div>';
+      d.style.display = 'flex';
+    } catch (e) {}
   }
 
   // ---------- boot ----------
@@ -436,7 +488,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
@@ -477,6 +529,11 @@
     tbtn('ASK', function () { openConsole(); });
 
     resize();
+    // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
+    window.addEventListener('blur', function () { if (started) setPaused(true); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
+    window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
+    window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);
   }
 
