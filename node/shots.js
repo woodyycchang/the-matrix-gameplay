@@ -14,7 +14,10 @@ fs.mkdirSync(OUT, { recursive: true });
 
 function step(g, inp, seconds) {
   const n = Math.round(seconds * 60);
-  for (let i = 0; i < n; i++) { g.update(inp || {}, 1 / 60); g.drain(); }
+  for (let i = 0; i < n; i++) {
+    g.update(inp || {}, 1 / 60); g.drain();
+    if (inp) { inp.actionEdge = false; inp.fireEdge = false; inp.jumpEdge = false; }
+  }
 }
 function shoot(g, name, t) {
   g.updateCam(1 / 60, 1 / 60);
@@ -179,5 +182,63 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   g.player.yaw = Math.atan2(px, -pz); g.player.pitch = 0.0;
   step(g, null, 0.04);
   shoot(g, '21_pedestal_unknown', g.time);
+}
+
+// ---- 22-24 motorcycle: parked, riding POV, code vision ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a motorcycle');
+  step(g, null, 1.4);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  // parked, viewed from front-left
+  at(g, bike.pos[0] - 2.2, 0, bike.pos[2] + 2.6);
+  let dx = bike.pos[0] - g.cam.pos[0], dz = bike.pos[2] - g.cam.pos[2];
+  g.player.yaw = Math.atan2(dx, -dz); g.player.pitch = -0.08;
+  step(g, null, 0.05);
+  shoot(g, '22_bike_parked', g.time);
+  // mount and ride forward, first-person
+  g.player.pos = [bike.pos[0] - 0.5, 0, bike.pos[2]];
+  step(g, null, 0.05);
+  let mbx = bike.pos[0] - g.cam.pos[0], mby = bike.pos[1] + 0.6 - g.cam.pos[1], mbz = bike.pos[2] - g.cam.pos[2];
+  g.player.yaw = Math.atan2(mbx, -mbz); g.player.pitch = Math.asin(mby / Math.hypot(mbx, mby, mbz));
+  step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  step(g, { fwd: 1, sprint: true }, 1.8); // get some speed + lean
+  step(g, { fwd: 1, strafe: 1 }, 0.4);
+  g.player.pitch = -0.22; // look down a touch so the tank and bars frame the shot
+  step(g, { fwd: 1 }, 0.04);
+  shoot(g, '23_bike_riding', g.time);
+  g.mode = 'code';
+  shoot(g, '24_bike_code', g.time);
+}
+
+// ---- 25-26 katana: stand, then striking the dummy in hand ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('sparring dojo');
+  step(g, null, 0.5);
+  g.request('a katana');
+  step(g, null, 1.2);
+  const stand = g.scene.insts.find(i => i.kind === 'katana');
+  at(g, stand.pos[0] - 0.9, 0, stand.pos[2] + 1.5);
+  let dx = stand.pos[0] - g.cam.pos[0], dy = stand.pos[1] + 0.35 - g.cam.pos[1], dz = stand.pos[2] - g.cam.pos[2];
+  g.player.yaw = Math.atan2(dx, -dz); g.player.pitch = Math.asin(dy / Math.hypot(dx, dy, dz));
+  step(g, null, 0.05);
+  shoot(g, '25_katana_stand', g.time);
+  // take it, strike the dummy
+  g.player.pos = [stand.pos[0], 0, stand.pos[2] + 1.3];
+  step(g, null, 0.05);
+  dx = stand.pos[0] - g.cam.pos[0]; dy = stand.pos[1] + 0.35 - g.cam.pos[1]; dz = stand.pos[2] - g.cam.pos[2];
+  g.player.yaw = Math.atan2(dx, -dz); g.player.pitch = Math.asin(dy / Math.hypot(dx, dy, dz));
+  step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  const dm = g.scene.dummyPos;
+  g.player.pos = [dm[0], 0, dm[2] + 1.7];
+  step(g, null, 0.05);
+  g.player.yaw = Math.atan2(dm[0] - g.cam.pos[0], -(dm[2] - g.cam.pos[2])); g.player.pitch = 0.02;
+  step(g, { fireEdge: true }, 0.08);
+  shoot(g, '26_katana_strike', g.time);
 }
 console.log('done');
