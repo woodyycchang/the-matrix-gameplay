@@ -670,6 +670,41 @@ section('riding state cleared on scene change');
   near(g.player.pos[1], C.ROOF.y, 0.1, 'spawned correctly on the new scene');
 }
 
+section('portal door (the street, inside the construct)');
+{
+  // parser: portal words open the door, and must NOT steal the city scene
+  const a1 = C.parse('the metaverse');
+  ok(a1.type === 'props' && a1.props[0].kind === 'door', "'metaverse' summons the door");
+  const a2 = C.parse('open the street protocol');
+  ok(a2.type === 'props' && a2.props[0].kind === 'door', "'street protocol' outranks the city scene");
+  const a3 = C.parse('a neon door');
+  ok(a3.type === 'props' && a3.props[0].kind === 'door', "'neon' summons the door");
+  const a4 = C.parse('a crowded street at lunch hour');
+  ok(a4.type === 'scene' && a4.scene === 'city', 'plain city phrases still load the city');
+  const a5 = C.parse('city street');
+  ok(a5.type === 'scene' && a5.scene === 'city', "'city street' unchanged");
+
+  const g = new C.Game();
+  step(g, null, 0.2);
+  const colsBefore = g.scene.colliders.length;
+  g.request('the metaverse');
+  const door = g.scene.insts.find(i => i.kind === 'door');
+  ok(!!door, 'door instance created');
+  eq(door.label, 'the street', 'door is labelled the street');
+  eq(g.scene.colliders.length, colsBefore, 'doorway adds no collider (walk-through)');
+  step(g, null, 1.4);
+  eq(door.loadT, 1, 'door materialized');
+  g.player.pos = [door.pos[0], 0, door.pos[2] + 1.6];
+  step(g, null, 0.05);
+  aimAt(g, door.pos, 1.1);
+  step(g, null, 0.05);
+  ok(g.aim === door, 'aim resolves the door');
+  const evs = step(g, { actionEdge: true }, 0.1);
+  ok(has(evs, 'portal'), 'E at the door emits the portal event');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN with the door in frame');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

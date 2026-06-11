@@ -260,6 +260,19 @@
     return m;
   };
 
+  // Portal door to THE STREET — dark frame in the white void, neon light leaking through
+  P.door = function () {
+    var m = C.newMesh(), frame = '#15171a', slab = '#05050c';
+    C.addBox(m, -0.62, 0, 0, 0.14, 2.3, 0.3, frame);                   // posts
+    C.addBox(m,  0.62, 0, 0, 0.14, 2.3, 0.3, frame);
+    C.addBox(m, 0, 2.3, 0, 1.4, 0.16, 0.34, frame);                    // lintel
+    C.addBox(m, 0, 0.02, -0.02, 1.1, 2.28, 0.08, slab, { flat: true }); // the dark doorway
+    C.addQuadZ(m, -0.55, 0.04, -0.49, 2.26, 0.062, '#ff2bd6', true);   // neon spill (street palette)
+    C.addQuadZ(m,  0.49, 0.04,  0.55, 2.26, 0.062, '#19e3ff', true);
+    C.addQuadY(m, -0.5, -0.18, 0.5, 0.2, 0.012, '#ff2bd6');            // glow pooling underneath
+    return fin(m, 6, 73, 8);
+  };
+
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
   P.human = function (opt) {

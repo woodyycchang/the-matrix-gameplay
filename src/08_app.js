@@ -302,6 +302,7 @@
       else if (a.kind === 'dummy') label = '[click] strike';
       else if (a.kind === 'bike') label = '[E] ride';
       else if (a.kind === 'katana') label = '[E] take katana';
+      else if (a.kind === 'door') label = '[E] enter the street';
     }
     if (hud.aim.textContent !== label) hud.aim.textContent = label;
     hud.aim.style.opacity = label ? 1 : 0;
@@ -374,6 +375,7 @@
   function frame(t) {
     requestAnimationFrame(frame);
     if (!started) return;
+    if (portal.open) { lastT = t; return; }
     var t0 = performance.now();
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
@@ -400,6 +402,7 @@
       if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
+      else if (e.name === 'portal') openPortal();
       else A.handle(e.name);
     }
     var ops = C.render(game, W, H, game.time);
@@ -449,6 +452,45 @@
     } catch (e) {}
   }
 
+  // ---------- portal to THE STREET (iframe overlay; CONSTRUCT sim sleeps while inside) ----------
+  var portal = { open: false, wrap: null };
+  function openPortal() {
+    if (portal.open) return;
+    if (consoleOpen) closeConsole();
+    setPaused(false);
+    portal.open = true;
+    A.portal(true);
+    A.handle('ringStop');
+    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
+    var w = document.createElement('div');
+    w.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#05050c';
+    var f = document.createElement('iframe');
+    f.src = 'street.html';
+    f.setAttribute('allow', 'pointer-lock; fullscreen; autoplay');
+    f.style.cssText = 'width:100%;height:100%;border:0;display:block;background:#05050c';
+    var b = document.createElement('button');
+    b.textContent = '\u21a9 CONSTRUCT';
+    b.style.cssText = 'position:absolute;top:10px;right:12px;z-index:9001;background:rgba(2,8,3,.85);' +
+      'color:#46ff7a;border:1px solid #1f6b3c;padding:7px 12px;font:12px ui-monospace,Menlo,Consolas,monospace;' +
+      'letter-spacing:.14em;cursor:pointer';
+    b.addEventListener('click', closePortal);
+    w.appendChild(f); w.appendChild(b);
+    document.body.appendChild(w);
+    portal.wrap = w;
+    try { f.addEventListener('load', function () { try { f.contentWindow.focus(); } catch (e) {} }); } catch (e) {}
+  }
+  function closePortal() {
+    if (!portal.open) return;
+    portal.open = false;
+    if (portal.wrap && portal.wrap.parentNode) portal.wrap.parentNode.removeChild(portal.wrap);
+    portal.wrap = null;
+    A.portal(false);
+    lastT = 0; acc = 0;
+    game.fx.flash = 1; game.fx.flashCol = '#ffffff';
+    game.say(C.LINES.portalBack, 0.2);
+    if (!touch.active) tryLock();
+  }
+
   // ---------- boot ----------
   function start() {
     if (started) return;
@@ -488,7 +530,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['the street', 'metaverse'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
@@ -530,8 +572,8 @@
 
     resize();
     // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
-    window.addEventListener('blur', function () { if (started) setPaused(true); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
+    window.addEventListener('blur', function () { if (started && !portal.open) setPaused(true); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden && started && !portal.open) setPaused(true); });
     window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
     window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);

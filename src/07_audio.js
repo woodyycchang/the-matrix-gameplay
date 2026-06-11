@@ -8,7 +8,7 @@
 
   if (!hasWindow) {
     A.init = function () {}; A.handle = function () {}; A.setAmbience = function () {};
-    A.speak = function () {}; A.engine = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
+    A.speak = function () {}; A.engine = function () {}; A.portal = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
     return;
   }
 
@@ -61,6 +61,11 @@
     // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
     var g = A.muted ? 0 : Math.min(0.014, 0.0015 + sp * 0.00028 + th * 0.0032);
     engGain.gain.setTargetAtTime(g, now, 0.05);
+  };
+  A.portal = function (on) {
+    if (!ctx || !master) return;
+    master.gain.setTargetAtTime(on ? 0 : (A.muted ? 0 : 0.6), ctx.currentTime, 0.08);
+    if (on && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
   };
   function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
   function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }

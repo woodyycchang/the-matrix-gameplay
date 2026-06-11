@@ -241,4 +241,19 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   step(g, { fireEdge: true }, 0.08);
   shoot(g, '26_katana_strike', g.time);
 }
+
+
+// ---- 27 the door to THE STREET, standing in the void ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the metaverse');
+  step(g, null, 1.6);
+  const door = g.scene.insts.find(i => i.kind === 'door');
+  at(g, door.pos[0] - 1.4, 0, door.pos[2] + 2.6);
+  const dx = door.pos[0] - g.cam.pos[0], dy = door.pos[1] + 1.15 - g.cam.pos[1], dz = door.pos[2] - g.cam.pos[2];
+  g.player.yaw = Math.atan2(dx, -dz); g.player.pitch = Math.asin(dy / Math.hypot(dx, dy, dz));
+  step(g, null, 0.05);
+  shoot(g, '27_door_void', g.time);
+}
 console.log('done');

@@ -621,6 +621,19 @@
     return m;
   };
 
+  // Portal door to THE STREET — dark frame in the white void, neon light leaking through
+  P.door = function () {
+    var m = C.newMesh(), frame = '#15171a', slab = '#05050c';
+    C.addBox(m, -0.62, 0, 0, 0.14, 2.3, 0.3, frame);                   // posts
+    C.addBox(m,  0.62, 0, 0, 0.14, 2.3, 0.3, frame);
+    C.addBox(m, 0, 2.3, 0, 1.4, 0.16, 0.34, frame);                    // lintel
+    C.addBox(m, 0, 0.02, -0.02, 1.1, 2.28, 0.08, slab, { flat: true }); // the dark doorway
+    C.addQuadZ(m, -0.55, 0.04, -0.49, 2.26, 0.062, '#ff2bd6', true);   // neon spill (street palette)
+    C.addQuadZ(m,  0.49, 0.04,  0.55, 2.26, 0.062, '#19e3ff', true);
+    C.addQuadY(m, -0.5, -0.18, 0.5, 0.2, 0.012, '#ff2bd6');            // glow pooling underneath
+    return fin(m, 6, 73, 8);
+  };
+
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
   P.human = function (opt) {
@@ -1223,6 +1236,8 @@
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
     bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
+    door: 'That light is not mine. A whole other street runs behind this door.',
+    portalBack: 'Hung up on the neon. Back to white.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -1244,6 +1259,7 @@
     fountain: 'fountain',
     motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', bike: 'bike', bikes: 'bike',
     katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
+    door: 'door', doorway: 'door',
     pedestal: 'pedestal'
   };
   var SCENEKEYS = [
@@ -1258,6 +1274,8 @@
     if (!s) return { type: 'none' };
     if (/\bhelp\b/.test(s)) return { type: 'help' };
     if (/\b(code|vision|digital|glyphs?)\b/.test(s) && !/\bdress\b/.test(s)) return { type: 'code' };
+    // the portal outranks the city scene so "the street protocol" opens the door, not the crowd
+    if (/\b(metaverse|protocol|neon)\b/.test(s)) return { type: 'props', props: [{ kind: 'door', n: 1 }] };
     for (var i = 0; i < SCENEKEYS.length; i++) {
       if (SCENEKEYS[i][0].test(s)) {
         var sc = SCENEKEYS[i][1];
@@ -1458,6 +1476,7 @@
       case 'mirror': mesh = P.mirror(); this.say(L.mirror); break;
       case 'bike': mesh = P.bike(); k = 'bike'; lbl = 'motorcycle'; this.say(L.bike, 0.6); break;
       case 'katana': mesh = P.katanaStand(); k = 'katana'; lbl = 'katana'; this.say(L.katana, 0.6); break;
+      case 'door': mesh = P.door(); k = 'door'; lbl = 'the street'; this.say(L.door, 0.6); break;
       case 'bench': mesh = P.bench(); break;
       case 'lamppost': mesh = P.lamppost(); break;
       case 'fountain': mesh = P.fountain(); break;
@@ -1650,11 +1669,11 @@
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana' && it.kind !== 'door') continue;
       var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : (it.kind === 'door' ? 2.6 : 2.8))));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -1676,6 +1695,8 @@
       this.enterBooth();
     } else if (it.kind === 'bike') {
       this.mountBike(it);
+    } else if (it.kind === 'door') {
+      this.emit('portal');
     } else if (it.kind === 'katana') {
       it.loadDir = -1;
       if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
@@ -2133,7 +2154,7 @@
 
   if (!hasWindow) {
     A.init = function () {}; A.handle = function () {}; A.setAmbience = function () {};
-    A.speak = function () {}; A.engine = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
+    A.speak = function () {}; A.engine = function () {}; A.portal = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
     return;
   }
 
@@ -2186,6 +2207,11 @@
     // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
     var g = A.muted ? 0 : Math.min(0.014, 0.0015 + sp * 0.00028 + th * 0.0032);
     engGain.gain.setTargetAtTime(g, now, 0.05);
+  };
+  A.portal = function (on) {
+    if (!ctx || !master) return;
+    master.gain.setTargetAtTime(on ? 0 : (A.muted ? 0 : 0.6), ctx.currentTime, 0.08);
+    if (on && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
   };
   function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
   function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }
@@ -2633,6 +2659,7 @@
       else if (a.kind === 'dummy') label = '[click] strike';
       else if (a.kind === 'bike') label = '[E] ride';
       else if (a.kind === 'katana') label = '[E] take katana';
+      else if (a.kind === 'door') label = '[E] enter the street';
     }
     if (hud.aim.textContent !== label) hud.aim.textContent = label;
     hud.aim.style.opacity = label ? 1 : 0;
@@ -2705,6 +2732,7 @@
   function frame(t) {
     requestAnimationFrame(frame);
     if (!started) return;
+    if (portal.open) { lastT = t; return; }
     var t0 = performance.now();
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
@@ -2731,6 +2759,7 @@
       if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
+      else if (e.name === 'portal') openPortal();
       else A.handle(e.name);
     }
     var ops = C.render(game, W, H, game.time);
@@ -2780,6 +2809,45 @@
     } catch (e) {}
   }
 
+  // ---------- portal to THE STREET (iframe overlay; CONSTRUCT sim sleeps while inside) ----------
+  var portal = { open: false, wrap: null };
+  function openPortal() {
+    if (portal.open) return;
+    if (consoleOpen) closeConsole();
+    setPaused(false);
+    portal.open = true;
+    A.portal(true);
+    A.handle('ringStop');
+    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
+    var w = document.createElement('div');
+    w.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#05050c';
+    var f = document.createElement('iframe');
+    f.src = 'street.html';
+    f.setAttribute('allow', 'pointer-lock; fullscreen; autoplay');
+    f.style.cssText = 'width:100%;height:100%;border:0;display:block;background:#05050c';
+    var b = document.createElement('button');
+    b.textContent = '\u21a9 CONSTRUCT';
+    b.style.cssText = 'position:absolute;top:10px;right:12px;z-index:9001;background:rgba(2,8,3,.85);' +
+      'color:#46ff7a;border:1px solid #1f6b3c;padding:7px 12px;font:12px ui-monospace,Menlo,Consolas,monospace;' +
+      'letter-spacing:.14em;cursor:pointer';
+    b.addEventListener('click', closePortal);
+    w.appendChild(f); w.appendChild(b);
+    document.body.appendChild(w);
+    portal.wrap = w;
+    try { f.addEventListener('load', function () { try { f.contentWindow.focus(); } catch (e) {} }); } catch (e) {}
+  }
+  function closePortal() {
+    if (!portal.open) return;
+    portal.open = false;
+    if (portal.wrap && portal.wrap.parentNode) portal.wrap.parentNode.removeChild(portal.wrap);
+    portal.wrap = null;
+    A.portal(false);
+    lastT = 0; acc = 0;
+    game.fx.flash = 1; game.fx.flashCol = '#ffffff';
+    game.say(C.LINES.portalBack, 0.2);
+    if (!touch.active) tryLock();
+  }
+
   // ---------- boot ----------
   function start() {
     if (started) return;
@@ -2819,7 +2887,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['the street', 'metaverse'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
@@ -2861,8 +2929,8 @@
 
     resize();
     // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
-    window.addEventListener('blur', function () { if (started) setPaused(true); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
+    window.addEventListener('blur', function () { if (started && !portal.open) setPaused(true); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden && started && !portal.open) setPaused(true); });
     window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
     window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);

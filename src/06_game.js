@@ -28,6 +28,8 @@
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
     bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
+    door: 'That light is not mine. A whole other street runs behind this door.',
+    portalBack: 'Hung up on the neon. Back to white.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -49,6 +51,7 @@
     fountain: 'fountain',
     motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', bike: 'bike', bikes: 'bike',
     katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
+    door: 'door', doorway: 'door',
     pedestal: 'pedestal'
   };
   var SCENEKEYS = [
@@ -63,6 +66,8 @@
     if (!s) return { type: 'none' };
     if (/\bhelp\b/.test(s)) return { type: 'help' };
     if (/\b(code|vision|digital|glyphs?)\b/.test(s) && !/\bdress\b/.test(s)) return { type: 'code' };
+    // the portal outranks the city scene so "the street protocol" opens the door, not the crowd
+    if (/\b(metaverse|protocol|neon)\b/.test(s)) return { type: 'props', props: [{ kind: 'door', n: 1 }] };
     for (var i = 0; i < SCENEKEYS.length; i++) {
       if (SCENEKEYS[i][0].test(s)) {
         var sc = SCENEKEYS[i][1];
@@ -263,6 +268,7 @@
       case 'mirror': mesh = P.mirror(); this.say(L.mirror); break;
       case 'bike': mesh = P.bike(); k = 'bike'; lbl = 'motorcycle'; this.say(L.bike, 0.6); break;
       case 'katana': mesh = P.katanaStand(); k = 'katana'; lbl = 'katana'; this.say(L.katana, 0.6); break;
+      case 'door': mesh = P.door(); k = 'door'; lbl = 'the street'; this.say(L.door, 0.6); break;
       case 'bench': mesh = P.bench(); break;
       case 'lamppost': mesh = P.lamppost(); break;
       case 'fountain': mesh = P.fountain(); break;
@@ -455,11 +461,11 @@
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana' && it.kind !== 'door') continue;
       var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : (it.kind === 'door' ? 2.6 : 2.8))));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -481,6 +487,8 @@
       this.enterBooth();
     } else if (it.kind === 'bike') {
       this.mountBike(it);
+    } else if (it.kind === 'door') {
+      this.emit('portal');
     } else if (it.kind === 'katana') {
       it.loadDir = -1;
       if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
