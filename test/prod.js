@@ -109,6 +109,25 @@ ok(/scroll doesn.{0,8}t take no/i.test(html), 'courier refusal line present and 
 ok(/function showHint\(txt, dur, once\)/.test(html), 'showHint supports once-only hints');
 ok(/_hintSeen/.test(html), 'once-hint dedupe set present');
 
+console.log('== courier corruption signifier ==');
+{
+  const fresh = boot();
+  const G2 = fresh.GAME;
+  G2.seed(5); G2.start();
+  const courier = G2.debug.refs.specials.find(s => s.special === 'courier');
+  ok(!!courier && !!courier.fxHalo, 'courier carries a corruption halo');
+  const bx = courier.fxBaseX, bz = courier.fxBaseZ;
+  G2.debug.warp(8, -2875); for (let i = 0; i < 2; i++) G2.update(1/60);
+  for (let i = 0; i < 210; i++) G2.update(1/60);
+  for (let i = 0; i < 180; i++) G2.update(1/60);
+  ok(courier._fx > 0.9, 'signal is live on the forecourt', courier._fx);
+  ok(courier.fxHalo.material.opacity > 0.05 && courier.fxHalo.material.opacity < 0.5,
+     'halo visible but restrained (saliency window)', courier.fxHalo.material.opacity);
+  const jx = Math.abs(courier.grp.position.x - bx), jz = Math.abs(courier.grp.position.z - bz);
+  ok(jx < 0.03 && jz < 0.03, 'jitter stays sub-3cm, far under the 6m talk radius');
+  ok(G2.debug.openDialogWith('courier') === true, 'courier still reachable while glitching');
+}
+
 console.log('== version ==');
 ok(G.debug.version === '1.0.0', 'version exposed', G.debug.version);
 ok(/STREET PROTOCOL/.test(html.match(/<title>([^<]*)<\/title>/)[1]), 'title intact');

@@ -179,6 +179,22 @@ const courier = addSpecial({ id:'courier', kind:'avatar', tier:'custom', hue:0.0
   'One look and you go back to sleep happy. Upgraded. No more questions.',
   'No? The scroll doesn\u2019t take no.' ]});
 courier.av.visorRef = null;
+(function corruptCourier(){
+  // The courier is patient zero — the virus already has him. He is the only
+  // figure on the forecourt whose render is breaking up. This is a saliency
+  // signifier (a glitching anomaly in a clean crowd pulls the eye) that is
+  // also pure story: you notice "that one's wrong", not "the game flagged a target".
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('#b81e6e'),
+    transparent:true, opacity:0.0, blending:THREE.AdditiveBlending, depthWrite:false }));
+  halo.scale.set(2.6, 3.2, 1); halo.position.y = 1.2;
+  courier.grp.add(halo);
+  courier.fxHalo = halo;
+  courier.fxBaseX = courier.grp.position.x;
+  courier.fxBaseZ = courier.grp.position.z;
+  courier.fxBaseY = courier.grp.rotation.y;
+  // remember each material's base color so we can pulse a dirty shift over it
+  courier.fxMats = courier.av.mats.map(m => ({ m, c: m.color ? m.color.clone() : null }));
+})();
 (function clubQueue(){ // bodies in line outside the rope
   for(let i=0;i<7;i++){
     const r = rng(); const tier = r<0.5 ? 'custom' : (r<0.8 ? 'retail' : 'terminal');
@@ -195,7 +211,27 @@ function updateSpecials(dt){
       sp.grp.position.y = 1.6 + Math.sin(state.time*1.7)*0.18;
       sp.grp.userData.core.rotation.y += dt*0.8;
       sp.grp.userData.core.rotation.x += dt*0.33;
-    } else if(sp.av){ avAnim(sp.av, dt, 0); }
+    } else if(sp.av){
+      avAnim(sp.av, dt, 0);
+      if(sp.special === 'courier' && sp.fxHalo){
+        // signal is live only while he's the objective (on the forecourt, pre-duel)
+        const live = (state.phase === 'ride' || state.phase === 'plaza' || state.phase === 'intro') && !sp.talked;
+        const tgt = live ? 1 : 0;
+        sp._fx = (sp._fx===undefined?0:sp._fx) + (tgt - (sp._fx||0)) * Math.min(1, dt*3);
+        const k = sp._fx;
+        // micro positional jitter — a render that won't hold still (~1.5cm, well under the 6m talk radius)
+        const t = state.time;
+        sp.grp.position.x = sp.fxBaseX + (Math.sin(t*37.0)*0.6 + Math.sin(t*113.0)*0.4) * 0.015 * k;
+        sp.grp.position.z = sp.fxBaseZ + (Math.sin(t*41.0+1.3)*0.6) * 0.012 * k;
+        sp.grp.rotation.y = sp.fxBaseY + Math.sin(t*7.0)*0.02 * k;
+        // dirty magenta color pulse over the base materials
+        const pulse = (0.5 + 0.5*Math.sin(t*5.5)) * k;
+        const dirty = new THREE.Color(0.72, 0.12, 0.43);
+        for(const e of sp.fxMats){ if(e.c){ e.m.color.copy(e.c).lerp(dirty, pulse*0.28); } }
+        // halo breathes
+        sp.fxHalo.material.opacity = (0.16 + 0.12*Math.sin(t*4.0)) * k;
+      }
+    }
   }
 }
 function nearestTalk(px, pz, maxR){
