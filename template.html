@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>THE CONSTRUCT — loading program</title>
+<style>
+  :root{
+    --white:#fbfbf9; --ink:#2a2a28; --faint:#8a8a86;
+    --green:#46ff7a; --green-dim:#0d5d2c; --code-bg:#020803;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--white)}
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink)}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+  /* HUD */
+  #scene{position:fixed;top:14px;left:16px;font-size:11px;letter-spacing:.22em;color:var(--faint);
+    text-transform:uppercase;pointer-events:none;mix-blend-mode:difference;color:#9a9a96}
+  #aim{position:fixed;left:50%;top:56%;transform:translateX(-50%);font-size:12px;letter-spacing:.14em;
+    color:var(--ink);background:rgba(251,251,249,.72);padding:3px 10px;border:1px solid rgba(42,42,40,.25);
+    opacity:0;transition:opacity .15s;pointer-events:none}
+  #lookhint{position:fixed;top:14px;right:16px;font-size:11px;letter-spacing:.18em;color:var(--faint);
+    opacity:0;transition:opacity .3s;pointer-events:none}
+  #mic{position:fixed;right:14px;bottom:64px;width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:15px;cursor:pointer;color:var(--ink)}
+  #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
+  /* console */
+  #console{position:fixed;left:0;right:0;bottom:0;padding:10px 16px 12px;pointer-events:none}
+  #log{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+  #log .line{font-size:12.5px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
+    transition:opacity 1.2s;max-width:72ch}
+  #log .line.sys{color:var(--faint)}
+  #log .line.fade{opacity:0}
+  #inrow{display:flex;gap:8px;align-items:center;pointer-events:auto;opacity:.55;transition:opacity .15s}
+  #inrow.open{opacity:1}
+  #inrow .gt{color:#0d7a3a;font-size:13px}
+  #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
+    font:inherit;font-size:13px;color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
+  #cmd::placeholder{color:#9a9a96}
+  #chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;pointer-events:auto}
+  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);
+    background:transparent;border:1px solid rgba(42,42,40,.3);padding:4px 11px;cursor:pointer;border-radius:2px}
+  .chip:hover{border-color:var(--ink);background:rgba(42,42,40,.05)}
+  /* touch */
+  #tbtns{position:fixed;right:10px;bottom:110px;display:none;flex-direction:column;gap:8px}
+  body.touch #tbtns{display:flex}
+  .tb{font:inherit;font-size:11px;letter-spacing:.12em;padding:11px 13px;border:1px solid rgba(42,42,40,.4);
+    background:rgba(251,251,249,.78);color:var(--ink);border-radius:3px}
+  /* boot */
+  #boot{position:fixed;inset:0;background:var(--code-bg);display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:26px;z-index:10;cursor:pointer;transition:opacity .6s}
+  #boot.gone{opacity:0;pointer-events:none}
+  #boot .t{color:var(--green);font-size:clamp(26px,5.4vw,52px);letter-spacing:.42em;text-indent:.42em;
+    text-shadow:0 0 18px rgba(70,255,122,.45);animation:fl 3.2s infinite}
+  #boot .s{color:#2f9e57;font-size:12px;letter-spacing:.3em;text-transform:uppercase}
+  #go{font:inherit;font-size:13px;letter-spacing:.3em;color:var(--green);background:transparent;
+    border:1px solid var(--green-dim);padding:12px 34px;cursor:pointer;border-radius:2px}
+  #go:hover{border-color:var(--green);box-shadow:0 0 14px rgba(70,255,122,.25)}
+  #boot .keys{color:#1f6b3c;font-size:11px;letter-spacing:.14em;line-height:2;text-align:center;max-width:60ch;padding:0 20px}
+  @keyframes fl{0%,100%{opacity:1}92%{opacity:1}94%{opacity:.55}96%{opacity:1}}
+  @media (prefers-reduced-motion: reduce){#boot .t{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="scene">THE CONSTRUCT</div>
+<div id="aim"></div>
+<div id="lookhint">CLICK TO LOOK · ESC TO RELEASE</div>
+<button id="mic" title="hold V to talk">&#9210;</button>
+
+<div id="console">
+  <div id="log"></div>
+  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"></div>
+  <div id="chips"></div>
+</div>
+
+<div id="tbtns"></div>
+
+<div id="boot">
+  <div class="t">THE CONSTRUCT</div>
+  <div class="s">loading program · an original homage</div>
+  <button id="go" type="button">ENTER</button>
+  <div class="keys">WASD move · SHIFT sprint · SPACE jump · mouse look · C code vision<br>
+  E use · click fire/strike · ENTER type a request · hold V to speak · M mute</div>
+</div>
+
+<script>
+/*__INJECT__*/
+</script>
+</body>
+</html>
