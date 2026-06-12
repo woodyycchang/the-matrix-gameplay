@@ -198,6 +198,45 @@
   // Deterministic lexical rescue: partial words map to designated words without
   // waking the model. 'motor' is a prefix of 'motorcycle'; 'chairs' starts with
   // 'chair'. Classification wants determinism - generation can stay creative.
+
+  // Levenshtein <= 1 (one insert/delete/substitution/transposition tolerance)
+  function near1(a, b) {
+    if (a === b) return true;
+    var la = a.length, lb = b.length;
+    if (la === lb) {                              // adjacent transposition (chiar <-> chair)
+      var diff = [];
+      for (var k = 0; k < la; k++) if (a[k] !== b[k]) diff.push(k);
+      if (diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]]) return true;
+    }
+    if (Math.abs(la - lb) > 1) return false;
+    var i = 0, j = 0, edits = 0;
+    while (i < la && j < lb) {
+      if (a[i] === b[j]) { i++; j++; continue; }
+      if (++edits > 1) return false;
+      if (la > lb) i++; else if (lb > la) j++; else { i++; j++; }
+    }
+    if (i < la || j < lb) edits++;
+    return edits <= 1;
+  }
+  // Rescue a designated word from the USER text first, then from the model REPLY:
+  // exact token, prefix, or a single-typo neighbour. Determinism around a small model.
+  I.rescueWord = function (userText, replyText) {
+    function scan(text) {
+      var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
+      var best = null, bestLen = 0;
+      for (var d = 0; d < I.designatedList.length; d++) {
+        var w = I.designatedList[d];
+        for (var i = 0; i < toks.length; i++) {
+          var t = toks[i];
+          if (w === t) return w;
+          if ((w.indexOf(t) === 0 || t.indexOf(w) === 0 || near1(w, t)) && t.length > bestLen) { best = w; bestLen = t.length; }
+        }
+      }
+      return best;
+    }
+    return scan(userText) || scan(replyText) || null;
+  };
+
   I.lexicalGuess = function (text) {
     var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
     var best = null, bestLen = 0;
