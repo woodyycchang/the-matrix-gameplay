@@ -110,7 +110,7 @@
     while (ttTimer > per && ttCur) {
       ttTimer -= per; ttChars++;
       ttCur.el.textContent = (ttCur.system ? '' : 'operator: ') + ttCur.text.slice(0, ttChars);
-      if (ttChars % 2 === 0) A.handle('tick');
+      if (ttChars % 4 === 0) A.handle('tick');
       if (ttChars >= ttCur.text.length) {
         var el = ttCur.el;
         setTimeout(function () { el.classList.add('fade'); }, 6500);
@@ -331,18 +331,18 @@
   }
 
   // ---------- HUD ----------
+  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
   function updateHUD() {
     var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     if (game.scene && game.scene.infinite) {
       var dpx = game.player.pos[0], dpz = game.player.pos[2];
-      var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8);
+      var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8 / 10) * 10;  // 10 m steps, not per-frame churn
       if (dOut > 5) sceneLine += ' \u00b7 ' + dOut + ' m out';
     }
-    hud.scene.textContent = sceneLine;
+    if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
+    if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
     var a = game.aim, label = '';
     if (game.bike) {
-      // show the controls hint briefly after mounting, then let it fade so it
-      // doesn't sit on screen the whole ride — once you've ridden a little, you know it
       if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
       else label = '';
     } else if (a && game.state === 'play') {
@@ -352,8 +352,9 @@
       else if (a.kind === 'bike') label = '[E] ride';
       else if (a.kind === 'katana') label = '[E] take katana';
     }
-    if (hud.aim.textContent !== label) hud.aim.textContent = label;
-    hud.aim.style.opacity = label ? 1 : 0;
+    if (label !== lastAimLabel) { lastAimLabel = label; hud.aim.textContent = label; }
+    var op = label ? 1 : 0;
+    if (op !== lastAimOp) { lastAimOp = op; hud.aim.style.opacity = op; }
   }
 
   // ---------- main loop ----------
@@ -369,15 +370,19 @@
     lastFont = '';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   }
+  var lastMsAvg = 0;
   function adapt(ms) {
     frameMs.push(ms);
-    if (frameMs.length < 75) return;
+    if (frameMs.length < 36) return;               // judge every ~0.6 s, not 1.25 s
     var sum = 0; for (var i = 0; i < frameMs.length; i++) sum += frameMs[i];
     var avg = sum / frameMs.length;
     frameMs.length = 0;
-    if (avg > 23 && renderScaleIdx < SCALES.length - 1) {
+    lastMsAvg = avg;
+    if (avg > 30 && renderScaleIdx < SCALES.length - 1) {        // badly behind: drop two steps
+      renderScaleIdx = Math.min(SCALES.length - 1, renderScaleIdx + 2); resize(); trimCrowd();
+    } else if (avg > 17 && renderScaleIdx < SCALES.length - 1) { // not holding 60: drop one
       renderScaleIdx++; resize(); trimCrowd();
-    } else if (avg < 12.5 && renderScaleIdx > 0) {
+    } else if (avg < 9 && renderScaleIdx > 0) {                  // lots of headroom: raise one
       renderScaleIdx--; resize();
     }
   }

@@ -1047,6 +1047,18 @@ section('inference runs in a Worker (the game loop never stalls)');
   ok(/neural\.pending\[/.test(app4) && /function neuralSend/.test(app4), 'replies route by id; sends stay serialised');
 }
 
+
+section('typing-lag fixes (frame budget guards)');
+{
+  const fs5 = require('fs');
+  const app5 = fs5.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/frameMs\.length < 36/.test(app5) && /avg > 30 /.test(app5) && /avg > 17 /.test(app5), 'dynamic resolution reacts in ~0.6s, drops hard when badly behind');
+  ok(/write only on change/.test(app5) && /lastSceneLine/.test(app5) && /lastAimOp/.test(app5), 'HUD DOM writes are change-detected, never per-frame');
+  ok(/\* 8 \/ 10\) \* 10/.test(app5), 'infinite-scene metres step by 10 - a few writes per second, not 60');
+  ok(/ttChars % 4 === 0\) A\.handle\('tick'\)/.test(app5), 'teletype tick rate halved (oscillator churn down)');
+  ok(/lastMsAvg \/ 2\) \* 2\) \+ 'ms'/.test(app5), 'live frame-ms meter on the scene line for real diagnosis');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
