@@ -872,6 +872,38 @@ section('wall-grind does not roar (scrape throttled at the boundary)');
   ok(scrapes <= frames / 60 * 7, 'scrape is throttled, not a per-substep roar (' + scrapes + ' over 3s, was ~540 before)');
 }
 
+section('city is INFINITE too (boulevard streams along x, crowd follows)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a crowded city street');
+  step(g, null, 0.6);
+  ok(g.scene.infinite === true, 'city scene is flagged infinite');
+  ok(Object.keys(g.scene.chunks).length >= 2, 'boulevard chunks exist on arrival');
+  ok(g.crowd && g.crowd.peds.length > 0, 'crowd populated');
+
+  // walk a long way down the boulevard (fountain is now off to the side, main lane is clear)
+  const seen = new Set(Object.keys(g.scene.chunks));
+  let maxChunks = Object.keys(g.scene.chunks).length;
+  for (let i = 0; i < 2000; i++) {
+    step(g, { fwd: 1, sprint: true }, 1 / 60);
+    Object.keys(g.scene.chunks).forEach(k => seen.add(k));
+    maxChunks = Math.max(maxChunks, Object.keys(g.scene.chunks).length);
+  }
+  ok(Math.abs(g.player.pos[0]) > 60, 'walked far along the boulevard (x=' + g.player.pos[0].toFixed(0) + ')');
+  ok(seen.size > Object.keys(g.scene.chunks).length + 1, 'new boulevard chunks generated while walking (' + seen.size + ' seen)');
+  ok(maxChunks <= 6, 'boulevard chunk count stays bounded (max ' + maxChunks + ')');
+
+  // crowd recycles around the player — there are still pedestrians near the walker
+  const px = g.player.pos[0];
+  const near = g.crowd.peds.filter(pd => Math.abs(pd.it.pos[0] - px) < 50).length;
+  ok(near > 0, 'pedestrians still around the player after walking far (' + near + ')');
+
+  ok(g.player.pos[1] === g.scene.groundY || g.player.pos[1] < 0.2, 'still on the ground far out');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out city renders without NaN');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

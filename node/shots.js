@@ -304,4 +304,16 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   shoot(g, '33_neon_infinite_far', g.time);
 }
 
+
+// ---- 34 far down the INFINITE city boulevard ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a crowded city street');
+  step(g, null, 0.6);
+  for (let i = 0; i < 900; i++) step(g, { fwd: 1, sprint: true }, 1/60);
+  at(g, g.player.pos[0], 1.6, 0.4); look(g, Math.PI/2, -0.02); step(g, null, 0.05);
+  shoot(g, '34_city_infinite_far', g.time);
+}
+
 console.log('done');

@@ -308,7 +308,10 @@
     }
     this.crowd = { peds: peds, red: null, agent: null };
     var self = this;
-    sc.update = function (game, dt) { self.updateCrowd(dt); };
+    sc.update = function (game, dt) {
+      if (sc._streamCity) sc._streamCity(game);   // stream the infinite boulevard
+      self.updateCrowd(dt);
+    };
   };
 
   Game.prototype.updateCrowd = function (dt) {
@@ -325,8 +328,8 @@
       if (d2 < 2.1 && d2 > 0.0001) {
         it.pos[2] += (dz >= 0 ? 1 : -1) * dt * 1.6;
       }
-      if (it.pos[0] > 47) { it.pos[0] = -47; }
-      if (it.pos[0] < -47) { it.pos[0] = 47; }
+      if (it.pos[0] > p[0] + 48) { it.pos[0] -= 96; }
+      if (it.pos[0] < p[0] - 48) { it.pos[0] += 96; }
       var s = Math.sin(pd.ph);
       it.pose[1] = s * 0.5; it.pose[2] = -s * 0.5;
       it.pose[3] = -s * 0.38; it.pose[4] = s * 0.38;
