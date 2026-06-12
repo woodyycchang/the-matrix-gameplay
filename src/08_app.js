@@ -329,8 +329,12 @@
   function updateHUD() {
     hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (game.bike) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro (limited)';
-    else if (a && game.state === 'play') {
+    if (game.bike) {
+      // show the controls hint briefly after mounting, then let it fade so it
+      // doesn't sit on screen the whole ride — once you've ridden a little, you know it
+      if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
+      else label = '';
+    } else if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
