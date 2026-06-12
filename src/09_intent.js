@@ -31,6 +31,7 @@
   ];
 
   var embedFn = null;       // async (text) -> Float32Array, plugged at runtime
+  var PRE = { query: '', anchor: '' };   // optional model-specific prefixes (e.g. bge)
   var anchorVecs = null;    // [{word, vec}]
   var THRESH = 0.42;        // below this similarity, stay 'unknown' (don't guess wildly)
 
@@ -47,8 +48,9 @@
     // plug an embedder (real model in browser, mock in tests), then index the anchors.
     // A SYNC embedder (returns a vector directly) indexes immediately and unlocks the
     // *Sync methods below; an async one (returns a Promise) indexes via the chain.
-    configure: function (embed) {
+    configure: function (embed, prefixes) {
       embedFn = embed;
+      PRE = { query: (prefixes && prefixes.query) || '', anchor: (prefixes && prefixes.anchor) || '' };
       anchorVecs = null;
       var probe = embedFn('probe');
       if (probe && typeof probe.then === 'function') {
@@ -56,14 +58,14 @@
         INTENTS.forEach(function (it) {
           it.anchors.forEach(function (a) {
             seq = seq.then(function (acc) {
-              return Promise.resolve(embedFn(a)).then(function (v) { acc.push({ word: it.word, vec: v }); return acc; });
+              return Promise.resolve(embedFn(PRE.anchor + a)).then(function (v) { acc.push({ word: it.word, vec: v }); return acc; });
             });
           });
         });
         return seq.then(function (acc) { anchorVecs = acc; return true; });
       }
       var acc = [];
-      INTENTS.forEach(function (it) { it.anchors.forEach(function (a) { acc.push({ word: it.word, vec: embedFn(a) }); }); });
+      INTENTS.forEach(function (it) { it.anchors.forEach(function (a) { acc.push({ word: it.word, vec: embedFn(PRE.anchor + a) }); }); });
       anchorVecs = acc;
       return Promise.resolve(true);
     },
@@ -71,7 +73,7 @@
     // sync mirrors (valid only with a sync embedder; used by the headless tests)
     classifySync: function (text) {
       if (!I.ready()) return null;
-      var v = embedFn(String(text || ''));
+      var v = embedFn(PRE.query + String(text || ''));
       var best = null, bestS = -1;
       for (var i = 0; i < anchorVecs.length; i++) {
         var s = cosine(v, anchorVecs[i].vec);
@@ -90,7 +92,7 @@
     // classify free text -> { word, score } or null when not confident
     classify: function (text) {
       if (!I.ready()) return Promise.resolve(null);
-      return Promise.resolve(embedFn(String(text || ''))).then(function (v) {
+      return Promise.resolve(embedFn(PRE.query + String(text || ''))).then(function (v) {
         var best = null, bestS = -1;
         for (var i = 0; i < anchorVecs.length; i++) {
           var s = cosine(v, anchorVecs[i].vec);

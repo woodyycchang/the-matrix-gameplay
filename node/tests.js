@@ -938,6 +938,19 @@ section('neural intent fallback (open-source embed layer, pluggable + testable)'
     const r = I.routeSync(phrase);
     ok(r.via === 'neural' && r.word === want, "'" + phrase + "' -> " + want + ' (got ' + (r.word || r.action.type) + ')');
   }
+
+  // prefixes (bge/e5-style) are applied to anchors and queries respectively
+  {
+    const calls = [];
+    const rec = text => { calls.push(text); const v = new Float32Array(4); v[0] = 1; return v; };
+    C.intent.configure(rec, { anchor: 'A: ', query: 'Q: ' });
+    ok(calls.length > 0 && calls.every(c => c.startsWith('A: ') || c === 'probe'), 'anchor prefix applied while indexing');
+    C.intent.classifySync('hello');
+    ok(calls[calls.length - 1] === 'Q: hello', 'query prefix applied at classify time');
+  }
+
+  // re-configure with the plain mock for the routing assertions below
+  I.configure(mock);
   // regex still wins first — a keyworded phrase never consults the neural layer
   const r1 = I.routeSync('load the dojo please');
   ok(r1.via === 'regex' && r1.action.scene === 'dojo', 'keyworded phrase routed by regex, not neural');

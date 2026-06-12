@@ -145,8 +145,12 @@
     if (!v) return;
     say('you: ' + v, true);
     C.intent.route(v).then(function (r) {
-      if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
-      game.request(r.via === 'neural' ? r.word : v);
+      if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
+      if (r.action.type === 'unknown' && neural.state === 'on') {
+        say("'" + v + "' is not in the library \u2014 ask for a program or an object I know", true);
+        return; // denied: nothing is spawned
+      }
+      game.request(v);
     });
   }
 
@@ -163,8 +167,12 @@
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
         C.intent.route(txt).then(function (r) {
-          if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
-          game.request(r.via === 'neural' ? r.word : txt);
+          if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
+          if (r.action.type === 'unknown' && neural.state === 'on') {
+            say("'" + txt + "' is not in the library \u2014 ask for a program or an object I know", true);
+            return;
+          }
+          game.request(txt);
         });
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
@@ -505,16 +513,16 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    say('loading the neural interpreter \u2014 open-source MiniLM, ~23 MB once, cached after', true);
+    say('loading the neural interpreter \u2014 open-source bge-small, ~30 MB once, cached after', true);
     import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
       .then(function (T) {
         T.env.allowLocalModels = false;
-        return T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
+        return T.pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', { quantized: true });
       })
       .then(function (pipe) {
         return C.intent.configure(function (text) {
           return pipe(text, { pooling: 'mean', normalize: true }).then(function (out) { return out.data; });
-        });
+        }, { query: 'Represent this sentence for searching relevant passages: ', anchor: '' });
       })
       .then(function () { neural.state = 'on'; say('neural operator online \u2014 speak naturally; I will map it to a program', true); })
       .catch(function (e) { neural.state = 'failed'; say('neural interpreter unavailable here (' + (e && e.message ? e.message.slice(0, 40) : 'load error') + ')', true); });

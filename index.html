@@ -2636,8 +2636,12 @@
     if (!v) return;
     say('you: ' + v, true);
     C.intent.route(v).then(function (r) {
-      if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
-      game.request(r.via === 'neural' ? r.word : v);
+      if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
+      if (r.action.type === 'unknown' && neural.state === 'on') {
+        say("'" + v + "' is not in the library \u2014 ask for a program or an object I know", true);
+        return; // denied: nothing is spawned
+      }
+      game.request(v);
     });
   }
 
@@ -2654,8 +2658,12 @@
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
         C.intent.route(txt).then(function (r) {
-          if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
-          game.request(r.via === 'neural' ? r.word : txt);
+          if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
+          if (r.action.type === 'unknown' && neural.state === 'on') {
+            say("'" + txt + "' is not in the library \u2014 ask for a program or an object I know", true);
+            return;
+          }
+          game.request(txt);
         });
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
@@ -2996,16 +3004,16 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    say('loading the neural interpreter \u2014 open-source MiniLM, ~23 MB once, cached after', true);
+    say('loading the neural interpreter \u2014 open-source bge-small, ~30 MB once, cached after', true);
     import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
       .then(function (T) {
         T.env.allowLocalModels = false;
-        return T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
+        return T.pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', { quantized: true });
       })
       .then(function (pipe) {
         return C.intent.configure(function (text) {
           return pipe(text, { pooling: 'mean', normalize: true }).then(function (out) { return out.data; });
-        });
+        }, { query: 'Represent this sentence for searching relevant passages: ', anchor: '' });
       })
       .then(function () { neural.state = 'on'; say('neural operator online \u2014 speak naturally; I will map it to a program', true); })
       .catch(function (e) { neural.state = 'failed'; say('neural interpreter unavailable here (' + (e && e.message ? e.message.slice(0, 40) : 'load error') + ')', true); });
@@ -3136,6 +3144,7 @@
   ];
 
   var embedFn = null;       // async (text) -> Float32Array, plugged at runtime
+  var PRE = { query: '', anchor: '' };   // optional model-specific prefixes (e.g. bge)
   var anchorVecs = null;    // [{word, vec}]
   var THRESH = 0.42;        // below this similarity, stay 'unknown' (don't guess wildly)
 
@@ -3152,8 +3161,9 @@
     // plug an embedder (real model in browser, mock in tests), then index the anchors.
     // A SYNC embedder (returns a vector directly) indexes immediately and unlocks the
     // *Sync methods below; an async one (returns a Promise) indexes via the chain.
-    configure: function (embed) {
+    configure: function (embed, prefixes) {
       embedFn = embed;
+      PRE = { query: (prefixes && prefixes.query) || '', anchor: (prefixes && prefixes.anchor) || '' };
       anchorVecs = null;
       var probe = embedFn('probe');
       if (probe && typeof probe.then === 'function') {
@@ -3161,14 +3171,14 @@
         INTENTS.forEach(function (it) {
           it.anchors.forEach(function (a) {
             seq = seq.then(function (acc) {
-              return Promise.resolve(embedFn(a)).then(function (v) { acc.push({ word: it.word, vec: v }); return acc; });
+              return Promise.resolve(embedFn(PRE.anchor + a)).then(function (v) { acc.push({ word: it.word, vec: v }); return acc; });
             });
           });
         });
         return seq.then(function (acc) { anchorVecs = acc; return true; });
       }
       var acc = [];
-      INTENTS.forEach(function (it) { it.anchors.forEach(function (a) { acc.push({ word: it.word, vec: embedFn(a) }); }); });
+      INTENTS.forEach(function (it) { it.anchors.forEach(function (a) { acc.push({ word: it.word, vec: embedFn(PRE.anchor + a) }); }); });
       anchorVecs = acc;
       return Promise.resolve(true);
     },
@@ -3176,7 +3186,7 @@
     // sync mirrors (valid only with a sync embedder; used by the headless tests)
     classifySync: function (text) {
       if (!I.ready()) return null;
-      var v = embedFn(String(text || ''));
+      var v = embedFn(PRE.query + String(text || ''));
       var best = null, bestS = -1;
       for (var i = 0; i < anchorVecs.length; i++) {
         var s = cosine(v, anchorVecs[i].vec);
@@ -3195,7 +3205,7 @@
     // classify free text -> { word, score } or null when not confident
     classify: function (text) {
       if (!I.ready()) return Promise.resolve(null);
-      return Promise.resolve(embedFn(String(text || ''))).then(function (v) {
+      return Promise.resolve(embedFn(PRE.query + String(text || ''))).then(function (v) {
         var best = null, bestS = -1;
         for (var i = 0; i < anchorVecs.length; i++) {
           var s = cosine(v, anchorVecs[i].vec);
