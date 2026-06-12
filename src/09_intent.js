@@ -115,4 +115,54 @@
       });
     }
   };
+
+  // ============ generative layer (chat LLM) ============
+  // The browser loads a small open-source instruct model; we open its context with a
+  // few-shot prompt describing the game, then every user line is answered by the model.
+  // Whatever the model SAYs is what we display — no templates. These two functions are
+  // pure (string in/out) so the whole contract is testable headless.
+  var DESIGNATED = {};
+  INTENTS.forEach(function (it) { DESIGNATED[it.word] = true; });
+  I.designated = DESIGNATED;
+
+  I.buildChatPrompt = function () {
+    var words = INTENTS.map(function (it) { return it.word; }).join(', ');
+    var sys = 'You are the Operator of THE CONSTRUCT, a white loading-space. ' +
+      'The ONLY designated programs and objects are: ' + words + '. ' +
+      'For every user request reply with EXACTLY one line in this format: ' +
+      'WORD: <one designated word, or none> | SAY: <one short line in your dry, calm operator voice>. ' +
+      'If the request does not belong to the designated list, use WORD: none and refuse in your own words. ' +
+      'Never invent a word outside the list. Never write anything except that one line.';
+    return [
+      { role: 'system', content: sys },
+      { role: 'user', content: 'something to sit on' },
+      { role: 'assistant', content: 'WORD: chair | SAY: One chair, folded out of the white. Sit.' },
+      { role: 'user', content: 'i want to learn how to fight' },
+      { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
+      { role: 'user', content: 'a fast ride through the night' },
+      { role: 'assistant', content: 'WORD: neon | SAY: The neon mile is endless. Throttle up.' },
+      { role: 'user', content: 'show me what this world really is' },
+      { role: 'assistant', content: 'WORD: code | SAY: Look again. It was always rain.' },
+      { role: 'user', content: 'a purple elephant that does my taxes' },
+      { role: 'assistant', content: 'WORD: none | SAY: The library carries no such program. Ask for what exists.' },
+      { role: 'user', content: 'wipe it all' },
+      { role: 'assistant', content: 'WORD: clear | SAY: Back to white.' }
+    ];
+  };
+
+  // parse the model's reply into { word: designated|null, say: string }.
+  // Tolerant of case/spacing; hard-validates the word against the designated list;
+  // if the model ignored the format, we still show ITS text (sanitized) as the say.
+  I.parseReply = function (raw) {
+    var text = String(raw == null ? '' : raw);
+    var wm = text.match(/word\s*[:=]\s*([a-z]+)/i);
+    var sm = text.match(/say\s*[:=]\s*([^\n]*)/i);
+    var word = wm ? wm[1].toLowerCase() : null;
+    if (!word || word === 'none' || !DESIGNATED[word]) word = null;
+    var say = sm ? sm[1] : text;
+    say = say.replace(/word\s*[:=][^|\n]*\|?/ig, '').replace(/\s+/g, ' ').trim();
+    if (say.length > 160) say = say.slice(0, 157) + '...';
+    if (!say) say = word ? ('Loading ' + word + '.') : 'The library is silent on that one.';
+    return { word: word, say: say };
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

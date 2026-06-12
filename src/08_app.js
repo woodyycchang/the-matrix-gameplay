@@ -144,14 +144,10 @@
     closeConsole();
     if (!v) return;
     say('you: ' + v, true);
-    C.intent.route(v).then(function (r) {
-      if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
-      if (r.action.type === 'unknown' && neural.state === 'on') {
-        say("'" + v + "' is not in the library \u2014 ask for a program or an object I know", true);
-        return; // denied: nothing is spawned
-      }
-      game.request(v);
-    });
+    var pp = C.parse(v);
+    if (pp.type !== 'unknown') { game.request(v); return; }
+    if (neural.state === 'on') { neuralChat(v); return; }
+    game.request(v);
   }
 
   // ---------- speech ----------
@@ -166,14 +162,10 @@
       recog.onresult = function (ev) {
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
-        C.intent.route(txt).then(function (r) {
-          if (r.via === 'neural') { say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true); game.request(r.word); return; }
-          if (r.action.type === 'unknown' && neural.state === 'on') {
-            say("'" + txt + "' is not in the library \u2014 ask for a program or an object I know", true);
-            return;
-          }
-          game.request(txt);
-        });
+        var pv = C.parse(txt);
+        if (pv.type !== 'unknown') { game.request(txt); return; }
+        if (neural.state === 'on') { neuralChat(txt); return; }
+        game.request(txt);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
       recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
@@ -508,24 +500,47 @@
   }
 
 
-  // ---------- neural operator (optional, open-source, in-browser) ----------
-  var neural = { state: 'off' }; // off -> loading -> on / failed
+  // ---------- neural operator (optional, open-source CHAT model, in-browser) ----------
+  // We load a small open-source instruct model, open its context with a few-shot
+  // prompt describing the game, then EVERY user line is answered by the model itself.
+  // Whatever the model says is what we show — no templates.
+  var neural = { state: 'off', gen: null, ctx: null }; // off -> loading -> on / failed
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    say('loading the neural interpreter \u2014 open-source bge-small, ~30 MB once, cached after', true);
+    say('waking the operator \u2014 open-source Qwen3-0.6B, a few hundred MB once, then cached', true);
     import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
       .then(function (T) {
         T.env.allowLocalModels = false;
-        return T.pipeline('feature-extraction', 'Xenova/bge-small-en-v1.5', { quantized: true });
+        return T.pipeline('text-generation', 'onnx-community/Qwen3-0.6B-ONNX', { dtype: 'q4' });
       })
-      .then(function (pipe) {
-        return C.intent.configure(function (text) {
-          return pipe(text, { pooling: 'mean', normalize: true }).then(function (out) { return out.data; });
-        }, { query: 'Represent this sentence for searching relevant passages: ', anchor: '' });
+      .then(function (gen) {
+        neural.gen = gen;
+        neural.ctx = C.intent.buildChatPrompt();   // open the context window with the game's few-shot prompt
+        neural.state = 'on';
+        say('operator online \u2014 tell me what you want. I answer for myself now.', true);
       })
-      .then(function () { neural.state = 'on'; say('neural operator online \u2014 speak naturally; I will map it to a program', true); })
-      .catch(function (e) { neural.state = 'failed'; say('neural interpreter unavailable here (' + (e && e.message ? e.message.slice(0, 40) : 'load error') + ')', true); });
+      .catch(function (e) { neural.state = 'failed'; say('the operator stayed silent (' + (e && e.message ? e.message.slice(0, 44) : 'load error') + ')', true); });
+  }
+
+  // send one user line to the model; show the model's own reply; act only if it named a designated word
+  function neuralChat(text) {
+    var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
+    say('\u2026', true);  // a beat while the model thinks
+    neural.gen(messages, { max_new_tokens: 64, do_sample: false, temperature: 0 })
+      .then(function (out) {
+        // transformers.js chat returns [{ generated_text: [...messages, {role:'assistant',content}] }]
+        var reply = '';
+        try {
+          var g = out && out[0] && out[0].generated_text;
+          if (Array.isArray(g)) reply = g[g.length - 1].content || '';
+          else if (typeof g === 'string') reply = g;
+        } catch (e) { reply = ''; }
+        var r = C.intent.parseReply(reply);
+        say(r.say, true);                 // ALWAYS show what the model said
+        if (r.word) game.request(r.word); // only dispatch if it named a designated program/object
+      })
+      .catch(function () { say('\u2026the line broke up. Say it again.', true); });
   }
 
   // ---------- boot ----------

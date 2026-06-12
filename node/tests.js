@@ -959,6 +959,42 @@ section('neural intent fallback (open-source embed layer, pluggable + testable)'
   ok(r2.via === 'regex' && r2.action.type === 'unknown', 'low-confidence gibberish stays unknown');
 }
 
+
+section('generative operator (few-shot chat — model writes the lines)');
+{
+  const I = C.intent;
+  // the context window we open before the first query
+  const msgs = I.buildChatPrompt();
+  ok(Array.isArray(msgs) && msgs[0].role === 'system', 'buildChatPrompt returns a message list starting with system');
+  const sys = msgs[0].content;
+  for (const w of ['weapons','dojo','rooftop','city','neon','clear','code','motorcycle','katana','chair','table','tv','lamp','tree','car','mirror','dummy','booth'])
+    ok(sys.indexOf(w) >= 0, 'system prompt lists designated word: ' + w);
+  ok(/WORD:.*SAY:/.test(sys), 'system prompt specifies the WORD/SAY reply format');
+  ok(msgs.length >= 7, 'prompt includes few-shot examples (' + msgs.length + ' messages)');
+
+  // parseReply: the MODEL's text is always shown; word dispatches only if designated
+  const a = I.parseReply('WORD: chair | SAY: One chair, folded from the white.');
+  ok(a.word === 'chair' && /folded from the white/.test(a.say), 'parses a clean LOAD reply (word + model line)');
+
+  const b = I.parseReply('word=neon | say=The mile is endless.');  // case/spacing tolerant
+  ok(b.word === 'neon' && /endless/.test(b.say), 'tolerant of lowercase and = signs');
+
+  const c = I.parseReply('WORD: none | SAY: No such program in the library.');
+  ok(c.word === null && /No such program/.test(c.say), 'WORD none -> no dispatch, shows model refusal');
+
+  const d = I.parseReply('WORD: unicorn | SAY: Prancing in aisle nine.');  // non-designated word
+  ok(d.word === null && /aisle nine/.test(d.say), 'invalid word -> null, but still shows the model line');
+
+  const e = I.parseReply('Just some free-form sentence the model wrote.');  // model ignored format
+  ok(e.word === null && /free-form sentence/.test(e.say), 'off-format reply still surfaces the model text');
+
+  const f = I.parseReply('WORD: dojo | SAY: ' + 'x'.repeat(300));  // overlong
+  ok(f.word === 'dojo' && f.say.length <= 160, 'long model line is capped, word still dispatched');
+
+  const g = I.parseReply('');  // empty
+  ok(g.word === null && g.say.length > 0, 'empty reply falls back to a non-empty line');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
