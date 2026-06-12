@@ -134,9 +134,15 @@
     say('you: ' + v, true);
     var pp = C.parse(v);
     if (pp.type !== 'unknown') { game.request(v); return; }
-    if (neural.state === 'on') { neuralChat(v); return; }
-    if (neural.state === 'loading') { say('the operator is still waking\u2026 ' + neural.pct + '% \u2014 give it a moment', true); return; }
-    if (neural.state === 'failed') { say('neural operator failed to load \u2014 classic mode', true); }
+    if (neural.state === 'on') { neuralSend(v); return; }
+    if (neural.state === 'off') {
+      neural.queue.push(v);
+      loadNeural();   // the first unheard line wakes the operator itself
+      say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true);
+      return;
+    }
+    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
+    say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
 
@@ -154,9 +160,10 @@
         say('you (voice): ' + txt, true);
         var pv = C.parse(txt);
         if (pv.type !== 'unknown') { game.request(txt); return; }
-        if (neural.state === 'on') { neuralChat(txt); return; }
-        if (neural.state === 'loading') { say('the operator is still waking\u2026 ' + neural.pct + '% \u2014 give it a moment', true); return; }
-        if (neural.state === 'failed') { say('neural operator failed to load \u2014 classic mode', true); }
+        if (neural.state === 'on') { neuralSend(txt); return; }
+        if (neural.state === 'off') { neural.queue.push(txt); loadNeural(); say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true); return; }
+        if (neural.state === 'loading') { neural.queue.push(txt); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
+        say('the neural operator could not load here \u2014 classic mode', true);
         game.request(txt);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
@@ -496,7 +503,7 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
-  var neural = { state: 'off', gen: null, ctx: null, pct: 0 }; // off -> loading -> on / failed
+  var neural = { state: 'off', gen: null, ctx: null, pct: 0, queue: [], chain: null }; // off -> loading -> on / failed
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
@@ -520,15 +527,21 @@
         neural.ctx = C.intent.buildChatPrompt();   // open the context window with the game's few-shot prompt
         neural.state = 'on';
         say('operator online \u2014 tell me what you want. I answer for myself now.', true);
+        var q = neural.queue.splice(0);
+        for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
       })
       .catch(function (e) { neural.state = 'failed'; say('the operator stayed silent (' + (e && e.message ? e.message.slice(0, 44) : 'load error') + ')', true); });
   }
 
+  // serialise sends: one generation at a time, in order
+  function neuralSend(text) {
+    neural.chain = (neural.chain || Promise.resolve()).then(function () { return neuralChat(text); }).catch(function () {});
+  }
   // send one user line to the model; show the model's own reply; act only if it named a designated word
   function neuralChat(text) {
     var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
     say('\u2026', true);  // a beat while the model thinks
-    neural.gen(messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 })
+    return neural.gen(messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 })
       .then(function (out) {
         // transformers.js chat returns [{ generated_text: [...messages, {role:'assistant',content}] }]
         var reply = '';

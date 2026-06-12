@@ -1026,6 +1026,16 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/pickSigma/.test(aud) && /pitch = 0.55/.test(aud) && /rate = 0.92/.test(aud), 'operator voice pinned deep (ranked male prefs, pitch 0.55, rate 0.92)');
 }
 
+
+section('the model IS the operator for unknowns (auto-wake, queue, no placeholder)');
+{
+  const fs3 = require('fs');
+  const app = fs3.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/the first unheard line wakes the operator itself/.test(app), 'an unknown line auto-wakes the model (no chip tap needed)');
+  ok(/neural\.queue\.push/.test(app) && /neural\.queue\.splice\(0\)/.test(app), 'lines are queued while waking and flushed to the model when online');
+  ok(/function neuralSend/.test(app) && /neural\.chain/.test(app), 'generations are serialised - one at a time, in order');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
