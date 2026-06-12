@@ -186,7 +186,7 @@
   // x, so it streams. Chunks of boulevard spawn around the walker; crowd recycles around
   // the player. The plaza and storefronts continue forever.
   var CITY_CHUNK = 88;
-  var CITY_AHEAD = 2, CITY_BEHIND = 1;
+  var CITY_AHEAD = 2, CITY_BEHIND = 2;
   function cityChunkMesh(ci) {
     var m = C.newMesh();
     var x0 = ci * CITY_CHUNK, x1 = x0 + CITY_CHUNK;

@@ -883,7 +883,7 @@
   // x, so it streams. Chunks of boulevard spawn around the walker; crowd recycles around
   // the player. The plaza and storefronts continue forever.
   var CITY_CHUNK = 88;
-  var CITY_AHEAD = 2, CITY_BEHIND = 1;
+  var CITY_AHEAD = 2, CITY_BEHIND = 2;
   function cityChunkMesh(ci) {
     var m = C.newMesh();
     var x0 = ci * CITY_CHUNK, x1 = x0 + CITY_CHUNK;
@@ -2818,7 +2818,13 @@
 
   // ---------- HUD ----------
   function updateHUD() {
-    hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
+    var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
+    if (game.scene && game.scene.infinite) {
+      var dpx = game.player.pos[0], dpz = game.player.pos[2];
+      var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8);
+      if (dOut > 5) sceneLine += ' \u00b7 ' + dOut + ' m out';
+    }
+    hud.scene.textContent = sceneLine;
     var a = game.aim, label = '';
     if (game.bike) {
       // show the controls hint briefly after mounting, then let it fade so it
