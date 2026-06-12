@@ -1,7 +1,7 @@
 /* node/tests.js — unit + end-to-end playthrough tests for THE CONSTRUCT */
 'use strict';
 const path = require('path');
-const SRC = ['00_math', '01_glyph', '02_mesh', '03_props', '04_scenes', '05_engine', '06_game', '07_audio'];
+const SRC = ['00_math', '01_glyph', '02_mesh', '03_props', '04_scenes', '05_engine', '06_game', '07_audio', '09_intent'];
 for (const f of SRC) require(path.join(__dirname, '..', 'src', f + '.js'));
 const C = globalThis.C;
 
@@ -902,6 +902,48 @@ section('city is INFINITE too (boulevard streams along x, crowd follows)');
   ok(g.player.pos[1] === g.scene.groundY || g.player.pos[1] < 0.2, 'still on the ground far out');
   const ops = C.render(g, 480, 270, g.time);
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out city renders without NaN');
+}
+
+
+section('neural intent fallback (open-source embed layer, pluggable + testable)');
+{
+  const I = C.intent;
+  ok(!!I && typeof I.routeSync === 'function', 'intent module present');
+  ok(I.ready() === false, 'starts unconfigured (regex-only)');
+  near(I._cosine([1, 0], [1, 0]), 1, 1e-9, 'cosine of identical vectors = 1');
+  near(I._cosine([1, 0], [0, 1]), 0, 1e-9, 'cosine of orthogonal vectors = 0');
+
+  // unconfigured: routing is pure regex passthrough (unknown stays unknown)
+  const r0 = I.routeSync('a fluffy zebra');
+  ok(r0.via === 'regex' && r0.action.type === 'unknown', 'unconfigured route = regex passthrough');
+
+  // mock embedder: deterministic bag-of-words over the anchor vocabulary
+  const vocab = {};
+  I.intents.forEach(it => it.anchors.forEach(a => a.toLowerCase().split(/[^a-z]+/).forEach(w => { if (w && vocab[w] == null) vocab[w] = Object.keys(vocab).length; })));
+  const V = Object.keys(vocab).length;
+  const mock = text => { const v = new Float32Array(V); String(text).toLowerCase().split(/[^a-z]+/).forEach(w => { if (vocab[w] != null) v[vocab[w]] += 1; }); return v; };
+  I.configure(mock);
+  ok(I.ready() === true, 'sync embedder configures immediately');
+
+  // free phrasings land on the DESIGNATED words (none of these contain parser keywords)
+  const cases = [
+    ['a hall for martial arts', 'dojo'],
+    ['something to sit on', 'chair'],
+    ['an endless glowing road to speed on', 'neon'],
+    ['reveal the simulation beneath', 'code'],
+    ['a plaza full of walkers', 'city'],
+    ['something sharp to swing', 'katana']
+  ];
+  for (const [phrase, want] of cases) {
+    const r = I.routeSync(phrase);
+    ok(r.via === 'neural' && r.word === want, "'" + phrase + "' -> " + want + ' (got ' + (r.word || r.action.type) + ')');
+  }
+  // regex still wins first — a keyworded phrase never consults the neural layer
+  const r1 = I.routeSync('load the dojo please');
+  ok(r1.via === 'regex' && r1.action.scene === 'dojo', 'keyworded phrase routed by regex, not neural');
+  // gibberish below threshold stays unknown (no wild guessing)
+  const r2 = I.routeSync('zzz qqq xylophone');
+  ok(r2.via === 'regex' && r2.action.type === 'unknown', 'low-confidence gibberish stays unknown');
 }
 
 // ---------------------------------------------------------------- summary

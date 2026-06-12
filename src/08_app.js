@@ -144,7 +144,10 @@
     closeConsole();
     if (!v) return;
     say('you: ' + v, true);
-    game.request(v);
+    C.intent.route(v).then(function (r) {
+      if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
+      game.request(r.via === 'neural' ? r.word : v);
+    });
   }
 
   // ---------- speech ----------
@@ -159,7 +162,10 @@
       recog.onresult = function (ev) {
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
-        game.request(txt);
+        C.intent.route(txt).then(function (r) {
+          if (r.via === 'neural') say('\u2192 ' + r.word + ' (' + (r.score * 100 | 0) + '%)', true);
+          game.request(r.via === 'neural' ? r.word : txt);
+        });
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
       recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
@@ -493,6 +499,27 @@
     } catch (e) {}
   }
 
+
+  // ---------- neural operator (optional, open-source, in-browser) ----------
+  var neural = { state: 'off' }; // off -> loading -> on / failed
+  function loadNeural() {
+    if (neural.state !== 'off') return;
+    neural.state = 'loading';
+    say('loading the neural interpreter \u2014 open-source MiniLM, ~23 MB once, cached after', true);
+    import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
+      .then(function (T) {
+        T.env.allowLocalModels = false;
+        return T.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
+      })
+      .then(function (pipe) {
+        return C.intent.configure(function (text) {
+          return pipe(text, { pooling: 'mean', normalize: true }).then(function (out) { return out.data; });
+        });
+      })
+      .then(function () { neural.state = 'on'; say('neural operator online \u2014 speak naturally; I will map it to a program', true); })
+      .catch(function (e) { neural.state = 'failed'; say('neural interpreter unavailable here (' + (e && e.message ? e.message.slice(0, 40) : 'load error') + ')', true); });
+  }
+
   // ---------- boot ----------
   function start() {
     if (started) return;
@@ -511,6 +538,7 @@
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
       say('you: ' + (req || label), true);
+      if (req === '__neural__') { loadNeural(); return; }
       game.request(req || label);
       A.handle('chirp');
     });
@@ -532,7 +560,7 @@
     hud.hint = document.getElementById('lookhint');
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
