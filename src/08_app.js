@@ -129,9 +129,16 @@
   }
   function submitConsole() {
     var v = hud.input.value.trim();
-    hud.input.value = '';        // stay in type mode — typing is the default
+    hud.input.value = '';        // clear instantly so the keystroke feels immediate
     if (!v) return;
     say('you: ' + v, true);
+    // Defer ALL routing off the Enter keystroke. Parsing is cheap, but waking the
+    // neural Worker (Blob + new Worker + module import) is NOT, and doing it inline
+    // froze the input on the first unknown line. One tick later, the box is already
+    // responsive and the heavy work runs without blocking typing.
+    setTimeout(function () { routeLine(v); }, 0);
+  }
+  function routeLine(v) {
     var pp = C.parse(v);
     if (pp.type !== 'unknown') { game.request(v); return; }
     if (neural.state === 'on') { neuralSend(v); return; }
@@ -158,13 +165,7 @@
       recog.onresult = function (ev) {
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
-        var pv = C.parse(txt);
-        if (pv.type !== 'unknown') { game.request(txt); return; }
-        if (neural.state === 'on') { neuralSend(txt); return; }
-        if (neural.state === 'off') { neural.queue.push(txt); loadNeural(); say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true); return; }
-        if (neural.state === 'loading') { neural.queue.push(txt); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
-        say('the neural operator could not load here \u2014 classic mode', true);
-        game.request(txt);
+        setTimeout(function () { routeLine(txt); }, 0);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
       recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };

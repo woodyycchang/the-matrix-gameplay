@@ -1021,7 +1021,7 @@ section('free mouse + type-first console + sigma voice (static guards)');
   const app = fs2.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(!/requestPointerLock|pointerlockchange|tryLock/.test(app), 'pointer lock fully removed - the mouse stays free');
   ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
-  ok(/stay in type mode/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit keeps focus');
+  ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/pickSigma/.test(aud) && /u\.pitch = 0;/.test(aud) && /rate = 0\.9/.test(aud), 'operator voice at the engine floor (ranked male prefs, pitch 0, rate 0.9)');
   ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
@@ -1057,6 +1057,19 @@ section('typing-lag fixes (frame budget guards)');
   ok(/\* 8 \/ 10\) \* 10/.test(app5), 'infinite-scene metres step by 10 - a few writes per second, not 60');
   ok(/ttChars % 4 === 0\) A\.handle\('tick'\)/.test(app5), 'teletype tick rate halved (oscillator churn down)');
   ok(/lastMsAvg \/ 2\) \* 2\) \+ 'ms'/.test(app5), 'live frame-ms meter on the scene line for real diagnosis');
+}
+
+
+section('Enter never blocks: routing is deferred off the keystroke');
+{
+  const fs6 = require('fs');
+  const app6 = fs6.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/clear instantly so the keystroke feels immediate/.test(app6), 'submit clears the box and echoes synchronously, nothing heavy inline');
+  ok(/function routeLine/.test(app6) && /setTimeout\(function \(\) \{ routeLine\(v\); \}, 0\)/.test(app6), 'all parse/request/loadNeural routing is deferred one tick');
+  ok(/setTimeout\(function \(\) \{ routeLine\(txt\); \}, 0\)/.test(app6), 'voice path defers routing the same way');
+  // the expensive part (waking the worker) must only be reachable from routeLine, not submit
+  const sub = app6.slice(app6.indexOf('function submitConsole'), app6.indexOf('function routeLine'));
+  ok(!/loadNeural\(\)/.test(sub), 'submitConsole itself never wakes the worker inline');
 }
 
 // ---------------------------------------------------------------- summary
