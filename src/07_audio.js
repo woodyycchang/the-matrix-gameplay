@@ -100,6 +100,20 @@
     o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
   }
 
+
+  // a gunshot-style crack: near-instant wideband burst + quick body, much snappier than hiss
+  function crack(vol, when) {
+    if (!ctx) return;
+    var t0 = ctx.currentTime + (when || 0);
+    var s = ctx.createBufferSource(); s.buffer = noise();
+    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 700;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(vol, t0);                       // no attack ramp — instant
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t0); s.stop(t0 + 0.12);
+  }
+
   function clearAmbience() {
     for (var i = 0; i < ambNodes.length; i++) { try { ambNodes[i].stop ? ambNodes[i].stop() : ambNodes[i].disconnect(); } catch (e) {} }
     ambNodes = [];
@@ -150,11 +164,11 @@
       if (!ctx) return;
     }
     switch (name) {
-      case 'whoosh': hiss(0.55, 0.5, 220, 2400, 1.1); break;
+      case 'whoosh': hiss(0.55, 0.34, 2200, 260, 1.1); break;
       case 'materialize': for (var i = 0; i < 7; i++) blip(700 + i * 180 + Math.random() * 90, 0.07, 0.12, 'triangle', i * 0.045); hiss(0.6, 0.18, 1400, 4200, 2); break;
       case 'scene': hiss(0.8, 0.35, 160, 1800, 1); break;
-      case 'codeOn': hiss(0.4, 0.3, 3000, 300, 2); blip(140, 0.3, 0.18, 'sine'); break;
-      case 'codeOff': hiss(0.4, 0.3, 300, 3000, 2); break;
+      case 'codeOn': hiss(0.45, 0.26, 300, 3200, 2); blip(180, 0.18, 0.12, 'sine'); blip(360, 0.22, 0.1, 'sine', 0.06); break;
+      case 'codeOff': hiss(0.4, 0.24, 3200, 300, 2); blip(360, 0.16, 0.08, 'sine'); break;
       case 'jump': hiss(0.18, 0.18, 500, 1400, 1); break;
       case 'land': thump(150, 0.12, 0.22); break;
       case 'step':
@@ -171,17 +185,17 @@
       case 'heartSoft': thump(64, 0.12, 0.16); thump(58, 0.1, 0.12, 0.16); break;
       case 'rise': hiss(1.2, 0.15, 120, 600, 0.8); break;
       case 'success': blip(523, 0.18, 0.12, 'triangle'); blip(784, 0.25, 0.12, 'triangle', 0.12); blip(1046, 0.4, 0.1, 'triangle', 0.24); break;
-      case 'shot': thump(180, 0.07, 0.5); hiss(0.12, 0.4, 2500, 300, 0.7); hiss(0.5, 0.14, 700, 120, 1, 0.02); break;
+      case 'shot': crack(0.5); thump(120, 0.05, 0.4); hiss(0.18, 0.10, 500, 90, 1.2, 0.02); break;
       case 'pickup': blip(660, 0.06, 0.12, 'square'); blip(990, 0.08, 0.1, 'square', 0.06); break;
       case 'pickupBlade': hiss(0.18, 0.22, 1800, 5200, 2.2); blip(1320, 0.06, 0.08, 'triangle', 0.04); break;
       case 'mount': engineStart(); blip(520, 0.05, 0.1, 'square'); thump(70, 0.18, 0.35, 0.02); break;
       case 'dismount': engineStop(); blip(360, 0.06, 0.08, 'square'); break;
-      case 'scrape': hiss(0.12, 0.3, 1600, 600, 2.4); blip(180, 0.05, 0.12, 'sawtooth'); break;
+      case 'scrape': hiss(0.13, 0.22, 1200, 500, 1.1); thump(90, 0.06, 0.12); break;
       case 'slash': hiss(0.14, 0.3, 1400, 500, 1.8); blip(300, 0.08, 0.08, 'sawtooth', 0.01); break;
       case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
       case 'punch': thump(140, 0.09, 0.34); hiss(0.08, 0.24, 900, 300, 1.5); blip(220, 0.12, 0.08, 'triangle', 0.02); break;
       case 'swish': hiss(0.16, 0.22, 1200, 400, 1.6); break;
-      case 'freeze': thump(70, 0.4, 0.6); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.12); break;
+      case 'freeze': thump(90, 0.16, 0.32); blip(140, 0.05, 0.06, 'sine'); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.1); break;
       case 'resume': hiss(0.3, 0.2, 200, 1500, 1); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.8); break;
       case 'ring': if (!ringTimer) { ring(); ringTimer = setInterval(ring, 2100); } break;
       case 'ringStop': if (ringTimer) { clearInterval(ringTimer); ringTimer = null; } break;

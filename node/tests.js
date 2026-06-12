@@ -681,8 +681,12 @@ section('audio balance (layered gain baseline — no outliers)');
     asrc.split('\n').forEach(ln => {
       const c = ln.match(/case '(\w+)':/); if (!c) return;
       const vs = [];
-      let mm; const re = /(?:blip|thump)\([^,]+,[^,]+,\s*([\d.]+)/g;
-      while ((mm = re.exec(ln))) vs.push(parseFloat(mm[1]));
+      let mm; const re = /(?:blip|thump|crack)\(([^,)]*)/g;
+      // blip/thump put vol 3rd; crack puts vol 1st — capture all numeric leading args then re-scan precisely
+      const reB = /(?:blip|thump)\([^,]+,[^,]+,\s*([\d.]+)/g;
+      while ((mm = reB.exec(ln))) vs.push(parseFloat(mm[1]));
+      const reC = /crack\(\s*([\d.]+)/g;
+      while ((mm = reC.exec(ln))) vs.push(parseFloat(mm[1]));
       const re2 = /hiss\([^,]+,\s*([\d.]+)/g;
       while ((mm = re2.exec(ln))) vs.push(parseFloat(mm[1]));
       if (vs.length) peaks.push({ name: c[1], peak: Math.max(...vs) });
