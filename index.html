@@ -3397,17 +3397,24 @@
 
   // deterministic rescue: a tiny model sometimes flubs the WORD line. Scan text for a
   // designated word by exact / prefix (>=4 chars) / edit-distance-1 (>=5 chars) match.
-  function lev1(a, b) {                       // is edit distance <= 1?
-    if (a === b) return true;
-    var la = a.length, lb = b.length;
-    if (Math.abs(la - lb) > 1) return false;
-    var i = 0, j = 0, edits = 0;
-    while (i < la && j < lb) {
-      if (a[i] === b[j]) { i++; j++; continue; }
-      if (++edits > 1) return false;
-      if (la === lb) { i++; j++; } else if (la > lb) { i++; } else { j++; }
+  function editDist(a, b) {                   // full Levenshtein
+    var la = a.length, lb = b.length, d = [];
+    for (var i = 0; i <= la; i++) { d[i] = [i]; }
+    for (var j = 0; j <= lb; j++) { d[0][j] = j; }
+    for (i = 1; i <= la; i++) for (j = 1; j <= lb; j++) {
+      var c = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
     }
-    return edits + (la - i) + (lb - j) <= 1;
+    return d[la][lb];
+  }
+  function transposed(a, b) {                 // one adjacent swap apart? (chiar<->chair)
+    if (a.length !== b.length) return false;
+    var diff = [];
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) { diff.push(i); if (diff.length > 2) return false; }
+    return diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]];
+  }
+  function fuzzy(tk, w) {                      // typo-close for >=5-char tokens
+    return editDist(tk, w) <= 1 || transposed(tk, w);
   }
   I.rescueWord = function (userText, modelReply) {
     var sources = [String(userText || ''), String(modelReply || '')];
@@ -3420,7 +3427,7 @@
           var w = INTENTS[wi].word;
           if (tk === w) return w;
           if (tk.length >= 4 && w.indexOf(tk) === 0) return w;         // 'motor' -> motorcycle
-          if (tk.length >= 5 && lev1(tk, w)) return w;                 // 'katan' / 'chiar'
+          if (tk.length >= 5 && fuzzy(tk, w)) return w;                 // 'katan' / 'chiar'
         }
       }
     }
