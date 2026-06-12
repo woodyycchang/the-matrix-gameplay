@@ -1117,6 +1117,23 @@ section('deterministic rails around the tiny model (rescue + regex + temp)');
   ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text, m\.reply\)/.test(app9), 'temperature cooled to 0.4 and the rescue is wired into the reply path');
 }
 
+
+section('lexical rescue: partial words map deterministically, before the model');
+{
+  const I = C.intent;
+  eq(I.lexicalGuess('motor'), 'motorcycle', "'motor' rescues to motorcycle without the model");
+  eq(I.lexicalGuess('give me chairs'), 'chair', "'chairs' rescues to chair");
+  eq(I.lexicalGuess('katan'), 'katana', "'katan' rescues to katana");
+  eq(I.lexicalGuess('zzzz qqqq'), null, 'gibberish stays null - no wild guessing');
+  eq(I.lexicalGuess('tv on'), null, 'tokens under 4 chars are ignored (regex owns those)');
+  const fs9 = require('fs');
+  const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/lexicalGuess\(v\)/.test(app9) && /deterministic rescue/.test(app9), 'route order: regex -> lexical -> model');
+  ok(/temperature: 0\.4/.test(app9) && !/temperature: 0\.8/.test(app9), 'sampling calmed to 0.4 - less tiny-model drift');
+  const msgs = I.buildChatPrompt();
+  ok(msgs.some((m,i)=>m.role==='user'&&m.content==='motor'&&msgs[i+1]&&/WORD:\s*motorcycle/i.test(msgs[i+1].content)), 'few-shot teaches partial words too');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

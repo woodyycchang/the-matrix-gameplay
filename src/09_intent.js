@@ -123,6 +123,7 @@
   // pure (string in/out) so the whole contract is testable headless.
   var DESIGNATED = {};
   INTENTS.forEach(function (it) { DESIGNATED[it.word] = true; });
+  I.designatedList = INTENTS.map(function (it) { return it.word; });
   I.designated = DESIGNATED;
 
   I.buildChatPrompt = function () {
@@ -138,6 +139,8 @@
       { role: 'system', content: sys },
       { role: 'user', content: 'something to sit on' },
       { role: 'assistant', content: 'WORD: chair | SAY: One chair, folded out of the white. Sit.' },
+      { role: 'user', content: 'motor' },
+      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiling.' },
       { role: 'user', content: 'hello' },
       { role: 'assistant', content: 'WORD: none | SAY: Operator. I hear you. Name a program or an object and I will load it.' },
       { role: 'user', content: 'i want to learn how to fight' },
@@ -189,6 +192,24 @@
       }
     }
     return null;
+  };
+
+
+  // Deterministic lexical rescue: partial words map to designated words without
+  // waking the model. 'motor' is a prefix of 'motorcycle'; 'chairs' starts with
+  // 'chair'. Classification wants determinism - generation can stay creative.
+  I.lexicalGuess = function (text) {
+    var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
+    var best = null, bestLen = 0;
+    for (var d = 0; d < I.designatedList.length; d++) {
+      var w = I.designatedList[d];
+      for (var i = 0; i < toks.length; i++) {
+        var t = toks[i];
+        if (w === t) return w;                                  // exact
+        if ((w.indexOf(t) === 0 || t.indexOf(w) === 0) && t.length > bestLen) { best = w; bestLen = t.length; }
+      }
+    }
+    return best;
   };
 
   I.parseReply = function (raw) {

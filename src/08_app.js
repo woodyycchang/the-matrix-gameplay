@@ -141,6 +141,8 @@
   function routeLine(v) {
     var pp = C.parse(v);
     if (pp.type !== 'unknown') { game.request(v); return; }
+    var lex = C.intent.lexicalGuess(v);
+    if (lex) { game.request(lex); return; }   // deterministic rescue: no model needed
     if (neural.state === 'on') { neuralSend(v); return; }
     if (neural.state === 'off') {
       neural.queue.push(v);
