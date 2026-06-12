@@ -142,6 +142,8 @@
       { role: 'assistant', content: 'WORD: none | SAY: Operator. I hear you. Name a program or an object and I will load it.' },
       { role: 'user', content: 'i want to learn how to fight' },
       { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
+      { role: 'user', content: 'motor' },
+      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
       { role: 'user', content: 'a fast ride through the night' },
       { role: 'assistant', content: 'WORD: neon | SAY: The neon mile is endless. Throttle up.' },
       { role: 'user', content: 'show me what this world really is' },
@@ -156,6 +158,39 @@
   // parse the model's reply into { word: designated|null, say: string }.
   // Tolerant of case/spacing; hard-validates the word against the designated list;
   // if the model ignored the format, we still show ITS text (sanitized) as the say.
+
+  // deterministic rescue: a tiny model sometimes flubs the WORD line. Scan text for a
+  // designated word by exact / prefix (>=4 chars) / edit-distance-1 (>=5 chars) match.
+  function lev1(a, b) {                       // is edit distance <= 1?
+    if (a === b) return true;
+    var la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > 1) return false;
+    var i = 0, j = 0, edits = 0;
+    while (i < la && j < lb) {
+      if (a[i] === b[j]) { i++; j++; continue; }
+      if (++edits > 1) return false;
+      if (la === lb) { i++; j++; } else if (la > lb) { i++; } else { j++; }
+    }
+    return edits + (la - i) + (lb - j) <= 1;
+  }
+  I.rescueWord = function (userText, modelReply) {
+    var sources = [String(userText || ''), String(modelReply || '')];
+    for (var si = 0; si < sources.length; si++) {
+      var toks = sources[si].toLowerCase().split(/[^a-z]+/);
+      for (var ti = 0; ti < toks.length; ti++) {
+        var tk = toks[ti];
+        if (tk.length < 3) continue;
+        for (var wi = 0; wi < INTENTS.length; wi++) {
+          var w = INTENTS[wi].word;
+          if (tk === w) return w;
+          if (tk.length >= 4 && w.indexOf(tk) === 0) return w;         // 'motor' -> motorcycle
+          if (tk.length >= 5 && lev1(tk, w)) return w;                 // 'katan' / 'chiar'
+        }
+      }
+    }
+    return null;
+  };
+
   I.parseReply = function (raw) {
     raw = String(raw == null ? '' : raw);
     raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, ' ');   // closed thinking blocks

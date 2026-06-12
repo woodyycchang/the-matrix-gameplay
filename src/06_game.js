@@ -48,7 +48,7 @@
     bench: 'bench', benches: 'bench',
     lamppost: 'lamppost', streetlight: 'lamppost',
     fountain: 'fountain',
-    motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', bike: 'bike', bikes: 'bike',
+    motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', motor: 'bike', bike: 'bike', bikes: 'bike',
     katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
     pedestal: 'pedestal'
   };

@@ -1094,6 +1094,29 @@ section('UI layout sanity (template guards)');
   ok(/DRAG TO LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the current control scheme');
 }
 
+
+section('deterministic rails around the tiny model (rescue + regex + temp)');
+{
+  const I2 = C.intent;
+  // rescue from the USER's own words when the model flubs
+  eq(I2.rescueWord('motor', 'The sky is grey. I see nothing.'), 'motorcycle', "'motor' rescued to motorcycle from the user text");
+  eq(I2.rescueWord('katan pls', ''), 'katana', 'one-typo token rescued (katan -> katana)');
+  eq(I2.rescueWord('give me a chiar', ''), 'chair', 'transposed typo rescued (chiar -> chair)');
+  // rescue from the model reply if the user text has nothing
+  eq(I2.rescueWord('two wheels please', 'sounds like you want a motorcycle'), 'motorcycle', 'reply-side rescue works');
+  // no false positives on gibberish
+  eq(I2.rescueWord('purple elephant taxes', 'I cannot help with that'), null, 'gibberish rescues nothing');
+  // the regex layer now catches motor before the model is ever consulted
+  const pm = C.parse('motor');
+  ok(pm.type === 'props' && pm.props[0].kind === 'bike', "parser maps bare 'motor' straight to the bike (no model needed)");
+  // few-shot teaches the elliptical case; sampling cooled to 0.4
+  const msgs = I2.buildChatPrompt();
+  ok(msgs.some(m => m.role === 'user' && m.content === 'motor'), 'few-shot includes the single-word elliptical example');
+  const fs9 = require('fs');
+  const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text, m\.reply\)/.test(app9), 'temperature cooled to 0.4 and the rescue is wired into the reply path');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

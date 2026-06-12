@@ -538,7 +538,7 @@
     "  if (m.type === 'load') { load(); return; }",
     "  if (m.type === 'chat') {",
     "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.8, top_p: 0.9 });",
+    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.4, top_p: 0.9 });",
     "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
     "      let reply = '';",
     "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
@@ -608,8 +608,9 @@
           say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
         } else {
           var r = C.intent.parseReply(m.reply);
+          var w = r.word || C.intent.rescueWord(text, m.reply);  // deterministic rails around a tiny model
           say(r.say, true);                 // ALWAYS show what the model said
-          if (r.word) game.request(r.word); // only dispatch if it named a designated program/object
+          if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();
       };
