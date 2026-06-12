@@ -995,6 +995,16 @@ section('generative operator (few-shot chat — model writes the lines)');
   ok(g.word === null && g.say.length > 0, 'empty reply falls back to a non-empty line');
 }
 
+  // thinking-model safety: <think> blocks are stripped before parsing
+  {
+    const r1 = C.intent.parseReply('<think>user wants seating, chair fits</think>WORD: chair | SAY: Sit.');
+    ok(r1.word === 'chair' && r1.say === 'Sit.', 'closed <think> block stripped, reply parsed');
+    const r2 = C.intent.parseReply('reasoning leaks here</think> WORD: none | SAY: Not in the library.');
+    ok(r2.word === null && /library/i.test(r2.say), 'reply starting mid-think still parses');
+    const r3 = C.intent.parseReply('WORD: dojo | SAY: Step on the mat. <think>should I add more');
+    ok(r3.word === 'dojo' && /mat/i.test(r3.say) && !/think|should I/i.test(r3.say), 'unclosed trailing <think> discarded');
+  }
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

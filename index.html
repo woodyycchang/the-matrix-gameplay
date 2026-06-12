@@ -2999,11 +2999,20 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    say('waking the operator \u2014 open-source Qwen3-0.6B, a few hundred MB once, then cached', true);
-    import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2')
+    say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
+    var lastPct = -1;
+    import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3')
       .then(function (T) {
         T.env.allowLocalModels = false;
-        return T.pipeline('text-generation', 'onnx-community/Qwen3-0.6B-ONNX', { dtype: 'q4' });
+        return T.pipeline('text-generation', 'HuggingFaceTB/SmolLM2-360M-Instruct', {
+          dtype: 'q4',
+          progress_callback: function (p) {
+            if (p && p.status === 'progress' && typeof p.progress === 'number') {
+              var pct = Math.floor(p.progress / 10) * 10;
+              if (pct > lastPct) { lastPct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
+            }
+          }
+        });
       })
       .then(function (gen) {
         neural.gen = gen;
@@ -3018,20 +3027,21 @@
   function neuralChat(text) {
     var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
     say('\u2026', true);  // a beat while the model thinks
-    neural.gen(messages, { max_new_tokens: 64, do_sample: false, temperature: 0 })
+    neural.gen(messages, { max_new_tokens: 96, do_sample: false })
       .then(function (out) {
         // transformers.js chat returns [{ generated_text: [...messages, {role:'assistant',content}] }]
         var reply = '';
         try {
-          var g = out && out[0] && out[0].generated_text;
-          if (Array.isArray(g)) reply = g[g.length - 1].content || '';
+          var g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text
+                : (out && out.generated_text != null) ? out.generated_text : out;
+          if (Array.isArray(g)) { var last = g[g.length - 1]; reply = (last && last.content) || ''; }
           else if (typeof g === 'string') reply = g;
         } catch (e) { reply = ''; }
         var r = C.intent.parseReply(reply);
         say(r.say, true);                 // ALWAYS show what the model said
         if (r.word) game.request(r.word); // only dispatch if it named a designated program/object
       })
-      .catch(function () { say('\u2026the line broke up. Say it again.', true); });
+      .catch(function (e) { say('\u2026the line broke up (' + (e && e.message ? String(e.message).slice(0, 44) : 'generation error') + '). Say it again.', true); });
   }
 
   // ---------- boot ----------
@@ -3282,6 +3292,11 @@
   // Tolerant of case/spacing; hard-validates the word against the designated list;
   // if the model ignored the format, we still show ITS text (sanitized) as the say.
   I.parseReply = function (raw) {
+    raw = String(raw == null ? '' : raw);
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, ' ');   // closed thinking blocks
+    raw = raw.replace(/^[\s\S]*?<\/think>/i, ' ');            // reply that starts mid-think
+    raw = raw.replace(/<think>[\s\S]*$/i, ' ');                // unclosed think eats the rest
+
     var text = String(raw == null ? '' : raw);
     var wm = text.match(/word\s*[:=]\s*([a-z]+)/i);
     var sm = text.match(/say\s*[:=]\s*([^\n]*)/i);

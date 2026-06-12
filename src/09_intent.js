@@ -154,6 +154,11 @@
   // Tolerant of case/spacing; hard-validates the word against the designated list;
   // if the model ignored the format, we still show ITS text (sanitized) as the say.
   I.parseReply = function (raw) {
+    raw = String(raw == null ? '' : raw);
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, ' ');   // closed thinking blocks
+    raw = raw.replace(/^[\s\S]*?<\/think>/i, ' ');            // reply that starts mid-think
+    raw = raw.replace(/<think>[\s\S]*$/i, ' ');                // unclosed think eats the rest
+
     var text = String(raw == null ? '' : raw);
     var wm = text.match(/word\s*[:=]\s*([a-z]+)/i);
     var sm = text.match(/say\s*[:=]\s*([^\n]*)/i);
