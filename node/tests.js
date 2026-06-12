@@ -1083,6 +1083,17 @@ section('think-time yield: the game gives up the core while he generates');
   ok(/max_new_tokens: 48/.test(app7) && !/max_new_tokens: 96/.test(app7), 'token budget halved to 48 - replies land in half the time');
 }
 
+
+section('UI layout sanity (template guards)');
+{
+  const fs8 = require('fs');
+  const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
+  ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
+  ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
+  ok(/DRAG TO LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the current control scheme');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
