@@ -503,59 +503,102 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
-  var neural = { state: 'off', gen: null, ctx: null, pct: 0, queue: [], chain: null }; // off -> loading -> on / failed
+  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {} }; // off -> loading -> on / failed
+  // The model runs in a module Worker: download, init and every generation happen
+  // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
+  var NEURAL_WORKER_SRC = [
+    "import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';",
+    "env.allowLocalModels = false;",
+    "let gen = null;",
+    "const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';",
+    "const opts = (device, dtype) => ({ device, dtype, progress_callback: p => {",
+    "  if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress });",
+    "} });",
+    "async function load() {",
+    "  try { gen = await pipeline('text-generation', MODEL, opts('webgpu', 'q4f16')); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) {}",
+    "  try { gen = await pipeline('text-generation', MODEL, opts('wasm', 'q4')); postMessage({ type: 'ready', device: 'wasm' }); }",
+    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
+    "}",
+    "onmessage = async (ev) => {",
+    "  const m = ev.data || {};",
+    "  if (m.type === 'load') { load(); return; }",
+    "  if (m.type === 'chat') {",
+    "    try {",
+    "      const out = await gen(m.messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 });",
+    "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
+    "      let reply = '';",
+    "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
+    "      postMessage({ type: 'reply', id: m.id, reply });",
+    "    } catch (e) { postMessage({ type: 'replyerr', id: m.id, error: String((e && e.message) || e) }); }",
+    "  }",
+    "};"
+  ].join('\n');
+
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
     say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
     var lastPct = -1;
-    import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3')
-      .then(function (T) {
-        T.env.allowLocalModels = false;
-        return T.pipeline('text-generation', 'HuggingFaceTB/SmolLM2-360M-Instruct', {
-          dtype: 'q4',
-          progress_callback: function (p) {
-            if (p && p.status === 'progress' && typeof p.progress === 'number') {
-              var pct = Math.floor(p.progress / 10) * 10;
-              if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
-            }
-          }
-        });
-      })
-      .then(function (gen) {
-        neural.gen = gen;
-        neural.ctx = C.intent.buildChatPrompt();   // open the context window with the game's few-shot prompt
+    try {
+      var blob = new Blob([NEURAL_WORKER_SRC], { type: 'text/javascript' });
+      neural.worker = new Worker(URL.createObjectURL(blob), { type: 'module' });
+    } catch (e) {
+      neural.state = 'failed';
+      say('the operator could not wake (' + String((e && e.message) || 'no worker').slice(0, 44) + ')', true);
+      return;
+    }
+    neural.worker.onmessage = function (ev) {
+      var m = ev.data || {};
+      if (m.type === 'progress') {
+        var pct = Math.floor(m.pct / 10) * 10;
+        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
+        return;
+      }
+      if (m.type === 'ready') {
+        neural.ctx = C.intent.buildChatPrompt();
         neural.state = 'on';
-        say('operator online \u2014 tell me what you want. I answer for myself now.', true);
+        say('operator online (' + (m.device || 'cpu') + ') \u2014 tell me what you want. I answer for myself now.', true);
         var q = neural.queue.splice(0);
         for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
-      })
-      .catch(function (e) { neural.state = 'failed'; say('the operator stayed silent (' + (e && e.message ? e.message.slice(0, 44) : 'load error') + ')', true); });
+        return;
+      }
+      if (m.type === 'fail') {
+        neural.state = 'failed';
+        say('the operator could not wake (' + String(m.error || 'load error').slice(0, 44) + ')', true);
+        return;
+      }
+      if (m.type === 'reply' || m.type === 'replyerr') {
+        var cb = neural.pending[m.id];
+        if (cb) { delete neural.pending[m.id]; cb(m); }
+      }
+    };
+    neural.worker.onerror = function (e) {
+      if (neural.state !== 'on') { neural.state = 'failed'; say('the operator could not wake (' + String((e && e.message) || 'worker error').slice(0, 44) + ')', true); }
+    };
+    neural.worker.postMessage({ type: 'load' });
   }
 
-  // serialise sends: one generation at a time, in order
   function neuralSend(text) {
     neural.chain = (neural.chain || Promise.resolve()).then(function () { return neuralChat(text); }).catch(function () {});
   }
   // send one user line to the model; show the model's own reply; act only if it named a designated word
   function neuralChat(text) {
     var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
-    say('\u2026', true);  // a beat while the model thinks
-    return neural.gen(messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 })
-      .then(function (out) {
-        // transformers.js chat returns [{ generated_text: [...messages, {role:'assistant',content}] }]
-        var reply = '';
-        try {
-          var g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text
-                : (out && out.generated_text != null) ? out.generated_text : out;
-          if (Array.isArray(g)) { var last = g[g.length - 1]; reply = (last && last.content) || ''; }
-          else if (typeof g === 'string') reply = g;
-        } catch (e) { reply = ''; }
-        var r = C.intent.parseReply(reply);
-        say(r.say, true);                 // ALWAYS show what the model said
-        if (r.word) game.request(r.word); // only dispatch if it named a designated program/object
-      })
-      .catch(function (e) { say('\u2026the line broke up (' + (e && e.message ? String(e.message).slice(0, 44) : 'generation error') + '). Say it again.', true); });
+    say('\u2026', true);  // a beat while the model thinks (in a worker \u2014 the game never stalls)
+    return new Promise(function (resolve) {
+      var id = ++neural.seq;
+      neural.pending[id] = function (m) {
+        if (m.type === 'replyerr') {
+          say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
+        } else {
+          var r = C.intent.parseReply(m.reply);
+          say(r.say, true);                 // ALWAYS show what the model said
+          if (r.word) game.request(r.word); // only dispatch if it named a designated program/object
+        }
+        resolve();
+      };
+      neural.worker.postMessage({ type: 'chat', id: id, messages: messages });
+    });
   }
 
   // ---------- boot ----------

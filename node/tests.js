@@ -1023,7 +1023,8 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
   ok(/stay in type mode/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit keeps focus');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/pickSigma/.test(aud) && /pitch = 0.55/.test(aud) && /rate = 0.92/.test(aud), 'operator voice pinned deep (ranked male prefs, pitch 0.55, rate 0.92)');
+  ok(/pickSigma/.test(aud) && /u\.pitch = 0;/.test(aud) && /rate = 0\.9/.test(aud), 'operator voice at the engine floor (ranked male prefs, pitch 0, rate 0.9)');
+  ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
 }
 
 
@@ -1034,6 +1035,16 @@ section('the model IS the operator for unknowns (auto-wake, queue, no placeholde
   ok(/the first unheard line wakes the operator itself/.test(app), 'an unknown line auto-wakes the model (no chip tap needed)');
   ok(/neural\.queue\.push/.test(app) && /neural\.queue\.splice\(0\)/.test(app), 'lines are queued while waking and flushed to the model when online');
   ok(/function neuralSend/.test(app) && /neural\.chain/.test(app), 'generations are serialised - one at a time, in order');
+}
+
+
+section('inference runs in a Worker (the game loop never stalls)');
+{
+  const fs4 = require('fs');
+  const app4 = fs4.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/new Worker\(/.test(app4) && /type: 'module'/.test(app4), 'model lives in a module Worker, off the main thread');
+  ok(/'webgpu', 'q4f16'/.test(app4) && /'wasm', 'q4'/.test(app4), 'WebGPU first, WASM fallback');
+  ok(/neural\.pending\[/.test(app4) && /function neuralSend/.test(app4), 'replies route by id; sends stay serialised');
 }
 
 // ---------------------------------------------------------------- summary
