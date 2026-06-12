@@ -1072,6 +1072,17 @@ section('Enter never blocks: routing is deferred off the keystroke');
   ok(!/loadNeural\(\)/.test(sub), 'submitConsole itself never wakes the worker inline');
 }
 
+
+section('think-time yield: the game gives up the core while he generates');
+{
+  const fs7 = require('fs');
+  const app7 = fs7.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/inFlight\+\+/.test(app7) && /inFlight = Math\.max\(0, neural\.inFlight - 1\)/.test(app7), 'in-flight generations are counted up and down');
+  ok(/paintSkip = \(paintSkip \+ 1\) % 3/.test(app7) && /!throttled \|\| paintSkip === 0/.test(app7), 'painting drops to 1/3 cadence while a reply is in flight');
+  ok(/else frameMs\.length = 0;/.test(app7), 'adaptive resolution ignores throttled frames (no false raise)');
+  ok(/max_new_tokens: 48/.test(app7) && !/max_new_tokens: 96/.test(app7), 'token budget halved to 48 - replies land in half the time');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

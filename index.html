@@ -2882,7 +2882,7 @@
     lastFont = '';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   }
-  var lastMsAvg = 0;
+  var lastMsAvg = 0, paintSkip = 0;
   function adapt(ms) {
     frameMs.push(ms);
     if (frameMs.length < 36) return;               // judge every ~0.6 s, not 1.25 s
@@ -2968,11 +2968,19 @@
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
     }
-    var ops = C.render(game, W, H, game.time);
-    paint(ops);
+    // While a generation is in flight the worker owns a whole core; yield ours.
+    // Paint at 1/3 cadence (physics, input and HUD keep full rate) so typing stays
+    // snappy during the think, then restore full painting the moment he answers.
+    var throttled = neural.inFlight > 0;
+    paintSkip = (paintSkip + 1) % 3;
+    if (!throttled || paintSkip === 0) {
+      var ops = C.render(game, W, H, game.time);
+      paint(ops);
+    }
     tickTeletype(dt);
     updateHUD();
-    adapt(performance.now() - t0);
+    if (!throttled) adapt(performance.now() - t0);
+    else frameMs.length = 0;   // don't let skipped frames trick the resolution up
   }
 
   // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
@@ -3020,7 +3028,7 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
-  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {} }; // off -> loading -> on / failed
+  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
   // The model runs in a module Worker: download, init and every generation happen
   // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
   var NEURAL_WORKER_SRC = [
@@ -3041,7 +3049,7 @@
     "  if (m.type === 'load') { load(); return; }",
     "  if (m.type === 'chat') {",
     "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 });",
+    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.8, top_p: 0.9 });",
     "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
     "      let reply = '';",
     "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
@@ -3102,9 +3110,11 @@
   function neuralChat(text) {
     var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
     say('\u2026', true);  // a beat while the model thinks (in a worker \u2014 the game never stalls)
+    neural.inFlight++;
     return new Promise(function (resolve) {
       var id = ++neural.seq;
       neural.pending[id] = function (m) {
+        neural.inFlight = Math.max(0, neural.inFlight - 1);
         if (m.type === 'replyerr') {
           say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
         } else {
