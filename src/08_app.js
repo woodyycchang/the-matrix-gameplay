@@ -11,7 +11,8 @@
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
   // ---------- input state ----------
-  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, locked = false, dragging = false, lastMX = 0, lastMY = 0;
+  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, dragging = false, lastMX = 0, lastMY = 0;
+  var mdX = 0, mdY = 0, mdT = 0, mdMoved = 0, mdWasTyping = false;
   var fireEdge = false, anyEdge = false;
   var touch = { active: false, mvId: -1, mvX: 0, mvY: 0, mvCX: 0, mvCY: 0, lkId: -1, lkX: 0, lkY: 0, fwd: 0, strafe: 0 };
   var SENS = 0.0023;
@@ -22,7 +23,7 @@
     keys[k] = down;
     if (down) anyEdge = true;
     if (down && started) {
-      if (k === 'enter' || k === 't') { e.preventDefault(); openConsole(); }
+      if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
       if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
       if (k === 'h') game.request('help');
@@ -34,32 +35,23 @@
 
   function onMouseMove(e) {
     if (!started) return;
-    if (locked) { mouseDX += e.movementX || 0; mouseDY += e.movementY || 0; }
-    else if (dragging) { mouseDX += e.clientX - lastMX; mouseDY += e.clientY - lastMY; lastMX = e.clientX; lastMY = e.clientY; }
-  }
-  function tryLock() {
-    if (touch.active) return;
-    if (canvas.requestPointerLock) {
-      try { var p = canvas.requestPointerLock(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    if (dragging) {
+      var dx = e.clientX - lastMX, dy = e.clientY - lastMY;
+      mouseDX += dx; mouseDY += dy; mdMoved += Math.abs(dx) + Math.abs(dy);
+      lastMX = e.clientX; lastMY = e.clientY;
     }
   }
+  // The mouse is FREE — no pointer lock. Drag to look around; a quick click (no drag)
+  // is the act/strike. Clicking the world while typing drops you into walk mode.
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
-    if (paused) { setPaused(false); if (!touch.active) tryLock(); return; }
-    if (consoleOpen) return;
-    if (!locked && !touch.active) {
-      dragging = true; lastMX = e.clientX; lastMY = e.clientY;
-      tryLock();
-      if (!lockEverWorked) return; // first click just engages look
-    }
-    if (e.button === 0) fireEdge = true;
-  }
-  var lockEverWorked = false;
-  function onLockChange() {
-    locked = document.pointerLockElement === canvas;
-    if (locked) lockEverWorked = true;
-    hud.hint.style.opacity = (!locked && !touch.active && started) ? 1 : 0;
+    if (paused) { setPaused(false); return; }
+    if (touch.active) return;
+    mdWasTyping = consoleOpen;
+    if (consoleOpen) hud.input.blur();     // click the world -> walk mode
+    dragging = true; lastMX = e.clientX; lastMY = e.clientY;
+    mdX = e.clientX; mdY = e.clientY; mdT = performance.now(); mdMoved = 0;
   }
 
   // ---------- touch ----------
@@ -129,19 +121,15 @@
   function openConsole() {
     consoleOpen = true;
     hud.inRow.classList.add('open');
-    hud.input.value = '';
     hud.input.focus();
-    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
   }
   function closeConsole() {
     consoleOpen = false;
-    hud.inRow.classList.remove('open');
     hud.input.blur();
-    if (started && !touch.active) tryLock();
   }
   function submitConsole() {
     var v = hud.input.value.trim();
-    closeConsole();
+    hud.input.value = '';        // stay in type mode — typing is the default
     if (!v) return;
     say('you: ' + v, true);
     var pp = C.parse(v);
@@ -565,7 +553,7 @@
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
     A.init();
     A.setAmbience('void');
-    if (!touch.active) tryLock();
+    if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }
 
@@ -593,8 +581,12 @@
     hud.log = document.getElementById('log');
     hud.inRow = document.getElementById('inrow');
     hud.input = document.getElementById('cmd');
+    hud.inRow.classList.add('open');   // the console is always visible — typing is first-class
+    hud.input.addEventListener('focus', function () { consoleOpen = true; });
+    hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
+    hud.hint.textContent = 'drag to look \u00b7 quick click = act \u00b7 Esc \u21c4 walk/type';
     hud.mic = document.getElementById('mic');
 
     var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['clear', 'clear']];
@@ -604,16 +596,19 @@
       if (consoleOpen) {
         if (e.key === 'Enter') { submitConsole(); e.preventDefault(); }
         else if (e.key === 'Escape') closeConsole();
+        else if (e.key.indexOf('Arrow') === 0 && hud.input.value === '') { e.preventDefault(); key(e, true); }
         return;
       }
       if ([' ', 'arrowup', 'arrowdown'].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
       key(e, true);
     });
-    window.addEventListener('keyup', function (e) { if (!consoleOpen) key(e, false); });
+    window.addEventListener('keyup', function (e) { key(e, false); });
     window.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', function () { dragging = false; });
-    document.addEventListener('pointerlockchange', onLockChange);
+    window.addEventListener('mouseup', function (e) {
+      if (dragging && e.button === 0 && !paused && !mdWasTyping && mdMoved < 6 && performance.now() - mdT < 300) fireEdge = true;
+      dragging = false;
+    });
     window.addEventListener('resize', resize);
     bindTouch();
 

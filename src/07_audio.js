@@ -205,16 +205,35 @@
     }
   };
 
+  // the operator speaks in the sigma register: deepest male voice on the device,
+  // pitch dropped, pace unhurried. Voice inventory differs per OS/browser, so we
+  // hunt a ranked preference list and fall back to any English voice + low pitch.
+  var sigmaVoice = null;
+  function pickSigma() {
+    try {
+      var vs = window.speechSynthesis.getVoices();
+      var pref = [/\bDaniel\b/i, /Google UK English Male/i, /\bGuy\b/i, /\bGeorge\b/i, /\bDavid\b/i, /\bAlex\b/i, /\bFred\b/i, /\bmale\b/i];
+      for (var p = 0; p < pref.length && !sigmaVoice; p++) {
+        for (var i = 0; i < vs.length; i++) {
+          if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
+        }
+      }
+      if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
+    } catch (e) {}
+  }
+  try {
+    if (window.speechSynthesis && window.speechSynthesis.addEventListener) {
+      window.speechSynthesis.addEventListener('voiceschanged', function () { sigmaVoice = null; pickSigma(); });
+    }
+  } catch (e) {}
   A.speak = function (text) {
     if (A.muted) return;
     try {
       if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
-      u.rate = 1.0; u.pitch = 0.72; u.volume = 0.85;
-      var vs = window.speechSynthesis.getVoices();
-      for (var i = 0; i < vs.length; i++) {
-        if (/en[-_]/i.test(vs[i].lang) && /male|David|Daniel|Alex|Google UK English Male/i.test(vs[i].name)) { u.voice = vs[i]; break; }
-      }
+      if (!sigmaVoice) pickSigma();
+      if (sigmaVoice) u.voice = sigmaVoice;
+      u.rate = 0.92; u.pitch = 0.55; u.volume = 0.95;
       window.speechSynthesis.speak(u);
     } catch (e) {}
   };

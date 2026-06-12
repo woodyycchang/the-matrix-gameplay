@@ -1014,6 +1014,18 @@ section('generative operator (few-shot chat — model writes the lines)');
     ok(/greetings and small talk/i.test(msgs[0].content), 'system prompt covers small talk explicitly');
   }
 
+
+section('free mouse + type-first console + sigma voice (static guards)');
+{
+  const fs2 = require('fs');
+  const app = fs2.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/requestPointerLock|pointerlockchange|tryLock/.test(app), 'pointer lock fully removed - the mouse stays free');
+  ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
+  ok(/stay in type mode/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit keeps focus');
+  const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/pickSigma/.test(aud) && /pitch = 0.55/.test(aud) && /rate = 0.92/.test(aud), 'operator voice pinned deep (ranked male prefs, pitch 0.55, rate 0.92)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
