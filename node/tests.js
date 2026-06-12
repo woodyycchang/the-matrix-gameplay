@@ -1005,6 +1005,15 @@ section('generative operator (few-shot chat — model writes the lines)');
     ok(r3.word === 'dojo' && /mat/i.test(r3.say) && !/think|should I/i.test(r3.say), 'unclosed trailing <think> discarded');
   }
 
+  // the context window teaches small talk: a greeting exchange exists, answered in character
+  {
+    const msgs = C.intent.buildChatPrompt();
+    const hasGreet = msgs.some((m, i) => m.role === 'user' && /^hello$/i.test(m.content)
+      && msgs[i + 1] && msgs[i + 1].role === 'assistant' && /WORD:\s*none/i.test(msgs[i + 1].content));
+    ok(hasGreet, 'few-shot includes a greeting handled by the model (WORD: none, in character)');
+    ok(/greetings and small talk/i.test(msgs[0].content), 'system prompt covers small talk explicitly');
+  }
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

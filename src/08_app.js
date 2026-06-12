@@ -147,6 +147,8 @@
     var pp = C.parse(v);
     if (pp.type !== 'unknown') { game.request(v); return; }
     if (neural.state === 'on') { neuralChat(v); return; }
+    if (neural.state === 'loading') { say('the operator is still waking\u2026 ' + neural.pct + '% \u2014 give it a moment', true); return; }
+    if (neural.state === 'failed') { say('neural operator failed to load \u2014 classic mode', true); }
     game.request(v);
   }
 
@@ -165,6 +167,8 @@
         var pv = C.parse(txt);
         if (pv.type !== 'unknown') { game.request(txt); return; }
         if (neural.state === 'on') { neuralChat(txt); return; }
+        if (neural.state === 'loading') { say('the operator is still waking\u2026 ' + neural.pct + '% \u2014 give it a moment', true); return; }
+        if (neural.state === 'failed') { say('neural operator failed to load \u2014 classic mode', true); }
         game.request(txt);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
@@ -504,7 +508,7 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
-  var neural = { state: 'off', gen: null, ctx: null }; // off -> loading -> on / failed
+  var neural = { state: 'off', gen: null, ctx: null, pct: 0 }; // off -> loading -> on / failed
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
@@ -518,7 +522,7 @@
           progress_callback: function (p) {
             if (p && p.status === 'progress' && typeof p.progress === 'number') {
               var pct = Math.floor(p.progress / 10) * 10;
-              if (pct > lastPct) { lastPct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
+              if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
             }
           }
         });
@@ -536,7 +540,7 @@
   function neuralChat(text) {
     var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
     say('\u2026', true);  // a beat while the model thinks
-    neural.gen(messages, { max_new_tokens: 96, do_sample: false })
+    neural.gen(messages, { max_new_tokens: 96, do_sample: true, temperature: 0.8, top_p: 0.9 })
       .then(function (out) {
         // transformers.js chat returns [{ generated_text: [...messages, {role:'assistant',content}] }]
         var reply = '';
