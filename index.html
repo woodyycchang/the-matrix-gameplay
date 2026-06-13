@@ -2504,7 +2504,7 @@
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
       if (!sigmaVoice) pickSigma();
       if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 0.9; u.pitch = 0; u.volume = 1.0;   // pitch floored: as deep as the engine allows
+      u.rate = 0.95; u.pitch = 0.7; u.volume = 1.0;   // deep but clear — not floored (0 was too muddy)
       window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
       window.speechSynthesis.speak(u);
     } catch (e) {}
