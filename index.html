@@ -2483,7 +2483,7 @@
   function pickSigma() {
     try {
       var vs = window.speechSynthesis.getVoices();
-      var pref = [/\bDaniel\b/i, /Google UK English Male/i, /\bGuy\b/i, /\bGeorge\b/i, /\bDavid\b/i, /\bAlex\b/i, /\bFred\b/i, /\bmale\b/i];
+      var pref = [/Natural.*\b(Guy|Davis|Tony|Jason|Andrew|Brian|Christopher|Eric|Roger)\b/i, /\b(Guy|Davis|Andrew|Brian|Christopher|Eric|Roger)\b.*Natural/i, /Google US English/i, /Microsoft.*\b(Guy|David|Mark)\b/i, /\bDaniel\b/i, /Google UK English Male/i, /\bDavid\b/i, /\bAlex\b/i, /\bmale\b/i];
       for (var p = 0; p < pref.length && !sigmaVoice; p++) {
         for (var i = 0; i < vs.length; i++) {
           if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
@@ -2504,7 +2504,7 @@
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
       if (!sigmaVoice) pickSigma();
       if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 0.85; u.pitch = 0.5; u.volume = 1.0;   // "voice-of-god" recipe: deep pitch + slowed 0.85 (pro trailer-narrator config, mapped to the 0-2 browser scale)
+      u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;   // web consensus for natural speech: stay at the per-voice defaults (deviating muddied it)
       window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
       window.speechSynthesis.speak(u);
     } catch (e) {}
