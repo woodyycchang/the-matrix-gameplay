@@ -6,13 +6,11 @@
 
   var canvas, ctx, game, hud = {}, started = false;
   var W = 0, H = 0, scale = 1, dpr = 1;
-  var paused = false;
   var reduceMotion = false;
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
   // ---------- input state ----------
-  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, dragging = false, lastMX = 0, lastMY = 0;
-  var mdX = 0, mdY = 0, mdT = 0, mdMoved = 0, mdWasTyping = false;
+  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, locked = false, dragging = false, lastMX = 0, lastMY = 0;
   var fireEdge = false, anyEdge = false;
   var touch = { active: false, mvId: -1, mvX: 0, mvY: 0, mvCX: 0, mvCY: 0, lkId: -1, lkX: 0, lkY: 0, fwd: 0, strafe: 0 };
   var SENS = 0.0023;
@@ -23,7 +21,7 @@
     keys[k] = down;
     if (down) anyEdge = true;
     if (down && started) {
-      if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
+      if (k === 'enter' || k === 't') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
       if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
       if (k === 'h') game.request('help');
@@ -35,23 +33,31 @@
 
   function onMouseMove(e) {
     if (!started) return;
-    if (dragging) {
-      var dx = e.clientX - lastMX, dy = e.clientY - lastMY;
-      mouseDX += dx; mouseDY += dy; mdMoved += Math.abs(dx) + Math.abs(dy);
-      lastMX = e.clientX; lastMY = e.clientY;
+    if (locked) { mouseDX += e.movementX || 0; mouseDY += e.movementY || 0; }
+    else if (dragging) { mouseDX += e.clientX - lastMX; mouseDY += e.clientY - lastMY; lastMX = e.clientX; lastMY = e.clientY; }
+  }
+  function tryLock() {
+    if (touch.active) return;
+    if (canvas.requestPointerLock) {
+      try { var p = canvas.requestPointerLock(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
     }
   }
-  // The mouse is FREE — no pointer lock. Drag to look around; a quick click (no drag)
-  // is the act/strike. Clicking the world while typing drops you into walk mode.
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
-    if (paused) { setPaused(false); return; }
-    if (touch.active) return;
-    mdWasTyping = consoleOpen;
-    if (consoleOpen) hud.input.blur();     // click the world -> walk mode
-    dragging = true; lastMX = e.clientX; lastMY = e.clientY;
-    mdX = e.clientX; mdY = e.clientY; mdT = performance.now(); mdMoved = 0;
+    if (consoleOpen) return;
+    if (!locked && !touch.active) {
+      dragging = true; lastMX = e.clientX; lastMY = e.clientY;
+      tryLock();
+      if (!lockEverWorked) return; // first click just engages look
+    }
+    if (e.button === 0) fireEdge = true;
+  }
+  var lockEverWorked = false;
+  function onLockChange() {
+    locked = document.pointerLockElement === canvas;
+    if (locked) lockEverWorked = true;
+    hud.hint.style.opacity = (!locked && !touch.active && started) ? 1 : 0;
   }
 
   // ---------- touch ----------
@@ -110,7 +116,7 @@
     while (ttTimer > per && ttCur) {
       ttTimer -= per; ttChars++;
       ttCur.el.textContent = (ttCur.system ? '' : 'operator: ') + ttCur.text.slice(0, ttChars);
-      if (ttChars % 4 === 0) A.handle('tick');
+      if (ttChars % 2 === 0) A.handle('tick');
       if (ttChars >= ttCur.text.length) {
         var el = ttCur.el;
         setTimeout(function () { el.classList.add('fade'); }, 6500);
@@ -121,37 +127,21 @@
   function openConsole() {
     consoleOpen = true;
     hud.inRow.classList.add('open');
+    hud.input.value = '';
     hud.input.focus();
+    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
   }
   function closeConsole() {
     consoleOpen = false;
+    hud.inRow.classList.remove('open');
     hud.input.blur();
+    if (started && !touch.active) tryLock();
   }
   function submitConsole() {
     var v = hud.input.value.trim();
-    hud.input.value = '';        // clear instantly so the keystroke feels immediate
+    closeConsole();
     if (!v) return;
     say('you: ' + v, true);
-    // Defer ALL routing off the Enter keystroke. Parsing is cheap, but waking the
-    // neural Worker (Blob + new Worker + module import) is NOT, and doing it inline
-    // froze the input on the first unknown line. One tick later, the box is already
-    // responsive and the heavy work runs without blocking typing.
-    setTimeout(function () { routeLine(v); }, 0);
-  }
-  function routeLine(v) {
-    var pp = C.parse(v);
-    if (pp.type !== 'unknown') { game.request(v); return; }
-    var lex = C.intent.lexicalGuess(v);
-    if (lex) { game.request(lex); return; }   // deterministic rescue: no model needed
-    if (neural.state === 'on') { neuralSend(v); return; }
-    if (neural.state === 'off') {
-      neural.queue.push(v);
-      loadNeural();   // the first unheard line wakes the operator itself
-      say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true);
-      return;
-    }
-    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
-    say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
 
@@ -167,7 +157,7 @@
       recog.onresult = function (ev) {
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
-        setTimeout(function () { routeLine(txt); }, 0);
+        game.request(txt);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
       recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
@@ -195,11 +185,7 @@
           else {
             var hor = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
             var g = ctx.createLinearGradient(0, 0, 0, H);
-            if (op.mode === 'neon') {
-              g.addColorStop(0, '#04040a');
-              g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#0c0a18');
-              g.addColorStop(1, op.fogCol);
-            } else if (op.mode === 'city') {
+            if (op.mode === 'city') {
               g.addColorStop(0, '#9fb2bf');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#cfd6da');
               g.addColorStop(1, op.fogCol);
@@ -301,63 +287,19 @@
         }
       }
     }
-    // riding instruments: speed bar + nitrous gauge, lower-right, only while mounted
-    if (game.bike) drawRideHUD();
-  }
-
-  function drawRideHUD() {
-    var bk = game.bike, B = C.BIKE;
-    var spd = Math.abs(bk.speed), sf = Math.min(1, spd / B.BOOST), tf = bk.turbo / B.TURBO_MAX;
-    var pad = Math.round(Math.min(W, H) * 0.03);
-    var bw = Math.round(W * 0.2), bh = Math.round(H * 0.018);
-    var x = W - pad - bw, y = H - pad - bh;
-    var code = game.mode === 'code';
-    // speed bar
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22';
-    ctx.fillRect(x, y, bw, bh);
-    var sCol = bk.boosting ? '#ff2bd6' : (code ? '#46ff7a' : '#19e3ff');
-    ctx.fillStyle = sCol; ctx.fillRect(x, y, bw * sf, bh);
-    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.lineWidth = 1; ctx.strokeRect(x, y, bw, bh);
-    // nitrous gauge above it
-    var y2 = y - bh - 5;
-    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22'; ctx.fillRect(x, y2, bw, bh);
-    ctx.fillStyle = tf > 0.05 ? '#ffd166' : '#5a4a2a'; ctx.fillRect(x, y2, bw * tf, bh);
-    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.strokeRect(x, y2, bw, bh);
-    // labels
-    setFont(Math.round(Math.min(W, H) * 0.016), false);
-    ctx.textAlign = 'right'; ctx.fillStyle = code ? '#7dffaf' : '#9aa0a8';
-    ctx.fillText(Math.round(spd / B.BOOST * 180) + ' KM/H', x - 8, y + bh);
-    ctx.fillText(bk.boosting ? 'TURBO' : 'NITRO', x - 8, y2 + bh);
-    ctx.fillText('DIST ' + Math.round(bk.dist * 8) + ' m', x - 8, y2 - bh - 4);
-    ctx.textAlign = 'left'; ctx.globalAlpha = 1;
   }
 
   // ---------- HUD ----------
-  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
   function updateHUD() {
-    var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
-    if (game.scene && game.scene.infinite) {
-      var dpx = game.player.pos[0], dpz = game.player.pos[2];
-      var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8 / 10) * 10;  // 10 m steps, not per-frame churn
-      if (dOut > 5) sceneLine += ' \u00b7 ' + dOut + ' m out';
-    }
-    if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
-    if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
+    hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (game.bike) {
-      if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
-      else label = '';
-    } else if (a && game.state === 'play') {
+    if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
-      else if (a.kind === 'bike') label = '[E] ride';
-      else if (a.kind === 'katana') label = '[E] take katana';
     }
-    if (label !== lastAimLabel) { lastAimLabel = label; hud.aim.textContent = label; }
-    var op = label ? 1 : 0;
-    if (op !== lastAimOp) { lastAimOp = op; hud.aim.style.opacity = op; }
+    if (hud.aim.textContent !== label) hud.aim.textContent = label;
+    hud.aim.style.opacity = label ? 1 : 0;
   }
 
   // ---------- main loop ----------
@@ -373,19 +315,15 @@
     lastFont = '';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   }
-  var lastMsAvg = 0, paintSkip = 0;
   function adapt(ms) {
     frameMs.push(ms);
-    if (frameMs.length < 36) return;               // judge every ~0.6 s, not 1.25 s
+    if (frameMs.length < 75) return;
     var sum = 0; for (var i = 0; i < frameMs.length; i++) sum += frameMs[i];
     var avg = sum / frameMs.length;
     frameMs.length = 0;
-    lastMsAvg = avg;
-    if (avg > 30 && renderScaleIdx < SCALES.length - 1) {        // badly behind: drop two steps
-      renderScaleIdx = Math.min(SCALES.length - 1, renderScaleIdx + 2); resize(); trimCrowd();
-    } else if (avg > 17 && renderScaleIdx < SCALES.length - 1) { // not holding 60: drop one
+    if (avg > 23 && renderScaleIdx < SCALES.length - 1) {
       renderScaleIdx++; resize(); trimCrowd();
-    } else if (avg < 9 && renderScaleIdx > 0) {                  // lots of headroom: raise one
+    } else if (avg < 12.5 && renderScaleIdx > 0) {
       renderScaleIdx--; resize();
     }
   }
@@ -435,12 +373,6 @@
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
-    if (paused) {
-      var opsP = C.render(game, W, H, game.time);
-      paint(opsP);
-      paintPauseOverlay();
-      return;
-    }
     acc += dt;
     var step = 1 / 60, n = 0;
     var inp = buildInput();
@@ -454,259 +386,15 @@
     var evs = game.drain();
     for (var i = 0; i < evs.length; i++) {
       var e = evs[i];
-      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; say('voice: ' + A.voiceName, true); } }
+      if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
-      else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
     }
-    // While a generation is in flight the worker owns a whole core; yield ours.
-    // Paint at 1/3 cadence (physics, input and HUD keep full rate) so typing stays
-    // snappy during the think, then restore full painting the moment he answers.
-    var throttled = neural.inFlight > 0;
-    paintSkip = (paintSkip + 1) % 3;
-    if (!throttled || paintSkip === 0) {
-      var ops = C.render(game, W, H, game.time);
-      paint(ops);
-    }
+    var ops = C.render(game, W, H, game.time);
+    paint(ops);
     tickTeletype(dt);
     updateHUD();
-    if (!throttled) adapt(performance.now() - t0);
-    else frameMs.length = 0;   // don't let skipped frames trick the resolution up
-  }
-
-  // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
-  function setPaused(v) {
-    if (paused === v) return;
-    paused = v;
-    if (paused) {
-      if (game && game.bike) A.engine(0, 0);
-      A.handle('ringStop'); // freeze any ringing
-      if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
-      if (window.speechSynthesis) try { window.speechSynthesis.pause(); } catch (e) {}
-    } else {
-      lastT = 0; acc = 0;
-      if (window.speechSynthesis) try { window.speechSynthesis.resume(); } catch (e) {}
-    }
-  }
-  function paintPauseOverlay() {
-    ctx.globalAlpha = 0.55; ctx.fillStyle = '#020803'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
-    setFont(Math.round(Math.min(W, H) * 0.04), true);
-    ctx.fillStyle = '#46ff7a';
-    ctx.fillText('PROGRAM PAUSED', W / 2, H / 2 - 8);
-    setFont(Math.round(Math.min(W, H) * 0.018));
-    ctx.fillStyle = '#2f9e57';
-    ctx.fillText('click to resume', W / 2, H / 2 + Math.min(W, H) * 0.05);
-  }
-  function showError(msg) {
-    try {
-      var d = document.getElementById('errlay');
-      if (!d) {
-        d = document.createElement('div'); d.id = 'errlay';
-        d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(2,8,3,.92);color:#9affc0;' +
-          'font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;' +
-          'align-items:center;justify-content:center;text-align:center;padding:24px;letter-spacing:.04em';
-        document.body.appendChild(d);
-      }
-      d.innerHTML = '<div style="color:#46ff7a;letter-spacing:.3em;margin-bottom:14px">CONSTRUCT FAULT</div>' +
-        '<div style="max-width:70ch;opacity:.85">' + String(msg).replace(/[<>&]/g, ' ') + '</div>' +
-        '<div style="margin-top:18px;opacity:.5">reload the page to recompile</div>';
-      d.style.display = 'flex';
-    } catch (e) {}
-  }
-
-
-  // ---------- neural operator (optional, open-source CHAT model, in-browser) ----------
-  // We load a small open-source instruct model, open its context with a few-shot
-  // prompt describing the game, then EVERY user line is answered by the model itself.
-  // Whatever the model says is what we show — no templates.
-  var voiceTold = false;
-  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
-  // The model runs in a module Worker: download, init and every generation happen
-  // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
-  var NEURAL_WORKER_SRC = [
-    "import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';",
-    "env.allowLocalModels = false;",
-    "let gen = null;",
-    "const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';",
-    "const opts = (device, dtype) => ({ device, dtype, progress_callback: p => {",
-    "  if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress });",
-    "} });",
-    "async function load() {",
-    "  try { gen = await pipeline('text-generation', MODEL, opts('webgpu', 'q4f16')); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) {}",
-    "  try { gen = await pipeline('text-generation', MODEL, opts('wasm', 'q4')); postMessage({ type: 'ready', device: 'wasm' }); }",
-    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
-    "}",
-    "onmessage = async (ev) => {",
-    "  const m = ev.data || {};",
-    "  if (m.type === 'load') { load(); return; }",
-    "  if (m.type === 'chat') {",
-    "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.4, top_p: 0.9 });",
-    "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
-    "      let reply = '';",
-    "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
-    "      postMessage({ type: 'reply', id: m.id, reply });",
-    "    } catch (e) { postMessage({ type: 'replyerr', id: m.id, error: String((e && e.message) || e) }); }",
-    "  }",
-    "};"
-  ].join('\n');
-
-  // The sigma voice, for real: an in-browser neural TTS (Kokoro-82M, Apache-2.0)
-  // speaking the literal 'am_adam' voice at speed 0.9 - the exact two parameters
-  // that transfer from the viral ElevenLabs-Adam recipe (stability/similarity are
-  // ElevenLabs-engine knobs that do not exist outside their API).
-  var VOICE_WORKER_SRC = [
-    "let tts = null;",
-    "const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';",
-    "const LIB_URLS = [",
-    "  'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm',",
-    "  'https://esm.sh/kokoro-js@1.2.0',",
-    "  'https://cdn.jsdelivr.net/npm/kokoro-js/+esm'",
-    "];",
-    "async function lib() {",
-    "  for (const u of LIB_URLS) {",
-    "    try { const m = await import(u); if (m && m.KokoroTTS) { postMessage({ type: 'link', step: 'lib', url: u }); return m.KokoroTTS; } }",
-    "    catch (e) { postMessage({ type: 'linkerr', step: 'lib', url: u, error: String((e && e.message) || e).slice(0, 60) }); }",
-    "  }",
-    "  throw new Error('no CDN reachable for kokoro-js');",
-    "}",
-    "async function load() {",
-    "  const KokoroTTS = await lib();",
-    "  const prog = p => { if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress }); };",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'webgpu', progress_callback: prog }); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) { postMessage({ type: 'linkerr', step: 'engine-webgpu', error: String((e && e.message) || e).slice(0, 60) }); }",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm', progress_callback: prog }); postMessage({ type: 'ready', device: 'wasm' }); }",
-    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
-    "}",
-    "onmessage = async (ev) => {",
-    "  const m = ev.data || {};",
-    "  if (m.type === 'load') { load().catch(e => postMessage({ type: 'fail', error: String((e && e.message) || e) })); return; }",
-    "  if (m.type === 'speak' && tts) {",
-    "    try {",
-    "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 0.9 });",
-    "      const f = out.audio;",
-    "      postMessage({ type: 'audio', sr: out.sampling_rate, buf: f }, [f.buffer]);",
-    "    } catch (e) { postMessage({ type: 'audioerr' }); }",
-    "  }",
-    "};"
-  ].join('\n');
-  var vox = { state: 'off', worker: null };
-  function loadVoice() {
-    if (vox.state !== 'off') return;
-    vox.state = 'loading';
-    try {
-      var vb = new Blob([VOICE_WORKER_SRC], { type: 'text/javascript' });
-      vox.worker = new Worker(URL.createObjectURL(vb), { type: 'module' });
-    } catch (e) { vox.state = 'failed'; return; }
-    var vLastPct = -1;
-    vox.worker.onmessage = function (ev) {
-      var m = ev.data || {};
-      if (m.type === 'link') { say('voice link ok: ' + m.step + ' via ' + (m.url || '').split('/')[2], true); return; }
-      if (m.type === 'linkerr') { say('voice link FAILED: ' + m.step + (m.url ? ' @ ' + m.url.split('/')[2] : '') + ' (' + (m.error || '?') + ')', true); return; }
-      if (m.type === 'progress') {
-        var p = Math.floor(m.pct / 25) * 25;
-        if (p > vLastPct) { vLastPct = p; say('voice model\u2026 ' + p + '%', true); }
-        return;
-      }
-      if (m.type === 'ready') {
-        vox.state = 'on';
-        A.ttsReady = true;
-        A.voiceName = 'Kokoro ' + A.voiceChoice + ' (AI \u00b7 ' + (m.device || '') + ')';
-        voiceTold = false;   // announce the switch on his next line
-        say('voice engine online \u2014 the ' + A.voiceChoice.replace('am_', '') + ' register, speed 0.9', true);
-        return;
-      }
-      if (m.type === 'fail') {
-        vox.state = 'failed'; A.ttsReady = false;
-        say('AI voice failed to load (' + String(m.error || 'cdn blocked?').slice(0, 50) + ') \u2014 using the system voice. tap \ud83d\udd0a voice to retry', true);
-        return;
-      }
-      if (m.type === 'audio') {
-        var f = (m.buf instanceof Float32Array) ? m.buf : new Float32Array(m.buf);
-        A.playPCM(f, m.sr);
-      }
-    };
-    vox.worker.onerror = function (e) {
-      if (vox.state !== 'on') {
-        vox.state = 'failed'; A.ttsReady = false;
-        say('AI voice worker error \u2014 using the system voice (the kokoro CDN may be blocked on your network)', true);
-      }
-    };
-    vox.worker.postMessage({ type: 'load' });
-  }
-  A.voiceChoice = 'am_onyx';   // the ultra-deep register, by model not by pitch-bending
-  A.speakNeural = function (text) {
-    if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
-  };
-
-  function loadNeural() {
-    if (neural.state !== 'off') return;
-    neural.state = 'loading';
-    loadVoice();   // the AI voice (Kokoro am_adam) wakes with the operator
-    say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
-    var lastPct = -1;
-    try {
-      var blob = new Blob([NEURAL_WORKER_SRC], { type: 'text/javascript' });
-      neural.worker = new Worker(URL.createObjectURL(blob), { type: 'module' });
-    } catch (e) {
-      neural.state = 'failed';
-      say('the operator could not wake (' + String((e && e.message) || 'no worker').slice(0, 44) + ')', true);
-      return;
-    }
-    neural.worker.onmessage = function (ev) {
-      var m = ev.data || {};
-      if (m.type === 'progress') {
-        var pct = Math.floor(m.pct / 10) * 10;
-        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
-        return;
-      }
-      if (m.type === 'ready') {
-        neural.ctx = C.intent.buildChatPrompt();
-        neural.state = 'on';
-        say('operator online (' + (m.device || 'cpu') + ') \u2014 tell me what you want. I answer for myself now.', true);
-        var q = neural.queue.splice(0);
-        for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
-        return;
-      }
-      if (m.type === 'fail') {
-        neural.state = 'failed';
-        say('the operator could not wake (' + String(m.error || 'load error').slice(0, 44) + ')', true);
-        return;
-      }
-      if (m.type === 'reply' || m.type === 'replyerr') {
-        var cb = neural.pending[m.id];
-        if (cb) { delete neural.pending[m.id]; cb(m); }
-      }
-    };
-    neural.worker.onerror = function (e) {
-      if (neural.state !== 'on') { neural.state = 'failed'; say('the operator could not wake (' + String((e && e.message) || 'worker error').slice(0, 44) + ')', true); }
-    };
-    neural.worker.postMessage({ type: 'load' });
-  }
-
-  function neuralSend(text) {
-    neural.chain = (neural.chain || Promise.resolve()).then(function () { return neuralChat(text); }).catch(function () {});
-  }
-  // send one user line to the model; show the model's own reply; act only if it named a designated word
-  function neuralChat(text) {
-    var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
-    say('\u2026', true);  // a beat while the model thinks (in a worker \u2014 the game never stalls)
-    neural.inFlight++;
-    return new Promise(function (resolve) {
-      var id = ++neural.seq;
-      neural.pending[id] = function (m) {
-        neural.inFlight = Math.max(0, neural.inFlight - 1);
-        if (m.type === 'replyerr') {
-          say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
-        } else {
-          var r = C.intent.parseReply(m.reply);
-          var w = r.word || C.intent.rescueWord(text, m.reply);  // deterministic rails around a tiny model
-          say(r.say, true);                 // ALWAYS show what the model said
-          if (w) game.request(w);           // dispatch the named (or rescued) designated word
-        }
-        resolve();
-      };
-      neural.worker.postMessage({ type: 'chat', id: id, messages: messages });
-    });
+    adapt(performance.now() - t0);
   }
 
   // ---------- boot ----------
@@ -717,7 +405,7 @@
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
     A.init();
     A.setAmbience('void');
-    if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
+    if (!touch.active) tryLock();
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }
 
@@ -727,15 +415,6 @@
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
       say('you: ' + (req || label), true);
-      if (req === '__neural__') { loadNeural(); return; }
-      if (req === '__deepvoice__') {
-        var cyc = ['am_onyx', 'am_michael', 'am_adam'];
-        A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
-        if (vox.state === 'off') loadVoice();
-        say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        if (A.ttsReady) A.speak('This is the ' + A.voiceChoice.replace('am_', '') + ' register.');
-        return;
-      }
       game.request(req || label);
       A.handle('chirp');
     });
@@ -753,34 +432,27 @@
     hud.log = document.getElementById('log');
     hud.inRow = document.getElementById('inrow');
     hud.input = document.getElementById('cmd');
-    hud.inRow.classList.add('open');   // the console is always visible — typing is first-class
-    hud.input.addEventListener('focus', function () { consoleOpen = true; });
-    hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
-    hud.hint.textContent = 'drag to look \u00b7 quick click = act \u00b7 Esc \u21c4 walk/type';
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
       if (consoleOpen) {
         if (e.key === 'Enter') { submitConsole(); e.preventDefault(); }
         else if (e.key === 'Escape') closeConsole();
-        else if (e.key.indexOf('Arrow') === 0 && hud.input.value === '') { e.preventDefault(); key(e, true); }
         return;
       }
       if ([' ', 'arrowup', 'arrowdown'].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
       key(e, true);
     });
-    window.addEventListener('keyup', function (e) { key(e, false); });
+    window.addEventListener('keyup', function (e) { if (!consoleOpen) key(e, false); });
     window.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', function (e) {
-      if (dragging && e.button === 0 && !paused && !mdWasTyping && mdMoved < 6 && performance.now() - mdT < 300) fireEdge = true;
-      dragging = false;
-    });
+    window.addEventListener('mouseup', function () { dragging = false; });
+    document.addEventListener('pointerlockchange', onLockChange);
     window.addEventListener('resize', resize);
     bindTouch();
 
@@ -805,11 +477,6 @@
     tbtn('ASK', function () { openConsole(); });
 
     resize();
-    // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
-    window.addEventListener('blur', function () { if (started) setPaused(true); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
-    window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
-    window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);
   }
 

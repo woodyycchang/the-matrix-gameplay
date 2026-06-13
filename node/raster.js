@@ -104,8 +104,7 @@ function paint(frame, ops, gameMode) {
         else if (op.mode === 'white') frame.clear(op.fogCol);
         else {
           const hor = C.clamp((H * 0.5 + Math.tan(op.pitch) * H * 0.62) / H, 0.02, 0.98);
-          if (op.mode === 'neon') frame.vgrad([[0, '#04040a'], [hor, '#0c0a18'], [1, op.fogCol]]);
-          else if (op.mode === 'city') frame.vgrad([[0, '#9fb2bf'], [hor, '#cfd6da'], [1, op.fogCol]]);
+          if (op.mode === 'city') frame.vgrad([[0, '#9fb2bf'], [hor, '#cfd6da'], [1, op.fogCol]]);
           else if (op.mode === 'day') frame.vgrad([[0, '#aebfc8'], [hor, '#d6dadc'], [1, op.fogCol]]);
           else frame.vgrad([[0, '#c9bda3'], [1, op.fogCol]]);
         }

@@ -21,14 +21,13 @@
     opacity:0;transition:opacity .15s;pointer-events:none}
   #lookhint{position:fixed;top:14px;right:16px;font-size:11px;letter-spacing:.18em;color:var(--faint);
     opacity:0;transition:opacity .3s;pointer-events:none}
-  #mic{flex:0 0 auto;width:30px;height:30px;border-radius:50%;
-    border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:13px;cursor:pointer;color:var(--ink)}
+  #mic{position:fixed;right:14px;bottom:64px;width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:15px;cursor:pointer;color:var(--ink)}
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
   /* console */
-  #console{position:fixed;left:0;bottom:0;width:min(720px,92vw);padding:10px 16px 12px;pointer-events:none;
-    background:linear-gradient(to top,rgba(251,251,249,.9),rgba(251,251,249,.55) 55%,transparent)}
-  #log{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
-  #log .line{font-size:12px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
+  #console{position:fixed;left:0;right:0;bottom:0;padding:10px 16px 12px;pointer-events:none}
+  #log{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+  #log .line{font-size:12.5px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
     transition:opacity 1.2s;max-width:72ch}
   #log .line.sys{color:var(--faint)}
   #log .line.fade{opacity:0}
@@ -38,10 +37,8 @@
   #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
     font:inherit;font-size:13px;color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
   #cmd::placeholder{color:#9a9a96}
-  #chips{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin-top:8px;pointer-events:auto;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-  #chips::-webkit-scrollbar{display:none}
-  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);flex:0 0 auto;white-space:nowrap;
+  #chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;pointer-events:auto}
+  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);
     background:transparent;border:1px solid rgba(42,42,40,.3);padding:4px 11px;cursor:pointer;border-radius:2px}
   .chip:hover{border-color:var(--ink);background:rgba(42,42,40,.05)}
   /* touch */
@@ -69,10 +66,12 @@
 
 <div id="scene">THE CONSTRUCT</div>
 <div id="aim"></div>
-<div id="lookhint">DRAG TO LOOK · QUICK CLICK = ACT · ESC ⇄ WALK/TYPE</div>
+<div id="lookhint">CLICK TO LOOK · ESC TO RELEASE</div>
+<button id="mic" title="hold V to talk">&#9210;</button>
+
 <div id="console">
   <div id="log"></div>
-  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
+  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"></div>
   <div id="chips"></div>
 </div>
 
@@ -82,8 +81,8 @@
   <div class="t">THE CONSTRUCT</div>
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
-  <div class="keys">WASD move · SHIFT sprint · SPACE jump · drag to look · C code vision<br>
-  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute</div>
+  <div class="keys">WASD move · SHIFT sprint · SPACE jump · mouse look · C code vision<br>
+  E use · click fire/strike · ENTER type a request · hold V to speak · M mute</div>
 </div>
 
 <script>
@@ -576,60 +575,10 @@
     return fin(m, 1.5, 44, 10);
   };
 
-  // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
-  P.bike = function () { // original naked street bike; nose at +z like every prop front
-    var m = C.newMesh();
-    var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';
-    function wheel(cz) {
-      C.addBox(m, 0, 0.34, cz, 0.16, 0.66, 0.66, dark);            // tire block
-      C.addBox(m, 0, 0.34, cz, 0.18, 0.30, 0.30, '#23262b');       // hub
-      C.addBox(m, 0, 0.34, cz, 0.20, 0.08, 0.50, '#3a3d42');       // spoke v
-      C.addBox(m, 0, 0.34, cz, 0.20, 0.50, 0.08, '#3a3d42');       // spoke h
-    }
-    wheel(-0.62); wheel(0.64);
-    C.addBox(m, 0, 0.40, 0.02, 0.40, 0.34, 0.58, body);            // engine/frame mass
-    C.addBox(m, 0.22, 0.30, -0.34, 0.08, 0.08, 0.66, steel);       // exhaust pipe
-    C.addBox(m, 0, 0.70, 0.08, 0.36, 0.26, 0.52, tank);            // fuel tank (raised)
-    C.addQuadY(m, -0.12, 0.20, 0.12, 0.40, 0.831, accent);         // code-green tank stripe
-    C.addBox(m, 0, 0.66, -0.42, 0.34, 0.12, 0.50, '#191b1f');      // seat
-    C.addBox(m, 0, 0.76, -0.70, 0.30, 0.14, 0.20, body);           // tail cowl
-    C.addBox(m, -0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);       // front forks
-    C.addBox(m,  0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);
-    C.addBox(m, 0, 0.98, 0.52, 0.70, 0.06, 0.07, '#1b1d20');       // handlebar
-    C.addBox(m, -0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');   // grips
-    C.addBox(m,  0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');
-    C.addBox(m, 0, 0.82, 0.70, 0.20, 0.18, 0.07, '#f0ead0', { flat: true }); // headlamp
-    return fin(m, 2.4, 71, 12);
-  };
-  P.katanaStand = function () { // low rack, blade resting across it
-    var m = C.newMesh(), wood = '#3a3026';
-    C.addBox(m, 0, 0, 0, 0.74, 0.06, 0.24, wood);
-    C.addBox(m, -0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
-    C.addBox(m,  0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
-    C.addBox(m, -0.52, 0.33, 0, 0.22, 0.05, 0.05, '#1b1d20');           // handle
-    C.addBox(m, -0.40, 0.305, 0, 0.045, 0.10, 0.09, '#23262b');         // guard
-    C.addBox(m, 0.06, 0.335, 0, 0.88, 0.035, 0.04, '#d6dde2');          // blade
-    return fin(m, 16, 72, 8);
-  };
-  // Viewmodel katana (engine subtracts 0.42 from y; build around y≈0.30–0.58, +x forward)
-  P.heldKatana = function () {
-    var m = C.newMesh();
-    C.addBox(m, 0.05, 0.385, 0, 0.24, 0.055, 0.05, '#1b1d20');          // wrapped handle
-    C.addBox(m, 0.18, 0.355, 0, 0.045, 0.115, 0.095, '#23262b');        // guard
-    C.addBox(m, 0.63, 0.405, 0, 0.86, 0.038, 0.02, '#d6dde2');          // blade
-    C.addBox(m, 0.63, 0.437, 0, 0.86, 0.012, 0.014, '#9aa6ad');         // spine
-    C.meshBounds(m); m.an = [];
-    return m;
-  };
-
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
-  // Render tiers — the principle lifted from STREET PROTOCOL (not its WebGL code):
-  // geometry detail encodes a figure's status. 'terminal' = lowest-detail (a few coarse
-  // blocks), 'retail' = mid, 'custom' = full detail (the original P.human look).
   P.human = function (opt) {
     opt = opt || {};
-    var tier = opt.tier || 'custom';
     var m = C.newMesh();
     m.vp = []; m.pivots = [];
     function part(pid, pivot, fn) {
@@ -641,37 +590,23 @@
     var suit = opt.suit || '#5a5c60', pants = opt.pants || C.scaleHex(suit, 0.8);
     var skin = opt.skin || '#b7b2aa', hair = opt.hair || '#3a3a3c', shoe = '#222428';
     var dress = !!opt.dress;
-
-    if (tier === 'terminal') {
-      // lowest render budget: a blocky torso, two stub legs, a cube head — no shoes, hands, hair detail
-      part(0, [0, 0, 0], function () {
-        C.addBox(m, 0, 0.78, 0, 0.5, 0.7, 0.32, suit, { flat: true });     // slab torso
-      });
-      part(1, [-0.12, 0.78, 0], function () { C.addBox(m, -0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
-      part(2, [0.12, 0.78, 0], function () { C.addBox(m, 0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
-      part(3, [-0.3, 1.34, 0], function () { C.addBox(m, -0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
-      part(4, [0.3, 1.34, 0], function () { C.addBox(m, 0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
-      part(5, [0, 1.4, 0], function () { C.addBox(m, 0, 1.42, 0, 0.3, 0.32, 0.3, skin, { flat: true }); }); // cube head
-      return fin(m, 2.0, opt.seed || 45, 4);
-    }
-
     part(0, [0, 0, 0], function () {
       if (dress) {
         C.addBox(m, 0, 0.42, 0, 0.52, 0.55, 0.34, opt.suit || '#c1121f'); // skirt
         C.addBox(m, 0, 0.97, 0, 0.4, 0.45, 0.26, opt.suit || '#c1121f');  // bodice
       } else {
         C.addBox(m, 0, 0.84, 0, 0.44, 0.58, 0.26, suit);                  // jacket
-        if (opt.shirt && tier === 'custom') C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
+        if (opt.shirt) C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
       }
     });
     var legY = dress ? 0.42 : 0.86, legH = legY - 0.02;
     part(1, [-0.11, legY, 0], function () {
       C.addBox(m, -0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      if (tier === 'custom') C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     part(2, [0.11, legY, 0], function () {
       C.addBox(m, 0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      if (tier === 'custom') C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     var shY = 1.36;
     part(3, [-0.28, shY, 0], function () {
@@ -686,14 +621,14 @@
       if (opt.longhair) C.addBox(m, 0, 1.3, -0.13, 0.26, 0.36, 0.08, hair);
       if (opt.glasses) C.addQuadZ(m, -0.11, 1.5, 0.11, 1.57, 0.125, '#0b0d0f', true);
     });
-    return fin(m, tier === 'retail' ? 3.2 : 4.5, opt.seed || 45, 6);
+    return fin(m, 4.5, opt.seed || 45, 6);
   };
 
   P.agent = function () {
-    return P.human({ tier: 'custom', suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
+    return P.human({ suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
   };
   P.redDress = function () {
-    return P.human({ tier: 'custom', dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
+    return P.human({ dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 /* THE CONSTRUCT — 04_scenes.js — scene programs (pure) */
@@ -879,143 +814,48 @@
     return s;
   }
 
-  // ---------------- CITY (lunch hour — INFINITE boulevard) ----------------
-  // Same first-principles result as neon: the street is a block pattern repeated along
-  // x, so it streams. Chunks of boulevard spawn around the walker; crowd recycles around
-  // the player. The plaza and storefronts continue forever.
-  var CITY_CHUNK = 88;
-  var CITY_AHEAD = 2, CITY_BEHIND = 2;
-  function cityChunkMesh(ci) {
+  // ---------------- CITY (lunch hour) ----------------
+  function sceneCity() {
+    var s = {
+      name: 'lunch hour', sky: 'day', fog: { near: 30, far: 95, col: '#cfd4d6' },
+      groundY: 0, ambience: 'crowd', colliders: [], insts: [],
+      spawn: { pos: [-14, 0, 0.4], yaw: Math.PI / 2 },
+      crowd: [], update: null
+    };
     var m = C.newMesh();
-    var x0 = ci * CITY_CHUNK, x1 = x0 + CITY_CHUNK;
-    C.addQuadY(m, x0, -20, x1, 20, 0.001, '#b9bcbe', 'floor');         // plaza
-    C.addQuadY(m, x0, -7.2, x1, 7.2, 0.004, '#c6c9cb', 'floor');       // walkway
-    for (var sx = x0; sx < x1; sx += 4) C.addQuadY(m, sx, -7.2, sx + 0.06, 7.2, 0.006, '#aeb1b3', 'floor');
-    var r = C.rng(515 + ci * 13);
-    for (var i = 0; i < 8; i++) {
-      var bx = x0 + i * 11;
+    C.addQuadY(m, -60, -20, 60, 20, 0.001, '#b9bcbe', 'floor');         // plaza
+    C.addQuadY(m, -60, -7.2, 60, 7.2, 0.004, '#c6c9cb', 'floor');       // walkway
+    for (var sx = -56; sx < 60; sx += 4) {                               // paving seams
+      C.addQuadY(m, sx, -7.2, sx + 0.06, 7.2, 0.006, '#aeb1b3', 'floor');
+    }
+    var r = C.rng(515);
+    for (var i = 0; i < 9; i++) {                                        // building rows
       var bw = 9 + r() * 5, bh = 9 + r() * 14;
+      var bx = -44 + i * 11;
       C.addBox(m, bx, 0, -14.5, bw, bh, 9, C.mixHex('#8c9094', '#b3a999', r()), { noBottom: true });
-      C.addBox(m, bx, 0, -9.6, bw, 3.4, 0.9, '#6f7478', { noBottom: true });
+      C.addBox(m, bx, 0, -9.6, bw, 3.4, 0.9, '#6f7478', { noBottom: true }); // storefront band
       var bw2 = 9 + r() * 5, bh2 = 9 + r() * 14;
       C.addBox(m, bx + 4, 0, 14.5, bw2, bh2, 9, C.mixHex('#8c9094', '#a9a294', r()), { noBottom: true });
       C.addBox(m, bx + 4, 0, 9.6, bw2, 3.4, 0.9, '#6f7478', { noBottom: true });
     }
     C.anchorize(m, 0.045, 73, 8); C.meshBounds(m);
-    return m;
-  }
-  function sceneCity() {
-    var s = {
-      name: 'lunch hour', sky: 'day', fog: { near: 30, far: 95, col: '#cfd4d6' },
-      groundY: 0, ambience: 'crowd', colliders: [], insts: [],
-      spawn: { pos: [0, 0, 0.4], yaw: Math.PI / 2 },
-      crowd: [], update: null, infinite: true, chunks: {}
-    };
-    // persistent building-row walls along both sides (span far in x)
-    s.colliders.push(box([-1e6, 0, -20.5], [1e6, 12, -9.4]));
-    s.colliders.push(box([-1e6, 0, 9.4], [1e6, 12, 20.5]));
-    // a couple of landmarks near the origin so the start isn't bare
-    s.insts.push(inst(P.fountain(), [12, 0, -6], 0, { label: 'fountain' }));
-    s.insts.push(inst(P.bench(), [-2, 0, -6.4], 0, { label: 'bench' }));
-    s.insts.push(inst(P.tree(61), [-20, 0, 6.6], 0, { label: 'tree' }));
-    s.colliders.push(box([9.6, 0, -8.4], [14.4, 1.1, -3.6]));            // fountain (off to the side)
-    s._cityChunkAt = cityChunkMesh;
-    s._streamCity = function (game) {
-      var px = game.player.pos[0];
-      var cur = Math.round(px / CITY_CHUNK);
-      var lo = cur - CITY_BEHIND, hi = cur + CITY_AHEAD;
-      for (var ci = lo; ci <= hi; ci++) {
-        if (!s.chunks[ci]) {
-          var it = inst(cityChunkMesh(ci), [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'street' });
-          it.loadT = 1; it.loadDir = 0;
-          s.chunks[ci] = it; s.insts.push(it);
-        }
-      }
-      for (var key in s.chunks) {
-        var k = +key;
-        if (k < lo || k > hi) {
-          var idx = s.insts.indexOf(s.chunks[k]);
-          if (idx >= 0) s.insts.splice(idx, 1);
-          delete s.chunks[k];
-        }
-      }
-    };
-    s._streamCity({ player: { pos: s.spawn.pos } });   // seed first chunks
-    return s;
-  }
-
-  // ---------------- NEON (the cyber street — an INFINITE riding program) ----------------
-  // Evaluated by first principles: the mile is a pattern repeated along -z, so it can
-  // stream forever. Chunks of street spawn ahead of the rider and recycle behind; the
-  // ground and side-walls follow the player. Memory stays constant, the road never ends.
-  var NEON_CHUNK = 95;        // length of one street segment
-  var NEON_AHEAD = 4;         // chunks kept in front
-  var NEON_BEHIND = 2;        // chunks kept behind
-  function neonChunkMesh(ci) {
-    var m = C.newMesh();
-    var z0 = -ci * NEON_CHUNK, z1 = z0 - NEON_CHUNK;
-    var r = C.rng(820 + ci * 7), hues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
-    // road + sidewalks for this segment
-    C.addQuadY(m, -7.4, z1, 7.4, z0, 0.001, '#07070e', 'floor');
-    C.addQuadY(m, -7.4, z1, -5.2, z0, 0.004, '#0c0c16', 'floor');
-    C.addQuadY(m, 5.2, z1, 7.4, z0, 0.004, '#0c0c16', 'floor');
-    // curb neon strips
-    C.addQuadY(m, -5.3, z1, -5.0, z0, 0.02, '#ff2bd6', 'floor');
-    C.addQuadY(m, 5.0, z1, 5.3, z0, 0.02, '#ff2bd6', 'floor');
-    C.addQuadY(m, -3.3, z1, -3.05, z0, 0.02, '#19e3ff', 'floor');
-    C.addQuadY(m, 3.05, z1, 3.3, z0, 0.02, '#19e3ff', 'floor');
-    // centreline dashes
-    for (var cz = z0 - 4; cz > z1; cz -= 9) C.addQuadY(m, -0.28, cz, 0.28, cz + 4.4, 0.02, '#ff2bd6', 'floor');
-    // towers along this segment, both rows
-    for (var i = 0; i < 10; i++) {
-      var z = z0 - 4 - i * 9.5;
-      var htL = 14 + r() * 26;
-      C.addBox(m, -10.5 - r() * 2, 0, z, 4 + r() * 2.5, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
-      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -7.4, hues[(i + ci) % 5], true);
-      var htR = 14 + r() * 26;
-      C.addBox(m, 10.5 + r() * 2, 0, z + 4, 4 + r() * 2.5, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
-      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 7.4, hues[(i + ci + 2) % 5], false);
-    }
-    C.anchorize(m, 0.05, 73, 8); C.meshBounds(m);
-    return m;
-  }
-  function sceneNeon() {
-    var s = {
-      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
-      groundY: 0, ambience: 'neon', colliders: [],
-      insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }, infinite: true, chunks: {}
-    };
-    // persistent side-walls + a bike at the line
-    s.colliders.push(box([-11, 0, -1e6], [-5.0, 14, 1e6]));
-    s.colliders.push(box([5.0, 0, -1e6], [11, 14, 1e6]));
-    s.insts.push(inst(P.lamppost(), [-5.6, 0, -6], 0, { label: 'lamp' }));
-    s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
-    // chunk manager: keep a window of segments around the rider's z
-    s.update = function (game) {
-      var pz = game.player.pos[2];
-      var cur = Math.max(0, Math.round(-pz / NEON_CHUNK));
-      var lo = Math.max(0, cur - NEON_BEHIND), hi = cur + NEON_AHEAD;
-      // spawn missing chunks in range
-      for (var ci = lo; ci <= hi; ci++) {
-        if (!s.chunks[ci]) {
-          var it = inst(neonChunkMesh(ci), [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'the mile' });
-          it.loadT = 1; it.loadDir = 0;
-          s.chunks[ci] = it; s.insts.push(it);
-        }
-      }
-      // recycle chunks outside the window
-      for (var key in s.chunks) {
-        var k = +key;
-        if (k < lo || k > hi) {
-          var inst2 = s.chunks[k];
-          var idx = s.insts.indexOf(inst2);
-          if (idx >= 0) s.insts.splice(idx, 1);
-          delete s.chunks[k];
-        }
-      }
-    };
-    // seed the first window immediately so the road exists on the first frame
-    s.update({ player: { pos: s.spawn.pos } });
+    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'street' }));
+    var props = [
+      inst(P.fountain(), [12, 0, 0], 0, { label: 'fountain' }),
+      inst(P.lamppost(), [-8, 0, -6.6], 0, { label: 'lamp' }),
+      inst(P.lamppost(), [4, 0, 6.6], Math.PI, { label: 'lamp' }),
+      inst(P.lamppost(), [22, 0, -6.6], 0, { label: 'lamp' }),
+      inst(P.bench(), [-2, 0, -6.4], 0, { label: 'bench' }),
+      inst(P.bench(), [18, 0, 6.4], Math.PI, { label: 'bench' }),
+      inst(P.tree(61), [-20, 0, -6.6], 0, { label: 'tree' }),
+      inst(P.tree(62), [28, 0, 6.6], 0, { label: 'tree' }),
+      inst(P.car('#4d5a64'), [-30, 0, 10.5], 0.06, { label: 'car' }),
+      inst(P.car('#6a5f55'), [34, 0, -10.8], Math.PI - 0.05, { label: 'car' })
+    ];
+    for (var p = 0; p < props.length; p++) s.insts.push(props[p]);
+    s.colliders.push(box([9.6, 0, -2.4], [14.4, 1.1, 2.4]));            // fountain
+    s.colliders.push(box([-60, 0, -20.5], [60, 12, -9.4]));             // building rows
+    s.colliders.push(box([-60, 0, 9.4], [60, 12, 20.5]));
     return s;
   }
 
@@ -1025,7 +865,6 @@
       case 'dojo': return sceneDojo();
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
-      case 'neon': return sceneNeon();
       default: return sceneVoid();
     }
   };
@@ -1336,9 +1175,6 @@
     hangup: 'Hanging up. Back to white.',
     lesson: 'You looked. Everyone looks — that is the lesson.',
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
-    bike: 'Two wheels, no excuses. The walls have opinions \u2014 respect them.',
-    katana: 'A blade. Quiet, honest, and exactly as sharp as you believe.',
-    neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -1358,8 +1194,6 @@
     bench: 'bench', benches: 'bench',
     lamppost: 'lamppost', streetlight: 'lamppost',
     fountain: 'fountain',
-    motorcycle: 'bike', motorbike: 'bike', motorcycles: 'bike', motor: 'bike', bike: 'bike', bikes: 'bike',
-    katana: 'katana', sword: 'katana', swords: 'katana', blade: 'katana',
     pedestal: 'pedestal'
   };
   var SCENEKEYS = [
@@ -1367,8 +1201,7 @@
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
-    [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
-    [/\b(city|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
+    [/\b(city|street|crowd|crowded|lunch|downtown|people|pedestrians)\b/, 'city']
   ];
   C.parse = function (text) {
     var s = String(text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1433,7 +1266,6 @@
     this.flags = { firstFallDone: false, lessonDone: false, attempts: 0, successDone: false, hinted: false };
     this.fx = { flash: 0, flashCol: '#ffffff', vig: 0, vigCol: '#7a1010', cracks: null, crackA: 0, slowmo: 1, slowTarget: 1, bars: 0, stamp: null, stampA: 0, bursts: [], heart: 0, painLinger: 0, camDip: 0, codeFlash: 0 };
     this.held = null;
-    this.bike = null;
     this.msgs = [];
     this.events = [];
     this.trans = null;
@@ -1504,7 +1336,6 @@
     p.pos = sc.spawn.pos.slice(); p.vel = [0, 0, 0];
     p.yaw = sc.spawn.yaw; p.pitch = 0; p.grounded = true; p.coyote = 0;
     this.held = null;
-    this.bike = null;
     this.state = 'play';
     this._fallFromRoof = false; this._airFromA = false;
     this.flags.successDone = false;
@@ -1573,8 +1404,6 @@
       case 'booth': mesh = P.booth(); k = 'booth'; lbl = 'exit'; break;
       case 'dummy': mesh = P.dummy(); k = 'dummy'; break;
       case 'mirror': mesh = P.mirror(); this.say(L.mirror); break;
-      case 'bike': mesh = P.bike(); k = 'bike'; lbl = 'motorcycle'; this.say(L.bike, 0.6); break;
-      case 'katana': mesh = P.katanaStand(); k = 'katana'; lbl = 'katana'; this.say(L.katana, 0.6); break;
       case 'bench': mesh = P.bench(); break;
       case 'lamppost': mesh = P.lamppost(); break;
       case 'fountain': mesh = P.fountain(); break;
@@ -1584,13 +1413,12 @@
     it.loadT = 0; it.loadDir = 1; it._delay = delay || 0;
     this.scene.insts.push(it);
     var b = mesh.bounds;
-    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv' || kind === 'bike') {
+    if (kind === 'booth' || kind === 'crate' || kind === 'table' || kind === 'car' || kind === 'fountain' || kind === 'dummy' || kind === 'pedestal' || kind === 'tv') {
       var cy = Math.cos(yaw), sy = Math.sin(yaw);
       var hw = Math.max(Math.abs(b.max[0]), Math.abs(b.min[0])), hd = Math.max(Math.abs(b.max[2]), Math.abs(b.min[2]));
-      var r = kind === 'booth' ? 0.52 : (kind === 'bike' ? 0.55 : Math.max(hw, hd) * 0.8);
+      var r = kind === 'booth' ? 0.52 : Math.max(hw, hd) * 0.8;
       var col = { min: [pos[0] - r, pos[1], pos[2] - r], max: [pos[0] + r, pos[1] + b.max[1], pos[2] + r] };
       if (kind === 'booth') { col.max[1] = pos[1] + 2.3; it._col = col; }
-      if (kind === 'bike') { col.max[1] = pos[1] + 1.1; it._col = col; }
       this.scene.colliders.push(col);
     }
     if (kind === 'booth') { this._boothRing = true; this.emit('ring'); this.say(L.booth, 0.9); }
@@ -1606,10 +1434,7 @@
       var grey = 0.28 + r() * 0.4;
       var gs = C.rgb2hex(grey * 255, grey * 255, grey * 258 > 255 ? 255 : grey * 258);
       var sk = r();
-      // render-tier mix: most pedestrians are low/mid budget, a few are full detail.
-      // in a simulated world, background extras don't get rendered at full fidelity.
-      var roll = r(), tier = roll < 0.45 ? 'terminal' : (roll < 0.8 ? 'retail' : 'custom');
-      var mesh = P.human({ tier: tier, suit: gs, skin: C.rgb2hex(170 + sk * 44, 162 + sk * 40, 152 + sk * 36), hair: r() < 0.5 ? '#2c2c2e' : '#55504a', shirt: r() < 0.4 ? '#dddbd4' : null, seed: 300 + i });
+      var mesh = P.human({ suit: gs, skin: C.rgb2hex(170 + sk * 44, 162 + sk * 40, 152 + sk * 36), hair: r() < 0.5 ? '#2c2c2e' : '#55504a', shirt: r() < 0.4 ? '#dddbd4' : null, seed: 300 + i });
       var dir = r() < 0.5 ? 1 : -1;
       var it = C.inst(mesh, [-44 + r() * 88, 0, lanes[(i % lanes.length)] + (r() - 0.5) * 0.7], dir > 0 ? Math.PI / 2 : -Math.PI / 2, { kind: 'ped', label: 'pedestrian' });
       it.pose = [0, 0, 0, 0, 0, 0];
@@ -1618,10 +1443,7 @@
     }
     this.crowd = { peds: peds, red: null, agent: null };
     var self = this;
-    sc.update = function (game, dt) {
-      if (sc._streamCity) sc._streamCity(game);   // stream the infinite boulevard
-      self.updateCrowd(dt);
-    };
+    sc.update = function (game, dt) { self.updateCrowd(dt); };
   };
 
   Game.prototype.updateCrowd = function (dt) {
@@ -1638,8 +1460,8 @@
       if (d2 < 2.1 && d2 > 0.0001) {
         it.pos[2] += (dz >= 0 ? 1 : -1) * dt * 1.6;
       }
-      if (it.pos[0] > p[0] + 48) { it.pos[0] -= 96; }
-      if (it.pos[0] < p[0] - 48) { it.pos[0] += 96; }
+      if (it.pos[0] > 47) { it.pos[0] = -47; }
+      if (it.pos[0] < -47) { it.pos[0] = 47; }
       var s = Math.sin(pd.ph);
       it.pose[1] = s * 0.5; it.pose[2] = -s * 0.5;
       it.pose[3] = -s * 0.38; it.pose[4] = s * 0.38;
@@ -1766,18 +1588,17 @@
 
   // ----- interaction -----
   Game.prototype.updateAim = function () {
-    if (this.bike) { this.aim = null; return; }
     var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
     this.aim = null;
     var insts = this.scene.insts, best = null, bd = 1e9;
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
-      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth') continue;
+      var cy = it.kind === 'gun' ? 0.05 : 1.1;
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : 2.8);
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -1787,7 +1608,6 @@
   };
 
   Game.prototype.doAction = function () {
-    if (this.bike) { this.dismountBike(); return; }
     var it = this.aim;
     if (!it) return;
     if (it.kind === 'gun') {
@@ -1797,13 +1617,6 @@
       this.say(L.gun);
     } else if (it.kind === 'booth') {
       this.enterBooth();
-    } else if (it.kind === 'bike') {
-      this.mountBike(it);
-    } else if (it.kind === 'katana') {
-      it.loadDir = -1;
-      if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
-      this.held = { mesh: P.heldKatana(), kick: 0, bob: 0, kind: 'katana' };
-      this.emit('pickupBlade');
     }
   };
 
@@ -1816,8 +1629,6 @@
 
   Game.prototype.doFire = function () {
     var t = this.time;
-    if (this.bike) return; // hands on the bars
-    if (this.held && this.held.kind === 'katana') { this.doSlash(); return; }
     if (this.held) {
       this.held.kick = 1;
       this.emit('shot');
@@ -1858,143 +1669,8 @@
   // ----- physics -----
   var GRAV = 18, WALK = 4.2, SPRINT = 8.0, R = 0.35, H = 1.7, EYE = 1.62;
   C.PHYS = { GRAV: GRAV, WALK: WALK, SPRINT: SPRINT, JUMP0: 5.0, JUMPK: 0.55, COYOTE: 0.12 };
-  // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
-  // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
-  //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34,
-             TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
-
-  Game.prototype.mountBike = function (it) {
-    this.bike = { it: it, speed: 0, lean: 0, turbo: C.BIKE.TURBO_MAX, boosting: false, dist: 0 };
-    it.loadDir = 0;
-    if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
-    this.held = null;
-    var p = this.player;
-    p.pos = it.pos.slice(); p.vel = [0, 0, 0]; p.grounded = true;
-    p.yaw = it.yaw; // bike nose is +z at yaw=0, same as player forward
-    this.emit('mount');
-    this.say(L.bike, 0.2);
-  };
-  Game.prototype.dismountBike = function () {
-    if (!this.bike) return;
-    var bk = this.bike, p = this.player;
-    var it = bk.it;
-    it.pos = [p.pos[0], this.scene.groundY, p.pos[2]];
-    it.yaw = p.yaw; it._baseYaw = null; it._wob = 0;
-    // step the rider off to the left of the bike
-    var lx = Math.cos(p.yaw), lz = Math.sin(p.yaw);
-    p.pos = [p.pos[0] - lx * 0.9, this.scene.groundY, p.pos[2] - lz * 0.9];
-    p.vel = [0, 0, 0];
-    // re-arm the bike collider so it's solid again once parked
-    var r = 0.55, col = { min: [it.pos[0] - r, it.pos[1], it.pos[2] - r], max: [it.pos[0] + r, it.pos[1] + 1.1, it.pos[2] + r] };
-    it._col = col; this.scene.colliders.push(col);
-    this.bike = null;
-    this.emit('dismount');
-  };
-
-  Game.prototype.moveBike = function (input, dt) {
-    var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
-    // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
-    p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
-    var wantTurbo = !!input.sprint;
-    var throttle = (input.fwd || 0);
-    var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26; // mouse contributes to steering
-    // turbo is a finite boost (nitrous): needs charge AND speed past a gate; drains while held, regens when off
-    var thr = throttle > 0.01;
-    bk.boosting = wantTurbo && bk.turbo > 0.05 && thr && bk.speed > B.TURBO_GATE;
-    if (bk.boosting) { bk.turbo = Math.max(0, bk.turbo - dt); }
-    else { bk.turbo = Math.min(B.TURBO_MAX, bk.turbo + dt * B.TURBO_REGEN); }
-    // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
-    var speedFrac = bk.speed / B.BOOST;
-    var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
-    p.yaw += steerIn * steerRate * dt;
-    bk.lean += (C.clamp(steerIn, -1, 1) * Math.min(1, bk.speed / B.MAX) - bk.lean) * Math.min(1, 6 * dt);
-    // longitudinal — roll-on with diminishing accel near vmax; turbo lifts the cap and boosts accel
-    var maxv = bk.boosting ? B.BOOST : B.MAX;
-    if (thr) {
-      var accel = (bk.boosting ? B.ACCEL * B.TURBO_GAIN : B.ACCEL) * throttle;
-      bk.speed += accel * dt * Math.max(0.12, 1.04 - bk.speed / maxv);
-    } else if (throttle < -0.01) {
-      bk.speed += B.BRAKE * throttle * dt; // brake/reverse
-    } else {
-      bk.speed -= Math.sign(bk.speed) * Math.min(Math.abs(bk.speed), B.COAST * dt);
-    }
-    // when not boosting but still over the normal cap, ease back down (don't hard-clamp)
-    if (!bk.boosting && bk.speed > B.MAX) bk.speed = Math.max(B.MAX, bk.speed - B.OVER_FALL * dt);
-    bk.speed = C.clamp(bk.speed, -B.MAX * 0.3, B.BOOST);
-    // integrate along facing (nose +z at yaw 0)
-    var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
-    var step = bk.speed * dt;
-    // substep to avoid tunnelling at high speed (|step| can exceed collider half-widths)
-    var subs = Math.max(1, Math.ceil(Math.abs(step) / 0.4));
-    var ds = step / subs;
-    function blocked(nx, nz) {
-      for (var i = 0; i < cols.length; i++) {
-        var b = cols[i];
-        if (b.max[1] <= p.pos[1] + 0.2) continue;
-        if (b.min[1] >= p.pos[1] + 1.0) continue;
-        if (nx > b.min[0] - 0.5 && nx < b.max[0] + 0.5 && nz > b.min[2] - 0.5 && nz < b.max[2] + 0.5) return b;
-      }
-      return null;
-    }
-    var hitWall = false;
-    for (var sgi = 0; sgi < subs; sgi++) {
-      var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
-      if (blocked(nx, p.pos[2])) { hitWall = true; }
-      else p.pos[0] = nx;
-      if (blocked(p.pos[0], nz)) { hitWall = true; }
-      else p.pos[2] = nz;
-    }
-    if (hitWall) {
-      bk.speed *= 0.6;                       // bleed speed once per frame, not per substep
-      // throttle the scrape sound: at most one every 0.15s, so grinding the wall
-      // can't stack dozens of hisses into a roar
-      if (this.time - (bk._lastScrape || -1) > 0.15) { this.emit('scrape'); bk._lastScrape = this.time; }
-    }
-    p.pos[1] = sc.groundY;
-    bk.dist += Math.abs(bk.speed) * dt;   // odometer — visible proof the road never ends
-    p.vel = [dirx * bk.speed, 0, dirz * bk.speed];
-    // sync the bike instance: push it forward so the rider sits on the seat and the
-    // tank + bars + headlamp fill the lower view (otherwise the bike renders under the camera and the frame looks empty)
-    var it = bk.it;
-    var fx0 = Math.sin(p.yaw) * 0.55, fz0 = -Math.cos(p.yaw) * 0.55;
-    it.pos = [p.pos[0] + fx0, sc.groundY, p.pos[2] + fz0];
-    it.yaw = p.yaw;
-    it._wob = 0;
-    bk.it._lean = bk.lean;
-    this.emit('engine', { speed: Math.abs(bk.speed), throttle: Math.max(0, throttle),
-                          speedFrac: C.clamp(Math.abs(bk.speed) / B.BOOST, 0, 1),
-                          turbo: bk.turbo / B.TURBO_MAX, boosting: bk.boosting });
-    // footstep phase off; engine carries the motion
-    p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
-  };
-
-  Game.prototype.doSlash = function () {
-    if (!this.held) return;
-    this.held.kick = 1;
-    this.emit('slash');
-    var B = C.BIKE; // reuse no constants; slash spec below ported from STREET PROTOCOL
-    var range = 3.5, arc = 1.35; // slashRange / slashArc (radians half-angle)
-    var eye = this.cam.pos, fw = fwdOf(this.player.yaw, this.player.pitch);
-    var insts = this.scene.insts, struck = false;
-    for (var i = 0; i < insts.length; i++) {
-      var it = insts[i];
-      if (it.loadT < 0.5) continue;
-      if (it.kind !== 'dummy' && it.kind !== 'ped' && it.kind !== 'red') continue;
-      var to = [it.pos[0] - eye[0], (it.pos[1] + 1.1) - eye[1], it.pos[2] - eye[2]];
-      var d = C.len(to);
-      if (d > range) continue;
-      var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
-      if (ang > arc) continue;
-      if (it.kind === 'dummy') { it._wob = 1; it._baseYaw = it._baseYaw == null ? it.yaw : it._baseYaw; }
-      this.burst([it.pos[0], it.pos[1] + 1.2, it.pos[2]], 9);
-      struck = true;
-    }
-    if (!struck) this.emit('swishBlade');
-  };
 
   Game.prototype.movePlayer = function (input, dt) {
-    if (this.bike) { this.moveBike(input, dt); return; }
     var p = this.player, sc = this.scene, cols = sc.colliders;
     // look
     p.yaw += input.dyaw || 0;
@@ -2235,7 +1911,6 @@
       eyeT = C.lerp(0.34, EYE, k); rollT = C.lerp(1.25, 0, k) + Math.sin(this._riseT * 9) * 0.05 * (1 - k);
     } else {
       eyeT = EYE; rollT = 0;
-      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.28; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
     cam.pos[0] = p.pos[0];
@@ -2279,13 +1954,11 @@
 
   if (!hasWindow) {
     A.init = function () {}; A.handle = function () {}; A.setAmbience = function () {};
-    A.speak = function () {}; A.engine = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
+    A.speak = function () {}; A.toggleMute = function () { A.muted = !A.muted; return A.muted; };
     return;
   }
 
   var ctx = null, master = null, ambGain = null, ambNodes = [], ringTimer = null;
-  // engine drone path (ported from STREET PROTOCOL; gain curve retuned down so idle is quiet)
-  var engOsc = null, engSub = null, engFilt = null, engGain = null, engOn = false;
 
   function noiseBuf(sec) {
     var b = ctx.createBuffer(1, Math.max(1, (sec * ctx.sampleRate) | 0), ctx.sampleRate);
@@ -2303,13 +1976,6 @@
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
       ambGain = ctx.createGain(); ambGain.gain.value = 0; ambGain.connect(master);
-      // engine drone: sawtooth + sub sine through a lowpass, idle silent until ridden
-      engGain = ctx.createGain(); engGain.gain.value = 0;
-      engFilt = ctx.createBiquadFilter(); engFilt.type = 'lowpass'; engFilt.frequency.value = 200;
-      engOsc = ctx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 44;
-      engSub = ctx.createOscillator(); engSub.type = 'sine'; engSub.frequency.value = 22;
-      engOsc.connect(engFilt); engSub.connect(engFilt); engFilt.connect(engGain); engGain.connect(master);
-      engOsc.start(); engSub.start();
       A.ready = true;
     } catch (e) { A.ready = false; }
   };
@@ -2319,22 +1985,6 @@
     if (A.muted && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
     return A.muted;
   };
-
-  // continuous engine voice. speed in m/s (0..~34), throttle 0..1.
-  // Retuned quieter than the source: idle is barely there, peak gain capped well below the original.
-  A.engine = function (speed, throttle) {
-    if (!ctx || !engGain) return;
-    var sp = Math.max(0, Math.min(34, speed || 0)), th = Math.max(0, Math.min(1, throttle || 0));
-    var now = ctx.currentTime;
-    engOsc.frequency.setTargetAtTime(40 + sp * 2.2, now, 0.06);
-    engSub.frequency.setTargetAtTime(20 + sp * 1.1, now, 0.06);
-    engFilt.frequency.setTargetAtTime(150 + sp * 24 + th * 180, now, 0.05);
-    // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
-    var g = A.muted ? 0 : Math.min(0.018, 0.002 + sp * 0.00034 + th * 0.0038);
-    engGain.gain.setTargetAtTime(g, now, 0.05);
-  };
-  function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
-  function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }
 
   function env(g, t0, a, peak, d, sustain) {
     g.gain.setValueAtTime(0.0001, t0);
@@ -2371,20 +2021,6 @@
     o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
   }
 
-
-  // a gunshot-style crack: near-instant wideband burst + quick body, much snappier than hiss
-  function crack(vol, when) {
-    if (!ctx) return;
-    var t0 = ctx.currentTime + (when || 0);
-    var s = ctx.createBufferSource(); s.buffer = noise();
-    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 700;
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(vol, t0);                       // no attack ramp — instant
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
-    s.connect(f); f.connect(g); g.connect(master);
-    s.start(t0); s.stop(t0 + 0.12);
-  }
-
   function clearAmbience() {
     for (var i = 0; i < ambNodes.length; i++) { try { ambNodes[i].stop ? ambNodes[i].stop() : ambNodes[i].disconnect(); } catch (e) {} }
     ambNodes = [];
@@ -2412,12 +2048,11 @@
         s.connect(f); f.connect(g); g.connect(ambGain);
         s.start(); ambNodes.push(s, g, f);
       }
-      if (name === 'wind') { loopNoise('bandpass', 420, 0.6, 0.16, 0.17, 220); loopNoise('lowpass', 180, 0.5, 0.09, 0.31, 70); }
-      else if (name === 'neon') { loopNoise('lowpass', 70, 0.6, 0.16, 0.13, 26); loopNoise('bandpass', 560, 3.5, 0.07, 0.21, 120); }
-      else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.14, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.05, 1.3, 240); }
+      if (name === 'wind') { loopNoise('bandpass', 420, 0.6, 0.5, 0.17, 220); loopNoise('lowpass', 180, 0.5, 0.25, 0.31, 70); }
+      else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.35, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.12, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
-      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0.1 : 0.22, t1 + 1.4);
+      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0.12 : 0.3, t1 + 1.4);
     }, 220);
   };
 
@@ -2435,11 +2070,11 @@
       if (!ctx) return;
     }
     switch (name) {
-      case 'whoosh': hiss(0.55, 0.34, 2200, 260, 1.1); break;
-      case 'materialize': for (var i = 0; i < 7; i++) blip(700 + i * 180 + Math.random() * 90, 0.07, 0.12, 'triangle', i * 0.045); hiss(0.6, 0.18, 1400, 4200, 2); break;
+      case 'whoosh': hiss(0.55, 0.5, 220, 2400, 1.1); break;
+      case 'materialize': for (var i = 0; i < 7; i++) blip(700 + i * 180 + Math.random() * 90, 0.07, 0.05, 'triangle', i * 0.045); hiss(0.6, 0.12, 1400, 4200, 2); break;
       case 'scene': hiss(0.8, 0.35, 160, 1800, 1); break;
-      case 'codeOn': hiss(0.45, 0.26, 300, 3200, 2); blip(180, 0.18, 0.12, 'sine'); blip(360, 0.22, 0.1, 'sine', 0.06); break;
-      case 'codeOff': hiss(0.4, 0.24, 3200, 300, 2); blip(360, 0.16, 0.08, 'sine'); break;
+      case 'codeOn': hiss(0.4, 0.3, 3000, 300, 2); blip(140, 0.3, 0.18, 'sine'); break;
+      case 'codeOff': hiss(0.4, 0.3, 300, 3000, 2); break;
       case 'jump': hiss(0.18, 0.18, 500, 1400, 1); break;
       case 'land': thump(150, 0.12, 0.22); break;
       case 'step':
@@ -2447,92 +2082,39 @@
         hiss(0.045, 0.16, f0, f0 * 0.6, 2.4); break;
       case 'falling': hiss(2.2, 0.4, 300, 1400, 0.8); break;
       case 'impactBig':
-        thump(95, 0.5, 0.72); thump(52, 0.9, 0.56, 0.03);
-        hiss(0.3, 0.4, 200, 80, 1);
+        thump(95, 0.5, 0.9); thump(52, 0.9, 0.7, 0.03);
+        hiss(0.3, 0.5, 200, 80, 1);
         blip(3050, 2.8, 0.05, 'sine', 0.15); // tinnitus
         break;
-      case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
-      case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;
+      case 'impactSmall': thump(110, 0.25, 0.5); hiss(0.15, 0.3, 400, 150, 1); break;
+      case 'heart': thump(64, 0.16, 0.5); thump(58, 0.13, 0.38, 0.18); break;
       case 'heartSoft': thump(64, 0.12, 0.16); thump(58, 0.1, 0.12, 0.16); break;
       case 'rise': hiss(1.2, 0.15, 120, 600, 0.8); break;
       case 'success': blip(523, 0.18, 0.12, 'triangle'); blip(784, 0.25, 0.12, 'triangle', 0.12); blip(1046, 0.4, 0.1, 'triangle', 0.24); break;
-      case 'shot': crack(0.5); thump(120, 0.05, 0.4); hiss(0.18, 0.10, 500, 90, 1.2, 0.02); break;
+      case 'shot': thump(180, 0.07, 0.7); hiss(0.12, 0.8, 2500, 300, 0.7); hiss(0.5, 0.2, 700, 120, 1, 0.02); break;
       case 'pickup': blip(660, 0.06, 0.12, 'square'); blip(990, 0.08, 0.1, 'square', 0.06); break;
-      case 'pickupBlade': hiss(0.18, 0.22, 1800, 5200, 2.2); blip(1320, 0.06, 0.08, 'triangle', 0.04); break;
-      case 'mount': engineStart(); blip(520, 0.05, 0.1, 'square'); thump(70, 0.18, 0.35, 0.02); break;
-      case 'dismount': engineStop(); blip(360, 0.06, 0.08, 'square'); break;
-      case 'scrape': hiss(0.13, 0.22, 1200, 500, 1.1); thump(90, 0.06, 0.12); break;
-      case 'slash': hiss(0.14, 0.3, 1400, 500, 1.8); blip(300, 0.08, 0.08, 'sawtooth', 0.01); break;
-      case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
-      case 'punch': thump(140, 0.09, 0.34); hiss(0.08, 0.24, 900, 300, 1.5); blip(220, 0.12, 0.08, 'triangle', 0.02); break;
+      case 'punch': thump(140, 0.09, 0.5); hiss(0.08, 0.35, 900, 300, 1.5); blip(220, 0.12, 0.1, 'triangle', 0.02); break;
       case 'swish': hiss(0.16, 0.22, 1200, 400, 1.6); break;
-      case 'freeze': thump(90, 0.16, 0.32); blip(140, 0.05, 0.06, 'sine'); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.1); break;
+      case 'freeze': thump(70, 0.4, 0.6); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.12); break;
       case 'resume': hiss(0.3, 0.2, 200, 1500, 1); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.8); break;
       case 'ring': if (!ringTimer) { ring(); ringTimer = setInterval(ring, 2100); } break;
       case 'ringStop': if (ringTimer) { clearInterval(ringTimer); ringTimer = null; } break;
       case 'exitFlash': hiss(0.5, 0.4, 2000, 200, 1); break;
-      case 'tick': blip(1900 + Math.random() * 400, 0.018, 0.05, 'square'); break;
+      case 'tick': blip(1900 + Math.random() * 400, 0.018, 0.03, 'square'); break;
       case 'chirp': blip(1240, 0.05, 0.08, 'square'); break;
     }
   };
 
-  // the operator speaks in the sigma register: deepest male voice on the device,
-  // pitch dropped, pace unhurried. Voice inventory differs per OS/browser, so we
-  // hunt a ranked preference list and fall back to any English voice + low pitch.
-  var sigmaVoice = null;
-  function pickSigma() {
-    try {
-      var vs = window.speechSynthesis.getVoices();
-      // exact named deep-male voices, ordered by web reputation. 'Google US English'
-      // is deliberately ABSENT (it leans female - it was being picked before).
-      var pref = [
-        /Google UK English Male/i,                                            // deepest male on Chrome
-        /\bDaniel\b/i,                                                       // macOS/iOS: the 40-50yo direct British male
-        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural males
-        /Natural.*\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b/i,
-        /Microsoft\s+(David|Mark|George)\b/i,                                // Windows classic males
-        /\bAlex\b/i,                                                         // macOS natural male
-        /\bFred\b/i,
-        /\bmale\b/i
-      ];
-      for (var p = 0; p < pref.length && !sigmaVoice; p++) {
-        for (var i = 0; i < vs.length; i++) {
-          if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
-        }
-      }
-      if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
-      A.voiceName = sigmaVoice ? sigmaVoice.name : '';
-    } catch (e) {}
-  }
-  try {
-    if (window.speechSynthesis && window.speechSynthesis.addEventListener) {
-      window.speechSynthesis.addEventListener('voiceschanged', function () { sigmaVoice = null; pickSigma(); });
-    }
-  } catch (e) {}
-  A.ttsReady = false;
-  A.playPCM = function (f32, sr) {
-    if (!ctx) return;
-    try {
-      if (A._ttsNode) { try { A._ttsNode.stop(); } catch (e) {} }
-      var buf = ctx.createBuffer(1, f32.length, sr);
-      buf.copyToChannel(f32, 0);
-      var src = ctx.createBufferSource(); src.buffer = buf;
-      src.playbackRate.value = 0.94;   // drop it a touch deeper still
-      var g = ctx.createGain(); g.gain.value = 1.0;
-      src.connect(g); g.connect(master); src.start();
-      A._ttsNode = src;
-    } catch (e) {}
-  };
   A.speak = function (text) {
-    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); return; } catch (e) {} }
     if (A.muted) return;
     try {
       if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
-      if (!sigmaVoice) pickSigma();
-      if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 0.9; u.pitch = 0.65; u.volume = 1.0;   // fallback runs deep too (0 was mud, 1.0 was plain; 0.65 is deep-but-clear)
-      window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
+      u.rate = 1.0; u.pitch = 0.72; u.volume = 0.85;
+      var vs = window.speechSynthesis.getVoices();
+      for (var i = 0; i < vs.length; i++) {
+        if (/en[-_]/i.test(vs[i].lang) && /male|David|Daniel|Alex|Google UK English Male/i.test(vs[i].name)) { u.voice = vs[i]; break; }
+      }
       window.speechSynthesis.speak(u);
     } catch (e) {}
   };
@@ -2545,13 +2127,11 @@
 
   var canvas, ctx, game, hud = {}, started = false;
   var W = 0, H = 0, scale = 1, dpr = 1;
-  var paused = false;
   var reduceMotion = false;
   try { reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
   // ---------- input state ----------
-  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, dragging = false, lastMX = 0, lastMY = 0;
-  var mdX = 0, mdY = 0, mdT = 0, mdMoved = 0, mdWasTyping = false;
+  var keys = {}, edges = {}, mouseDX = 0, mouseDY = 0, locked = false, dragging = false, lastMX = 0, lastMY = 0;
   var fireEdge = false, anyEdge = false;
   var touch = { active: false, mvId: -1, mvX: 0, mvY: 0, mvCX: 0, mvCY: 0, lkId: -1, lkX: 0, lkY: 0, fwd: 0, strafe: 0 };
   var SENS = 0.0023;
@@ -2562,7 +2142,7 @@
     keys[k] = down;
     if (down) anyEdge = true;
     if (down && started) {
-      if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
+      if (k === 'enter' || k === 't') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
       if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
       if (k === 'h') game.request('help');
@@ -2574,23 +2154,31 @@
 
   function onMouseMove(e) {
     if (!started) return;
-    if (dragging) {
-      var dx = e.clientX - lastMX, dy = e.clientY - lastMY;
-      mouseDX += dx; mouseDY += dy; mdMoved += Math.abs(dx) + Math.abs(dy);
-      lastMX = e.clientX; lastMY = e.clientY;
+    if (locked) { mouseDX += e.movementX || 0; mouseDY += e.movementY || 0; }
+    else if (dragging) { mouseDX += e.clientX - lastMX; mouseDY += e.clientY - lastMY; lastMX = e.clientX; lastMY = e.clientY; }
+  }
+  function tryLock() {
+    if (touch.active) return;
+    if (canvas.requestPointerLock) {
+      try { var p = canvas.requestPointerLock(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
     }
   }
-  // The mouse is FREE — no pointer lock. Drag to look around; a quick click (no drag)
-  // is the act/strike. Clicking the world while typing drops you into walk mode.
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
-    if (paused) { setPaused(false); return; }
-    if (touch.active) return;
-    mdWasTyping = consoleOpen;
-    if (consoleOpen) hud.input.blur();     // click the world -> walk mode
-    dragging = true; lastMX = e.clientX; lastMY = e.clientY;
-    mdX = e.clientX; mdY = e.clientY; mdT = performance.now(); mdMoved = 0;
+    if (consoleOpen) return;
+    if (!locked && !touch.active) {
+      dragging = true; lastMX = e.clientX; lastMY = e.clientY;
+      tryLock();
+      if (!lockEverWorked) return; // first click just engages look
+    }
+    if (e.button === 0) fireEdge = true;
+  }
+  var lockEverWorked = false;
+  function onLockChange() {
+    locked = document.pointerLockElement === canvas;
+    if (locked) lockEverWorked = true;
+    hud.hint.style.opacity = (!locked && !touch.active && started) ? 1 : 0;
   }
 
   // ---------- touch ----------
@@ -2649,7 +2237,7 @@
     while (ttTimer > per && ttCur) {
       ttTimer -= per; ttChars++;
       ttCur.el.textContent = (ttCur.system ? '' : 'operator: ') + ttCur.text.slice(0, ttChars);
-      if (ttChars % 4 === 0) A.handle('tick');
+      if (ttChars % 2 === 0) A.handle('tick');
       if (ttChars >= ttCur.text.length) {
         var el = ttCur.el;
         setTimeout(function () { el.classList.add('fade'); }, 6500);
@@ -2660,37 +2248,21 @@
   function openConsole() {
     consoleOpen = true;
     hud.inRow.classList.add('open');
+    hud.input.value = '';
     hud.input.focus();
+    if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
   }
   function closeConsole() {
     consoleOpen = false;
+    hud.inRow.classList.remove('open');
     hud.input.blur();
+    if (started && !touch.active) tryLock();
   }
   function submitConsole() {
     var v = hud.input.value.trim();
-    hud.input.value = '';        // clear instantly so the keystroke feels immediate
+    closeConsole();
     if (!v) return;
     say('you: ' + v, true);
-    // Defer ALL routing off the Enter keystroke. Parsing is cheap, but waking the
-    // neural Worker (Blob + new Worker + module import) is NOT, and doing it inline
-    // froze the input on the first unknown line. One tick later, the box is already
-    // responsive and the heavy work runs without blocking typing.
-    setTimeout(function () { routeLine(v); }, 0);
-  }
-  function routeLine(v) {
-    var pp = C.parse(v);
-    if (pp.type !== 'unknown') { game.request(v); return; }
-    var lex = C.intent.lexicalGuess(v);
-    if (lex) { game.request(lex); return; }   // deterministic rescue: no model needed
-    if (neural.state === 'on') { neuralSend(v); return; }
-    if (neural.state === 'off') {
-      neural.queue.push(v);
-      loadNeural();   // the first unheard line wakes the operator itself
-      say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true);
-      return;
-    }
-    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
-    say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
 
@@ -2706,7 +2278,7 @@
       recog.onresult = function (ev) {
         var txt = ev.results[0][0].transcript;
         say('you (voice): ' + txt, true);
-        setTimeout(function () { routeLine(txt); }, 0);
+        game.request(txt);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
       recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
@@ -2734,11 +2306,7 @@
           else {
             var hor = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
             var g = ctx.createLinearGradient(0, 0, 0, H);
-            if (op.mode === 'neon') {
-              g.addColorStop(0, '#04040a');
-              g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#0c0a18');
-              g.addColorStop(1, op.fogCol);
-            } else if (op.mode === 'city') {
+            if (op.mode === 'city') {
               g.addColorStop(0, '#9fb2bf');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#cfd6da');
               g.addColorStop(1, op.fogCol);
@@ -2840,63 +2408,19 @@
         }
       }
     }
-    // riding instruments: speed bar + nitrous gauge, lower-right, only while mounted
-    if (game.bike) drawRideHUD();
-  }
-
-  function drawRideHUD() {
-    var bk = game.bike, B = C.BIKE;
-    var spd = Math.abs(bk.speed), sf = Math.min(1, spd / B.BOOST), tf = bk.turbo / B.TURBO_MAX;
-    var pad = Math.round(Math.min(W, H) * 0.03);
-    var bw = Math.round(W * 0.2), bh = Math.round(H * 0.018);
-    var x = W - pad - bw, y = H - pad - bh;
-    var code = game.mode === 'code';
-    // speed bar
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22';
-    ctx.fillRect(x, y, bw, bh);
-    var sCol = bk.boosting ? '#ff2bd6' : (code ? '#46ff7a' : '#19e3ff');
-    ctx.fillStyle = sCol; ctx.fillRect(x, y, bw * sf, bh);
-    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.lineWidth = 1; ctx.strokeRect(x, y, bw, bh);
-    // nitrous gauge above it
-    var y2 = y - bh - 5;
-    ctx.fillStyle = code ? '#0a1f12' : '#1a1c22'; ctx.fillRect(x, y2, bw, bh);
-    ctx.fillStyle = tf > 0.05 ? '#ffd166' : '#5a4a2a'; ctx.fillRect(x, y2, bw * tf, bh);
-    ctx.strokeStyle = code ? '#1f7d4a' : '#3a3d44'; ctx.strokeRect(x, y2, bw, bh);
-    // labels
-    setFont(Math.round(Math.min(W, H) * 0.016), false);
-    ctx.textAlign = 'right'; ctx.fillStyle = code ? '#7dffaf' : '#9aa0a8';
-    ctx.fillText(Math.round(spd / B.BOOST * 180) + ' KM/H', x - 8, y + bh);
-    ctx.fillText(bk.boosting ? 'TURBO' : 'NITRO', x - 8, y2 + bh);
-    ctx.fillText('DIST ' + Math.round(bk.dist * 8) + ' m', x - 8, y2 - bh - 4);
-    ctx.textAlign = 'left'; ctx.globalAlpha = 1;
   }
 
   // ---------- HUD ----------
-  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
   function updateHUD() {
-    var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
-    if (game.scene && game.scene.infinite) {
-      var dpx = game.player.pos[0], dpz = game.player.pos[2];
-      var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8 / 10) * 10;  // 10 m steps, not per-frame churn
-      if (dOut > 5) sceneLine += ' \u00b7 ' + dOut + ' m out';
-    }
-    if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
-    if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
+    hud.scene.textContent = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     var a = game.aim, label = '';
-    if (game.bike) {
-      if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
-      else label = '';
-    } else if (a && game.state === 'play') {
+    if (a && game.state === 'play') {
       if (a.kind === 'gun') label = '[E] take ' + a.label;
       else if (a.kind === 'booth') label = '[E] answer';
       else if (a.kind === 'dummy') label = '[click] strike';
-      else if (a.kind === 'bike') label = '[E] ride';
-      else if (a.kind === 'katana') label = '[E] take katana';
     }
-    if (label !== lastAimLabel) { lastAimLabel = label; hud.aim.textContent = label; }
-    var op = label ? 1 : 0;
-    if (op !== lastAimOp) { lastAimOp = op; hud.aim.style.opacity = op; }
+    if (hud.aim.textContent !== label) hud.aim.textContent = label;
+    hud.aim.style.opacity = label ? 1 : 0;
   }
 
   // ---------- main loop ----------
@@ -2912,19 +2436,15 @@
     lastFont = '';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   }
-  var lastMsAvg = 0, paintSkip = 0;
   function adapt(ms) {
     frameMs.push(ms);
-    if (frameMs.length < 36) return;               // judge every ~0.6 s, not 1.25 s
+    if (frameMs.length < 75) return;
     var sum = 0; for (var i = 0; i < frameMs.length; i++) sum += frameMs[i];
     var avg = sum / frameMs.length;
     frameMs.length = 0;
-    lastMsAvg = avg;
-    if (avg > 30 && renderScaleIdx < SCALES.length - 1) {        // badly behind: drop two steps
-      renderScaleIdx = Math.min(SCALES.length - 1, renderScaleIdx + 2); resize(); trimCrowd();
-    } else if (avg > 17 && renderScaleIdx < SCALES.length - 1) { // not holding 60: drop one
+    if (avg > 23 && renderScaleIdx < SCALES.length - 1) {
       renderScaleIdx++; resize(); trimCrowd();
-    } else if (avg < 9 && renderScaleIdx > 0) {                  // lots of headroom: raise one
+    } else if (avg < 12.5 && renderScaleIdx > 0) {
       renderScaleIdx--; resize();
     }
   }
@@ -2974,12 +2494,6 @@
     if (!lastT) lastT = t;
     var dt = Math.min(0.1, (t - lastT) / 1000);
     lastT = t;
-    if (paused) {
-      var opsP = C.render(game, W, H, game.time);
-      paint(opsP);
-      paintPauseOverlay();
-      return;
-    }
     acc += dt;
     var step = 1 / 60, n = 0;
     var inp = buildInput();
@@ -2993,259 +2507,15 @@
     var evs = game.drain();
     for (var i = 0; i < evs.length; i++) {
       var e = evs[i];
-      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; say('voice: ' + A.voiceName, true); } }
+      if (e.name === 'say') { say(e.v); A.speak(e.v); }
       else if (e.name === 'ambience') A.setAmbience(e.v);
-      else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
     }
-    // While a generation is in flight the worker owns a whole core; yield ours.
-    // Paint at 1/3 cadence (physics, input and HUD keep full rate) so typing stays
-    // snappy during the think, then restore full painting the moment he answers.
-    var throttled = neural.inFlight > 0;
-    paintSkip = (paintSkip + 1) % 3;
-    if (!throttled || paintSkip === 0) {
-      var ops = C.render(game, W, H, game.time);
-      paint(ops);
-    }
+    var ops = C.render(game, W, H, game.time);
+    paint(ops);
     tickTeletype(dt);
     updateHUD();
-    if (!throttled) adapt(performance.now() - t0);
-    else frameMs.length = 0;   // don't let skipped frames trick the resolution up
-  }
-
-  // ---------- pause + error overlay (ported hardening from STREET PROTOCOL) ----------
-  function setPaused(v) {
-    if (paused === v) return;
-    paused = v;
-    if (paused) {
-      if (game && game.bike) A.engine(0, 0);
-      A.handle('ringStop'); // freeze any ringing
-      if (document.exitPointerLock) try { document.exitPointerLock(); } catch (e) {}
-      if (window.speechSynthesis) try { window.speechSynthesis.pause(); } catch (e) {}
-    } else {
-      lastT = 0; acc = 0;
-      if (window.speechSynthesis) try { window.speechSynthesis.resume(); } catch (e) {}
-    }
-  }
-  function paintPauseOverlay() {
-    ctx.globalAlpha = 0.55; ctx.fillStyle = '#020803'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
-    setFont(Math.round(Math.min(W, H) * 0.04), true);
-    ctx.fillStyle = '#46ff7a';
-    ctx.fillText('PROGRAM PAUSED', W / 2, H / 2 - 8);
-    setFont(Math.round(Math.min(W, H) * 0.018));
-    ctx.fillStyle = '#2f9e57';
-    ctx.fillText('click to resume', W / 2, H / 2 + Math.min(W, H) * 0.05);
-  }
-  function showError(msg) {
-    try {
-      var d = document.getElementById('errlay');
-      if (!d) {
-        d = document.createElement('div'); d.id = 'errlay';
-        d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(2,8,3,.92);color:#9affc0;' +
-          'font:13px/1.7 ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;' +
-          'align-items:center;justify-content:center;text-align:center;padding:24px;letter-spacing:.04em';
-        document.body.appendChild(d);
-      }
-      d.innerHTML = '<div style="color:#46ff7a;letter-spacing:.3em;margin-bottom:14px">CONSTRUCT FAULT</div>' +
-        '<div style="max-width:70ch;opacity:.85">' + String(msg).replace(/[<>&]/g, ' ') + '</div>' +
-        '<div style="margin-top:18px;opacity:.5">reload the page to recompile</div>';
-      d.style.display = 'flex';
-    } catch (e) {}
-  }
-
-
-  // ---------- neural operator (optional, open-source CHAT model, in-browser) ----------
-  // We load a small open-source instruct model, open its context with a few-shot
-  // prompt describing the game, then EVERY user line is answered by the model itself.
-  // Whatever the model says is what we show — no templates.
-  var voiceTold = false;
-  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
-  // The model runs in a module Worker: download, init and every generation happen
-  // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
-  var NEURAL_WORKER_SRC = [
-    "import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';",
-    "env.allowLocalModels = false;",
-    "let gen = null;",
-    "const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';",
-    "const opts = (device, dtype) => ({ device, dtype, progress_callback: p => {",
-    "  if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress });",
-    "} });",
-    "async function load() {",
-    "  try { gen = await pipeline('text-generation', MODEL, opts('webgpu', 'q4f16')); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) {}",
-    "  try { gen = await pipeline('text-generation', MODEL, opts('wasm', 'q4')); postMessage({ type: 'ready', device: 'wasm' }); }",
-    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
-    "}",
-    "onmessage = async (ev) => {",
-    "  const m = ev.data || {};",
-    "  if (m.type === 'load') { load(); return; }",
-    "  if (m.type === 'chat') {",
-    "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.4, top_p: 0.9 });",
-    "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
-    "      let reply = '';",
-    "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
-    "      postMessage({ type: 'reply', id: m.id, reply });",
-    "    } catch (e) { postMessage({ type: 'replyerr', id: m.id, error: String((e && e.message) || e) }); }",
-    "  }",
-    "};"
-  ].join('\n');
-
-  // The sigma voice, for real: an in-browser neural TTS (Kokoro-82M, Apache-2.0)
-  // speaking the literal 'am_adam' voice at speed 0.9 - the exact two parameters
-  // that transfer from the viral ElevenLabs-Adam recipe (stability/similarity are
-  // ElevenLabs-engine knobs that do not exist outside their API).
-  var VOICE_WORKER_SRC = [
-    "let tts = null;",
-    "const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';",
-    "const LIB_URLS = [",
-    "  'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm',",
-    "  'https://esm.sh/kokoro-js@1.2.0',",
-    "  'https://cdn.jsdelivr.net/npm/kokoro-js/+esm'",
-    "];",
-    "async function lib() {",
-    "  for (const u of LIB_URLS) {",
-    "    try { const m = await import(u); if (m && m.KokoroTTS) { postMessage({ type: 'link', step: 'lib', url: u }); return m.KokoroTTS; } }",
-    "    catch (e) { postMessage({ type: 'linkerr', step: 'lib', url: u, error: String((e && e.message) || e).slice(0, 60) }); }",
-    "  }",
-    "  throw new Error('no CDN reachable for kokoro-js');",
-    "}",
-    "async function load() {",
-    "  const KokoroTTS = await lib();",
-    "  const prog = p => { if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress }); };",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'webgpu', progress_callback: prog }); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) { postMessage({ type: 'linkerr', step: 'engine-webgpu', error: String((e && e.message) || e).slice(0, 60) }); }",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm', progress_callback: prog }); postMessage({ type: 'ready', device: 'wasm' }); }",
-    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
-    "}",
-    "onmessage = async (ev) => {",
-    "  const m = ev.data || {};",
-    "  if (m.type === 'load') { load().catch(e => postMessage({ type: 'fail', error: String((e && e.message) || e) })); return; }",
-    "  if (m.type === 'speak' && tts) {",
-    "    try {",
-    "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 0.9 });",
-    "      const f = out.audio;",
-    "      postMessage({ type: 'audio', sr: out.sampling_rate, buf: f }, [f.buffer]);",
-    "    } catch (e) { postMessage({ type: 'audioerr' }); }",
-    "  }",
-    "};"
-  ].join('\n');
-  var vox = { state: 'off', worker: null };
-  function loadVoice() {
-    if (vox.state !== 'off') return;
-    vox.state = 'loading';
-    try {
-      var vb = new Blob([VOICE_WORKER_SRC], { type: 'text/javascript' });
-      vox.worker = new Worker(URL.createObjectURL(vb), { type: 'module' });
-    } catch (e) { vox.state = 'failed'; return; }
-    var vLastPct = -1;
-    vox.worker.onmessage = function (ev) {
-      var m = ev.data || {};
-      if (m.type === 'link') { say('voice link ok: ' + m.step + ' via ' + (m.url || '').split('/')[2], true); return; }
-      if (m.type === 'linkerr') { say('voice link FAILED: ' + m.step + (m.url ? ' @ ' + m.url.split('/')[2] : '') + ' (' + (m.error || '?') + ')', true); return; }
-      if (m.type === 'progress') {
-        var p = Math.floor(m.pct / 25) * 25;
-        if (p > vLastPct) { vLastPct = p; say('voice model\u2026 ' + p + '%', true); }
-        return;
-      }
-      if (m.type === 'ready') {
-        vox.state = 'on';
-        A.ttsReady = true;
-        A.voiceName = 'Kokoro ' + A.voiceChoice + ' (AI \u00b7 ' + (m.device || '') + ')';
-        voiceTold = false;   // announce the switch on his next line
-        say('voice engine online \u2014 the ' + A.voiceChoice.replace('am_', '') + ' register, speed 0.9', true);
-        return;
-      }
-      if (m.type === 'fail') {
-        vox.state = 'failed'; A.ttsReady = false;
-        say('AI voice failed to load (' + String(m.error || 'cdn blocked?').slice(0, 50) + ') \u2014 using the system voice. tap \ud83d\udd0a voice to retry', true);
-        return;
-      }
-      if (m.type === 'audio') {
-        var f = (m.buf instanceof Float32Array) ? m.buf : new Float32Array(m.buf);
-        A.playPCM(f, m.sr);
-      }
-    };
-    vox.worker.onerror = function (e) {
-      if (vox.state !== 'on') {
-        vox.state = 'failed'; A.ttsReady = false;
-        say('AI voice worker error \u2014 using the system voice (the kokoro CDN may be blocked on your network)', true);
-      }
-    };
-    vox.worker.postMessage({ type: 'load' });
-  }
-  A.voiceChoice = 'am_onyx';   // the ultra-deep register, by model not by pitch-bending
-  A.speakNeural = function (text) {
-    if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
-  };
-
-  function loadNeural() {
-    if (neural.state !== 'off') return;
-    neural.state = 'loading';
-    loadVoice();   // the AI voice (Kokoro am_adam) wakes with the operator
-    say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
-    var lastPct = -1;
-    try {
-      var blob = new Blob([NEURAL_WORKER_SRC], { type: 'text/javascript' });
-      neural.worker = new Worker(URL.createObjectURL(blob), { type: 'module' });
-    } catch (e) {
-      neural.state = 'failed';
-      say('the operator could not wake (' + String((e && e.message) || 'no worker').slice(0, 44) + ')', true);
-      return;
-    }
-    neural.worker.onmessage = function (ev) {
-      var m = ev.data || {};
-      if (m.type === 'progress') {
-        var pct = Math.floor(m.pct / 10) * 10;
-        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
-        return;
-      }
-      if (m.type === 'ready') {
-        neural.ctx = C.intent.buildChatPrompt();
-        neural.state = 'on';
-        say('operator online (' + (m.device || 'cpu') + ') \u2014 tell me what you want. I answer for myself now.', true);
-        var q = neural.queue.splice(0);
-        for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
-        return;
-      }
-      if (m.type === 'fail') {
-        neural.state = 'failed';
-        say('the operator could not wake (' + String(m.error || 'load error').slice(0, 44) + ')', true);
-        return;
-      }
-      if (m.type === 'reply' || m.type === 'replyerr') {
-        var cb = neural.pending[m.id];
-        if (cb) { delete neural.pending[m.id]; cb(m); }
-      }
-    };
-    neural.worker.onerror = function (e) {
-      if (neural.state !== 'on') { neural.state = 'failed'; say('the operator could not wake (' + String((e && e.message) || 'worker error').slice(0, 44) + ')', true); }
-    };
-    neural.worker.postMessage({ type: 'load' });
-  }
-
-  function neuralSend(text) {
-    neural.chain = (neural.chain || Promise.resolve()).then(function () { return neuralChat(text); }).catch(function () {});
-  }
-  // send one user line to the model; show the model's own reply; act only if it named a designated word
-  function neuralChat(text) {
-    var messages = neural.ctx.concat([{ role: 'user', content: String(text) }]);
-    say('\u2026', true);  // a beat while the model thinks (in a worker \u2014 the game never stalls)
-    neural.inFlight++;
-    return new Promise(function (resolve) {
-      var id = ++neural.seq;
-      neural.pending[id] = function (m) {
-        neural.inFlight = Math.max(0, neural.inFlight - 1);
-        if (m.type === 'replyerr') {
-          say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
-        } else {
-          var r = C.intent.parseReply(m.reply);
-          var w = r.word || C.intent.rescueWord(text, m.reply);  // deterministic rails around a tiny model
-          say(r.say, true);                 // ALWAYS show what the model said
-          if (w) game.request(w);           // dispatch the named (or rescued) designated word
-        }
-        resolve();
-      };
-      neural.worker.postMessage({ type: 'chat', id: id, messages: messages });
-    });
+    adapt(performance.now() - t0);
   }
 
   // ---------- boot ----------
@@ -3256,7 +2526,7 @@
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
     A.init();
     A.setAmbience('void');
-    if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
+    if (!touch.active) tryLock();
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }
 
@@ -3266,15 +2536,6 @@
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
       say('you: ' + (req || label), true);
-      if (req === '__neural__') { loadNeural(); return; }
-      if (req === '__deepvoice__') {
-        var cyc = ['am_onyx', 'am_michael', 'am_adam'];
-        A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
-        if (vox.state === 'off') loadVoice();
-        say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        if (A.ttsReady) A.speak('This is the ' + A.voiceChoice.replace('am_', '') + ' register.');
-        return;
-      }
       game.request(req || label);
       A.handle('chirp');
     });
@@ -3292,34 +2553,27 @@
     hud.log = document.getElementById('log');
     hud.inRow = document.getElementById('inrow');
     hud.input = document.getElementById('cmd');
-    hud.inRow.classList.add('open');   // the console is always visible — typing is first-class
-    hud.input.addEventListener('focus', function () { consoleOpen = true; });
-    hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
-    hud.hint.textContent = 'drag to look \u00b7 quick click = act \u00b7 Esc \u21c4 walk/type';
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['city street', 'city street'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
       if (consoleOpen) {
         if (e.key === 'Enter') { submitConsole(); e.preventDefault(); }
         else if (e.key === 'Escape') closeConsole();
-        else if (e.key.indexOf('Arrow') === 0 && hud.input.value === '') { e.preventDefault(); key(e, true); }
         return;
       }
       if ([' ', 'arrowup', 'arrowdown'].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
       key(e, true);
     });
-    window.addEventListener('keyup', function (e) { key(e, false); });
+    window.addEventListener('keyup', function (e) { if (!consoleOpen) key(e, false); });
     window.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', function (e) {
-      if (dragging && e.button === 0 && !paused && !mdWasTyping && mdMoved < 6 && performance.now() - mdT < 300) fireEdge = true;
-      dragging = false;
-    });
+    window.addEventListener('mouseup', function () { dragging = false; });
+    document.addEventListener('pointerlockchange', onLockChange);
     window.addEventListener('resize', resize);
     bindTouch();
 
@@ -3344,294 +2598,11 @@
     tbtn('ASK', function () { openConsole(); });
 
     resize();
-    // engineering hardening: auto-pause on blur/hidden, resume on click; surface runtime errors
-    window.addEventListener('blur', function () { if (started) setPaused(true); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden && started) setPaused(true); });
-    window.addEventListener('error', function (ev) { showError(ev.message || 'unknown error'); });
-    window.addEventListener('unhandledrejection', function (ev) { showError((ev.reason && ev.reason.message) || 'promise rejection'); });
     requestAnimationFrame(frame);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-})(typeof globalThis !== 'undefined' ? globalThis : this);
-/* THE CONSTRUCT — 09_intent.js — neural intent fallback (open-source embeddings)
-   Maps free-form requests onto the DESIGNATED WORDS when the regex parser shrugs.
-   Pure logic here (cosine + anchors + pluggable embed). The browser lazily loads an
-   open-source sentence-embedding model (MiniLM via transformers.js) and plugs it in;
-   headless tests plug a mock. Regex always wins first — this only handles 'unknown'. */
-(function (G) {
-  'use strict';
-  var C = G.C;
-
-  // The designated vocabulary: each intent = the exact word the parser already knows,
-  // plus anchor phrasings that describe what a person might actually say.
-  var INTENTS = [
-    { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks'] },
-    { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
-    { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
-    { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
-    { word: 'neon', anchors: ['ride a motorcycle down a neon street', 'cyberpunk highway at night', 'an endless glowing road to speed on', 'night ride through neon city'] },
-    { word: 'clear', anchors: ['remove everything', 'empty the room', 'reset the world', 'wipe it all away'] },
-    { word: 'code', anchors: ['see the world as code', 'matrix vision of falling glyphs', 'show me the digital rain', 'reveal the simulation'] },
-    { word: 'motorcycle', anchors: ['a bike to ride', 'give me a motorcycle', 'two wheels to drive fast', 'a motorbike'] },
-    { word: 'katana', anchors: ['a sword', 'a sharp blade to swing', 'give me a katana', 'something to slash with'] },
-    { word: 'chair', anchors: ['something to sit on', 'a seat', 'a place to rest'] },
-    { word: 'table', anchors: ['a table to put things on', 'a desk surface'] },
-    { word: 'tv', anchors: ['a screen to watch', 'a television', 'a monitor'] },
-    { word: 'lamp', anchors: ['a light to see by', 'a lamp', 'some lighting'] },
-    { word: 'tree', anchors: ['a tree', 'some greenery', 'a plant'] },
-    { word: 'car', anchors: ['a car', 'an automobile', 'a parked vehicle'] },
-    { word: 'mirror', anchors: ['a mirror to look into', 'see my reflection'] },
-    { word: 'dummy', anchors: ['a training dummy to hit', 'a practice target for strikes'] },
-    { word: 'booth', anchors: ['a phone booth', 'a telephone to answer', 'a payphone'] }
-  ];
-
-  var embedFn = null;       // async (text) -> Float32Array, plugged at runtime
-  var PRE = { query: '', anchor: '' };   // optional model-specific prefixes (e.g. bge)
-  var anchorVecs = null;    // [{word, vec}]
-  var THRESH = 0.42;        // below this similarity, stay 'unknown' (don't guess wildly)
-
-  function dot(a, b) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
-  function norm(a) { return Math.sqrt(dot(a, a)) || 1; }
-  function cosine(a, b) { return dot(a, b) / (norm(a) * norm(b)); }
-
-  var I = C.intent = {
-    ready: function () { return !!(embedFn && anchorVecs); },
-    intents: INTENTS,
-    _cosine: cosine,
-    threshold: THRESH,
-
-    // plug an embedder (real model in browser, mock in tests), then index the anchors.
-    // A SYNC embedder (returns a vector directly) indexes immediately and unlocks the
-    // *Sync methods below; an async one (returns a Promise) indexes via the chain.
-    configure: function (embed, prefixes) {
-      embedFn = embed;
-      PRE = { query: (prefixes && prefixes.query) || '', anchor: (prefixes && prefixes.anchor) || '' };
-      anchorVecs = null;
-      var probe = embedFn('probe');
-      if (probe && typeof probe.then === 'function') {
-        var seq = probe.then(function () { return []; });
-        INTENTS.forEach(function (it) {
-          it.anchors.forEach(function (a) {
-            seq = seq.then(function (acc) {
-              return Promise.resolve(embedFn(PRE.anchor + a)).then(function (v) { acc.push({ word: it.word, vec: v }); return acc; });
-            });
-          });
-        });
-        return seq.then(function (acc) { anchorVecs = acc; return true; });
-      }
-      var acc = [];
-      INTENTS.forEach(function (it) { it.anchors.forEach(function (a) { acc.push({ word: it.word, vec: embedFn(PRE.anchor + a) }); }); });
-      anchorVecs = acc;
-      return Promise.resolve(true);
-    },
-
-    // sync mirrors (valid only with a sync embedder; used by the headless tests)
-    classifySync: function (text) {
-      if (!I.ready()) return null;
-      var v = embedFn(PRE.query + String(text || ''));
-      var best = null, bestS = -1;
-      for (var i = 0; i < anchorVecs.length; i++) {
-        var s = cosine(v, anchorVecs[i].vec);
-        if (s > bestS) { bestS = s; best = anchorVecs[i].word; }
-      }
-      return bestS >= THRESH ? { word: best, score: bestS } : null;
-    },
-    routeSync: function (text) {
-      var p = C.parse(text);
-      if (p.type !== 'unknown' || !I.ready()) return { action: p, via: 'regex' };
-      var hit = I.classifySync(text);
-      if (!hit) return { action: p, via: 'regex' };
-      return { action: C.parse(hit.word), via: 'neural', word: hit.word, score: hit.score };
-    },
-
-    // classify free text -> { word, score } or null when not confident
-    classify: function (text) {
-      if (!I.ready()) return Promise.resolve(null);
-      return Promise.resolve(embedFn(PRE.query + String(text || ''))).then(function (v) {
-        var best = null, bestS = -1;
-        for (var i = 0; i < anchorVecs.length; i++) {
-          var s = cosine(v, anchorVecs[i].vec);
-          if (s > bestS) { bestS = s; best = anchorVecs[i].word; }
-        }
-        return bestS >= THRESH ? { word: best, score: bestS } : null;
-      });
-    },
-
-    // the routing rule, pure and testable:
-    // regex parser first; only an 'unknown' consults the neural layer.
-    route: function (text) {
-      var p = C.parse(text);
-      if (p.type !== 'unknown' || !I.ready()) return Promise.resolve({ action: p, via: 'regex' });
-      return I.classify(text).then(function (hit) {
-        if (!hit) return { action: p, via: 'regex' };
-        var p2 = C.parse(hit.word);
-        p2 && (p2._neural = { from: text, score: hit.score });
-        return { action: p2, via: 'neural', word: hit.word, score: hit.score };
-      });
-    }
-  };
-
-  // ============ generative layer (chat LLM) ============
-  // The browser loads a small open-source instruct model; we open its context with a
-  // few-shot prompt describing the game, then every user line is answered by the model.
-  // Whatever the model SAYs is what we display — no templates. These two functions are
-  // pure (string in/out) so the whole contract is testable headless.
-  var DESIGNATED = {};
-  INTENTS.forEach(function (it) { DESIGNATED[it.word] = true; });
-  I.designatedList = INTENTS.map(function (it) { return it.word; });
-  I.designated = DESIGNATED;
-
-  I.buildChatPrompt = function () {
-    var words = INTENTS.map(function (it) { return it.word; }).join(', ');
-    var sys = 'You are the Operator of THE CONSTRUCT, a white loading-space. ' +
-      'The ONLY designated programs and objects are: ' + words + '. ' +
-      'For every user request reply with EXACTLY one line in this format: ' +
-      'WORD: <one designated word, or none> | SAY: <one short line in your dry, calm operator voice>. ' +
-      'If the request does not belong to the designated list, use WORD: none and refuse in your own words. ' +
-      'Greetings and small talk also get WORD: none \u2014 answer them in character, briefly, and invite a request. ' +
-      'Never invent a word outside the list. Never write anything except that one line.';
-    return [
-      { role: 'system', content: sys },
-      { role: 'user', content: 'something to sit on' },
-      { role: 'assistant', content: 'WORD: chair | SAY: One chair, folded out of the white. Sit.' },
-      { role: 'user', content: 'motor' },
-      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiling.' },
-      { role: 'user', content: 'hello' },
-      { role: 'assistant', content: 'WORD: none | SAY: Operator. I hear you. Name a program or an object and I will load it.' },
-      { role: 'user', content: 'i want to learn how to fight' },
-      { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
-      { role: 'user', content: 'motor' },
-      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
-      { role: 'user', content: 'a fast ride through the night' },
-      { role: 'assistant', content: 'WORD: neon | SAY: The neon mile is endless. Throttle up.' },
-      { role: 'user', content: 'show me what this world really is' },
-      { role: 'assistant', content: 'WORD: code | SAY: Look again. It was always rain.' },
-      { role: 'user', content: 'a purple elephant that does my taxes' },
-      { role: 'assistant', content: 'WORD: none | SAY: The library carries no such program. Ask for what exists.' },
-      { role: 'user', content: 'wipe it all' },
-      { role: 'assistant', content: 'WORD: clear | SAY: Back to white.' }
-    ];
-  };
-
-  // parse the model's reply into { word: designated|null, say: string }.
-  // Tolerant of case/spacing; hard-validates the word against the designated list;
-  // if the model ignored the format, we still show ITS text (sanitized) as the say.
-
-  // deterministic rescue: a tiny model sometimes flubs the WORD line. Scan text for a
-  // designated word by exact / prefix (>=4 chars) / edit-distance-1 (>=5 chars) match.
-  function editDist(a, b) {                   // full Levenshtein
-    var la = a.length, lb = b.length, d = [];
-    for (var i = 0; i <= la; i++) { d[i] = [i]; }
-    for (var j = 0; j <= lb; j++) { d[0][j] = j; }
-    for (i = 1; i <= la; i++) for (j = 1; j <= lb; j++) {
-      var c = a[i - 1] === b[j - 1] ? 0 : 1;
-      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
-    }
-    return d[la][lb];
-  }
-  function transposed(a, b) {                 // one adjacent swap apart? (chiar<->chair)
-    if (a.length !== b.length) return false;
-    var diff = [];
-    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) { diff.push(i); if (diff.length > 2) return false; }
-    return diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]];
-  }
-  function fuzzy(tk, w) {                      // typo-close for >=5-char tokens
-    return editDist(tk, w) <= 1 || transposed(tk, w);
-  }
-  I.rescueWord = function (userText, modelReply) {
-    var sources = [String(userText || ''), String(modelReply || '')];
-    for (var si = 0; si < sources.length; si++) {
-      var toks = sources[si].toLowerCase().split(/[^a-z]+/);
-      for (var ti = 0; ti < toks.length; ti++) {
-        var tk = toks[ti];
-        if (tk.length < 3) continue;
-        for (var wi = 0; wi < INTENTS.length; wi++) {
-          var w = INTENTS[wi].word;
-          if (tk === w) return w;
-          if (tk.length >= 4 && w.indexOf(tk) === 0) return w;         // 'motor' -> motorcycle
-          if (tk.length >= 5 && fuzzy(tk, w)) return w;                 // 'katan' / 'chiar'
-        }
-      }
-    }
-    return null;
-  };
-
-
-  // Deterministic lexical rescue: partial words map to designated words without
-  // waking the model. 'motor' is a prefix of 'motorcycle'; 'chairs' starts with
-  // 'chair'. Classification wants determinism - generation can stay creative.
-
-  // Levenshtein <= 1 (one insert/delete/substitution/transposition tolerance)
-  function near1(a, b) {
-    if (a === b) return true;
-    var la = a.length, lb = b.length;
-    if (la === lb) {                              // adjacent transposition (chiar <-> chair)
-      var diff = [];
-      for (var k = 0; k < la; k++) if (a[k] !== b[k]) diff.push(k);
-      if (diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]]) return true;
-    }
-    if (Math.abs(la - lb) > 1) return false;
-    var i = 0, j = 0, edits = 0;
-    while (i < la && j < lb) {
-      if (a[i] === b[j]) { i++; j++; continue; }
-      if (++edits > 1) return false;
-      if (la > lb) i++; else if (lb > la) j++; else { i++; j++; }
-    }
-    if (i < la || j < lb) edits++;
-    return edits <= 1;
-  }
-  // Rescue a designated word from the USER text first, then from the model REPLY:
-  // exact token, prefix, or a single-typo neighbour. Determinism around a small model.
-  I.rescueWord = function (userText, replyText) {
-    function scan(text) {
-      var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
-      var best = null, bestLen = 0;
-      for (var d = 0; d < I.designatedList.length; d++) {
-        var w = I.designatedList[d];
-        for (var i = 0; i < toks.length; i++) {
-          var t = toks[i];
-          if (w === t) return w;
-          if ((w.indexOf(t) === 0 || t.indexOf(w) === 0 || near1(w, t)) && t.length > bestLen) { best = w; bestLen = t.length; }
-        }
-      }
-      return best;
-    }
-    return scan(userText) || scan(replyText) || null;
-  };
-
-  I.lexicalGuess = function (text) {
-    var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
-    var best = null, bestLen = 0;
-    for (var d = 0; d < I.designatedList.length; d++) {
-      var w = I.designatedList[d];
-      for (var i = 0; i < toks.length; i++) {
-        var t = toks[i];
-        if (w === t) return w;                                  // exact
-        if ((w.indexOf(t) === 0 || t.indexOf(w) === 0) && t.length > bestLen) { best = w; bestLen = t.length; }
-      }
-    }
-    return best;
-  };
-
-  I.parseReply = function (raw) {
-    raw = String(raw == null ? '' : raw);
-    raw = raw.replace(/<think>[\s\S]*?<\/think>/gi, ' ');   // closed thinking blocks
-    raw = raw.replace(/^[\s\S]*?<\/think>/i, ' ');            // reply that starts mid-think
-    raw = raw.replace(/<think>[\s\S]*$/i, ' ');                // unclosed think eats the rest
-
-    var text = String(raw == null ? '' : raw);
-    var wm = text.match(/word\s*[:=]\s*([a-z]+)/i);
-    var sm = text.match(/say\s*[:=]\s*([^\n]*)/i);
-    var word = wm ? wm[1].toLowerCase() : null;
-    if (!word || word === 'none' || !DESIGNATED[word]) word = null;
-    var say = sm ? sm[1] : text;
-    say = say.replace(/word\s*[:=][^|\n]*\|?/ig, '').replace(/\s+/g, ' ').trim();
-    if (say.length > 160) say = say.slice(0, 157) + '...';
-    if (!say) say = word ? ('Loading ' + word + '.') : 'The library is silent on that one.';
-    return { word: word, say: say };
-  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 </script>

@@ -3,7 +3,7 @@ set -e
 cd "$(dirname "$0")"
 OUT=dist/the-construct.html
 mkdir -p dist
-cat src/00_math.js src/01_glyph.js src/02_mesh.js src/03_props.js src/04_scenes.js src/05_engine.js src/06_game.js src/07_audio.js src/08_app.js src/09_intent.js > dist/_bundle.js
+cat src/00_math.js src/01_glyph.js src/02_mesh.js src/03_props.js src/04_scenes.js src/05_engine.js src/06_game.js src/07_audio.js src/08_app.js > dist/_bundle.js
 node --check dist/_bundle.js
 python3 - "$OUT" <<'PY'
 import sys

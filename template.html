@@ -21,14 +21,13 @@
     opacity:0;transition:opacity .15s;pointer-events:none}
   #lookhint{position:fixed;top:14px;right:16px;font-size:11px;letter-spacing:.18em;color:var(--faint);
     opacity:0;transition:opacity .3s;pointer-events:none}
-  #mic{flex:0 0 auto;width:30px;height:30px;border-radius:50%;
-    border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:13px;cursor:pointer;color:var(--ink)}
+  #mic{position:fixed;right:14px;bottom:64px;width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:15px;cursor:pointer;color:var(--ink)}
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
   /* console */
-  #console{position:fixed;left:0;bottom:0;width:min(720px,92vw);padding:10px 16px 12px;pointer-events:none;
-    background:linear-gradient(to top,rgba(251,251,249,.9),rgba(251,251,249,.55) 55%,transparent)}
-  #log{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
-  #log .line{font-size:12px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
+  #console{position:fixed;left:0;right:0;bottom:0;padding:10px 16px 12px;pointer-events:none}
+  #log{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+  #log .line{font-size:12.5px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
     transition:opacity 1.2s;max-width:72ch}
   #log .line.sys{color:var(--faint)}
   #log .line.fade{opacity:0}
@@ -38,10 +37,8 @@
   #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
     font:inherit;font-size:13px;color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
   #cmd::placeholder{color:#9a9a96}
-  #chips{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin-top:8px;pointer-events:auto;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-  #chips::-webkit-scrollbar{display:none}
-  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);flex:0 0 auto;white-space:nowrap;
+  #chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;pointer-events:auto}
+  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);
     background:transparent;border:1px solid rgba(42,42,40,.3);padding:4px 11px;cursor:pointer;border-radius:2px}
   .chip:hover{border-color:var(--ink);background:rgba(42,42,40,.05)}
   /* touch */
@@ -69,10 +66,12 @@
 
 <div id="scene">THE CONSTRUCT</div>
 <div id="aim"></div>
-<div id="lookhint">DRAG TO LOOK · QUICK CLICK = ACT · ESC ⇄ WALK/TYPE</div>
+<div id="lookhint">CLICK TO LOOK · ESC TO RELEASE</div>
+<button id="mic" title="hold V to talk">&#9210;</button>
+
 <div id="console">
   <div id="log"></div>
-  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
+  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"></div>
   <div id="chips"></div>
 </div>
 
@@ -82,8 +81,8 @@
   <div class="t">THE CONSTRUCT</div>
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
-  <div class="keys">WASD move · SHIFT sprint · SPACE jump · drag to look · C code vision<br>
-  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute</div>
+  <div class="keys">WASD move · SHIFT sprint · SPACE jump · mouse look · C code vision<br>
+  E use · click fire/strike · ENTER type a request · hold V to speak · M mute</div>
 </div>
 
 <script>
