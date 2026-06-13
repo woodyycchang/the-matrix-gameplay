@@ -246,7 +246,8 @@
       var buf = ctx.createBuffer(1, f32.length, sr);
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
-      var g = ctx.createGain(); g.gain.value = 0.9;
+      src.playbackRate.value = 0.94;   // drop it a touch deeper still
+      var g = ctx.createGain(); g.gain.value = 1.0;
       src.connect(g); g.connect(master); src.start();
       A._ttsNode = src;
     } catch (e) {}

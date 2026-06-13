@@ -1141,10 +1141,12 @@ section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
 {
   const fsA = require('fs');
   const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/Kokoro-82M/.test(appA) && /voice: 'am_adam', speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
+  ok(/Kokoro-82M/.test(appA) && /'am_adam'/.test(appA) && /speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
   ok(/function loadVoice/.test(appA) && /loadVoice\(\);   \/\/ the AI voice/.test(appA), 'the AI voice wakes with the operator (one consent point for AI downloads)');
   const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
+  ok(/AI voice failed to load/.test(appA) && /cdn blocked/.test(appA), 'AI-voice load failure is now LOUD (no silent fallback) so we know if Kokoro did not load');
+  ok(/am_michael/.test(appA) && /__deepvoice__/.test(appA), 'a deeper male (am_michael) is selectable via the deeper-voice chip');
 }
 
 // ---------------------------------------------------------------- summary

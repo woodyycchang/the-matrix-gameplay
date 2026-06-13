@@ -569,7 +569,7 @@
     "  if (m.type === 'load') { load(); return; }",
     "  if (m.type === 'speak' && tts) {",
     "    try {",
-    "      const out = await tts.generate(m.text, { voice: 'am_adam', speed: 0.9 });",
+    "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 0.9 });",
     "      const f = out.audio;",
     "      postMessage({ type: 'audio', sr: out.sampling_rate, buf: f }, [f.buffer]);",
     "    } catch (e) { postMessage({ type: 'audioerr' }); }",
@@ -594,17 +594,27 @@
         say('voice engine online \u2014 the Adam register, speed 0.9', true);
         return;
       }
-      if (m.type === 'fail') { vox.state = 'failed'; A.ttsReady = false; return; }
+      if (m.type === 'fail') {
+        vox.state = 'failed'; A.ttsReady = false;
+        say('AI voice failed to load (' + String(m.error || 'cdn blocked?').slice(0, 50) + ') \u2014 using the system voice. tap \ud83d\udd0a voice to retry', true);
+        return;
+      }
       if (m.type === 'audio') {
         var f = (m.buf instanceof Float32Array) ? m.buf : new Float32Array(m.buf);
         A.playPCM(f, m.sr);
       }
     };
-    vox.worker.onerror = function () { if (vox.state !== 'on') { vox.state = 'failed'; A.ttsReady = false; } };
+    vox.worker.onerror = function (e) {
+      if (vox.state !== 'on') {
+        vox.state = 'failed'; A.ttsReady = false;
+        say('AI voice worker error \u2014 using the system voice (the kokoro CDN may be blocked on your network)', true);
+      }
+    };
     vox.worker.postMessage({ type: 'load' });
   }
+  A.voiceChoice = 'am_adam';
   A.speakNeural = function (text) {
-    if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text) });
+    if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
   };
 
   function loadNeural() {
@@ -697,6 +707,13 @@
       ev.stopPropagation();
       say('you: ' + (req || label), true);
       if (req === '__neural__') { loadNeural(); return; }
+      if (req === '__deepvoice__') {
+        A.voiceChoice = (A.voiceChoice === 'am_adam') ? 'am_michael' : 'am_adam';
+        if (vox.state === 'off') loadVoice();
+        say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
+        if (A.ttsReady) A.speak('This is the ' + (A.voiceChoice === 'am_michael' ? 'Michael' : 'Adam') + ' register.');
+        return;
+      }
       game.request(req || label);
       A.handle('chirp');
     });
@@ -722,7 +739,7 @@
     hud.hint.textContent = 'drag to look \u00b7 quick click = act \u00b7 Esc \u21c4 walk/type';
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
