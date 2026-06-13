@@ -1023,7 +1023,9 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
   ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/pickSigma/.test(aud) && /u\.pitch = 1\.0;/.test(aud) && /rate = 1\.0/.test(aud), 'operator voice at natural defaults (pitch 1.0, rate 1.0) with modern-voice prefs');
+  ok(/pickSigma/.test(aud) && /u\.pitch = 1\.0;/.test(aud) && /rate = 1\.0/.test(aud), 'operator voice at natural defaults (pitch 1.0, rate 1.0)');
+  ok(/Google UK English Male/.test(aud) && /deliberately ABSENT/.test(aud) && !/Google US English\//.test(aud), 'exact named deep-male list; female-leaning Google US English removed');
+  ok(/A\.voiceName = sigmaVoice/.test(aud), 'chosen voice name is exposed for the one-time announcement');
   ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
 }
 

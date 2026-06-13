@@ -454,7 +454,7 @@
     var evs = game.drain();
     for (var i = 0; i < evs.length; i++) {
       var e = evs[i];
-      if (e.name === 'say') { say(e.v); A.speak(e.v); }
+      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; say('voice: ' + A.voiceName, true); } }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
@@ -519,6 +519,7 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
+  var voiceTold = false;
   var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
   // The model runs in a module Worker: download, init and every generation happen
   // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.

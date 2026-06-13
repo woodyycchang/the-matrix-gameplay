@@ -2483,13 +2483,25 @@
   function pickSigma() {
     try {
       var vs = window.speechSynthesis.getVoices();
-      var pref = [/Natural.*\b(Guy|Davis|Tony|Jason|Andrew|Brian|Christopher|Eric|Roger)\b/i, /\b(Guy|Davis|Andrew|Brian|Christopher|Eric|Roger)\b.*Natural/i, /Google US English/i, /Microsoft.*\b(Guy|David|Mark)\b/i, /\bDaniel\b/i, /Google UK English Male/i, /\bDavid\b/i, /\bAlex\b/i, /\bmale\b/i];
+      // exact named deep-male voices, ordered by web reputation. 'Google US English'
+      // is deliberately ABSENT (it leans female - it was being picked before).
+      var pref = [
+        /Google UK English Male/i,                                            // deepest male on Chrome
+        /\bDaniel\b/i,                                                       // macOS/iOS: the 40-50yo direct British male
+        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural males
+        /Natural.*\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b/i,
+        /Microsoft\s+(David|Mark|George)\b/i,                                // Windows classic males
+        /\bAlex\b/i,                                                         // macOS natural male
+        /\bFred\b/i,
+        /\bmale\b/i
+      ];
       for (var p = 0; p < pref.length && !sigmaVoice; p++) {
         for (var i = 0; i < vs.length; i++) {
           if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
         }
       }
       if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
+      A.voiceName = sigmaVoice ? sigmaVoice.name : '';
     } catch (e) {}
   }
   try {
@@ -2966,7 +2978,7 @@
     var evs = game.drain();
     for (var i = 0; i < evs.length; i++) {
       var e = evs[i];
-      if (e.name === 'say') { say(e.v); A.speak(e.v); }
+      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; say('voice: ' + A.voiceName, true); } }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
@@ -3031,6 +3043,7 @@
   // We load a small open-source instruct model, open its context with a few-shot
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
+  var voiceTold = false;
   var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
   // The model runs in a module Worker: download, init and every generation happen
   // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.

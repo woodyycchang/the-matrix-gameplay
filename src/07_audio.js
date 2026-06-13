@@ -212,13 +212,25 @@
   function pickSigma() {
     try {
       var vs = window.speechSynthesis.getVoices();
-      var pref = [/Natural.*\b(Guy|Davis|Tony|Jason|Andrew|Brian|Christopher|Eric|Roger)\b/i, /\b(Guy|Davis|Andrew|Brian|Christopher|Eric|Roger)\b.*Natural/i, /Google US English/i, /Microsoft.*\b(Guy|David|Mark)\b/i, /\bDaniel\b/i, /Google UK English Male/i, /\bDavid\b/i, /\bAlex\b/i, /\bmale\b/i];
+      // exact named deep-male voices, ordered by web reputation. 'Google US English'
+      // is deliberately ABSENT (it leans female - it was being picked before).
+      var pref = [
+        /Google UK English Male/i,                                            // deepest male on Chrome
+        /\bDaniel\b/i,                                                       // macOS/iOS: the 40-50yo direct British male
+        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural males
+        /Natural.*\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b/i,
+        /Microsoft\s+(David|Mark|George)\b/i,                                // Windows classic males
+        /\bAlex\b/i,                                                         // macOS natural male
+        /\bFred\b/i,
+        /\bmale\b/i
+      ];
       for (var p = 0; p < pref.length && !sigmaVoice; p++) {
         for (var i = 0; i < vs.length; i++) {
           if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
         }
       }
       if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
+      A.voiceName = sigmaVoice ? sigmaVoice.name : '';
     } catch (e) {}
   }
   try {
