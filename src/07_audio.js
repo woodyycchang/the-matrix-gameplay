@@ -238,7 +238,21 @@
       window.speechSynthesis.addEventListener('voiceschanged', function () { sigmaVoice = null; pickSigma(); });
     }
   } catch (e) {}
+  A.ttsReady = false;
+  A.playPCM = function (f32, sr) {
+    if (!ctx) return;
+    try {
+      if (A._ttsNode) { try { A._ttsNode.stop(); } catch (e) {} }
+      var buf = ctx.createBuffer(1, f32.length, sr);
+      buf.copyToChannel(f32, 0);
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var g = ctx.createGain(); g.gain.value = 0.9;
+      src.connect(g); g.connect(master); src.start();
+      A._ttsNode = src;
+    } catch (e) {}
+  };
   A.speak = function (text) {
+    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); return; } catch (e) {} }
     if (A.muted) return;
     try {
       if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;

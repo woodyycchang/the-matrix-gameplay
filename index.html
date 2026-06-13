@@ -2509,7 +2509,21 @@
       window.speechSynthesis.addEventListener('voiceschanged', function () { sigmaVoice = null; pickSigma(); });
     }
   } catch (e) {}
+  A.ttsReady = false;
+  A.playPCM = function (f32, sr) {
+    if (!ctx) return;
+    try {
+      if (A._ttsNode) { try { A._ttsNode.stop(); } catch (e) {} }
+      var buf = ctx.createBuffer(1, f32.length, sr);
+      buf.copyToChannel(f32, 0);
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var g = ctx.createGain(); g.gain.value = 0.9;
+      src.connect(g); g.connect(master); src.start();
+      A._ttsNode = src;
+    } catch (e) {}
+  };
   A.speak = function (text) {
+    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); return; } catch (e) {} }
     if (A.muted) return;
     try {
       if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
@@ -3075,9 +3089,66 @@
     "};"
   ].join('\n');
 
+  // The sigma voice, for real: an in-browser neural TTS (Kokoro-82M, Apache-2.0)
+  // speaking the literal 'am_adam' voice at speed 0.9 - the exact two parameters
+  // that transfer from the viral ElevenLabs-Adam recipe (stability/similarity are
+  // ElevenLabs-engine knobs that do not exist outside their API).
+  var VOICE_WORKER_SRC = [
+    "import { KokoroTTS } from 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm';",
+    "let tts = null;",
+    "const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';",
+    "async function load() {",
+    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'webgpu' }); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) {}",
+    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm' }); postMessage({ type: 'ready', device: 'wasm' }); }",
+    "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
+    "}",
+    "onmessage = async (ev) => {",
+    "  const m = ev.data || {};",
+    "  if (m.type === 'load') { load(); return; }",
+    "  if (m.type === 'speak' && tts) {",
+    "    try {",
+    "      const out = await tts.generate(m.text, { voice: 'am_adam', speed: 0.9 });",
+    "      const f = out.audio;",
+    "      postMessage({ type: 'audio', sr: out.sampling_rate, buf: f }, [f.buffer]);",
+    "    } catch (e) { postMessage({ type: 'audioerr' }); }",
+    "  }",
+    "};"
+  ].join('\n');
+  var vox = { state: 'off', worker: null };
+  function loadVoice() {
+    if (vox.state !== 'off') return;
+    vox.state = 'loading';
+    try {
+      var vb = new Blob([VOICE_WORKER_SRC], { type: 'text/javascript' });
+      vox.worker = new Worker(URL.createObjectURL(vb), { type: 'module' });
+    } catch (e) { vox.state = 'failed'; return; }
+    vox.worker.onmessage = function (ev) {
+      var m = ev.data || {};
+      if (m.type === 'ready') {
+        vox.state = 'on';
+        A.ttsReady = true;
+        A.voiceName = 'Kokoro am_adam (AI \u00b7 ' + (m.device || '') + ')';
+        voiceTold = false;   // announce the switch on his next line
+        say('voice engine online \u2014 the Adam register, speed 0.9', true);
+        return;
+      }
+      if (m.type === 'fail') { vox.state = 'failed'; A.ttsReady = false; return; }
+      if (m.type === 'audio') {
+        var f = (m.buf instanceof Float32Array) ? m.buf : new Float32Array(m.buf);
+        A.playPCM(f, m.sr);
+      }
+    };
+    vox.worker.onerror = function () { if (vox.state !== 'on') { vox.state = 'failed'; A.ttsReady = false; } };
+    vox.worker.postMessage({ type: 'load' });
+  }
+  A.speakNeural = function (text) {
+    if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text) });
+  };
+
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
+    loadVoice();   // the AI voice (Kokoro am_adam) wakes with the operator
     say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
     var lastPct = -1;
     try {

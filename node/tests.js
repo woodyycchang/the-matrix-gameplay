@@ -1136,6 +1136,17 @@ section('lexical rescue: partial words map deterministically, before the model')
   ok(msgs.some((m,i)=>m.role==='user'&&m.content==='motor'&&msgs[i+1]&&/WORD:\s*motorcycle/i.test(msgs[i+1].content)), 'few-shot teaches partial words too');
 }
 
+
+section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
+{
+  const fsA = require('fs');
+  const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/Kokoro-82M/.test(appA) && /voice: 'am_adam', speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
+  ok(/function loadVoice/.test(appA) && /loadVoice\(\);   \/\/ the AI voice/.test(appA), 'the AI voice wakes with the operator (one consent point for AI downloads)');
+  const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
