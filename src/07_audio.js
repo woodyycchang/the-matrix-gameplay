@@ -260,7 +260,7 @@
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
       if (!sigmaVoice) pickSigma();
       if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;   // web consensus for natural speech: stay at the per-voice defaults (deviating muddied it)
+      u.rate = 0.9; u.pitch = 0.65; u.volume = 1.0;   // fallback runs deep too (0 was mud, 1.0 was plain; 0.65 is deep-but-clear)
       window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
       window.speechSynthesis.speak(u);
     } catch (e) {}

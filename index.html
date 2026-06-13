@@ -2531,7 +2531,7 @@
       var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
       if (!sigmaVoice) pickSigma();
       if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;   // web consensus for natural speech: stay at the per-voice defaults (deviating muddied it)
+      u.rate = 0.9; u.pitch = 0.65; u.volume = 1.0;   // fallback runs deep too (0 was mud, 1.0 was plain; 0.65 is deep-but-clear)
       window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
       window.speechSynthesis.speak(u);
     } catch (e) {}
@@ -3095,17 +3095,30 @@
   // that transfer from the viral ElevenLabs-Adam recipe (stability/similarity are
   // ElevenLabs-engine knobs that do not exist outside their API).
   var VOICE_WORKER_SRC = [
-    "import { KokoroTTS } from 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm';",
     "let tts = null;",
     "const MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';",
+    "const LIB_URLS = [",
+    "  'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm',",
+    "  'https://esm.sh/kokoro-js@1.2.0',",
+    "  'https://cdn.jsdelivr.net/npm/kokoro-js/+esm'",
+    "];",
+    "async function lib() {",
+    "  for (const u of LIB_URLS) {",
+    "    try { const m = await import(u); if (m && m.KokoroTTS) { postMessage({ type: 'link', step: 'lib', url: u }); return m.KokoroTTS; } }",
+    "    catch (e) { postMessage({ type: 'linkerr', step: 'lib', url: u, error: String((e && e.message) || e).slice(0, 60) }); }",
+    "  }",
+    "  throw new Error('no CDN reachable for kokoro-js');",
+    "}",
     "async function load() {",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'webgpu' }); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) {}",
-    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm' }); postMessage({ type: 'ready', device: 'wasm' }); }",
+    "  const KokoroTTS = await lib();",
+    "  const prog = p => { if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress }); };",
+    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'webgpu', progress_callback: prog }); postMessage({ type: 'ready', device: 'webgpu' }); return; } catch (e) { postMessage({ type: 'linkerr', step: 'engine-webgpu', error: String((e && e.message) || e).slice(0, 60) }); }",
+    "  try { tts = await KokoroTTS.from_pretrained(MODEL, { dtype: 'q8', device: 'wasm', progress_callback: prog }); postMessage({ type: 'ready', device: 'wasm' }); }",
     "  catch (e2) { postMessage({ type: 'fail', error: String((e2 && e2.message) || e2) }); }",
     "}",
     "onmessage = async (ev) => {",
     "  const m = ev.data || {};",
-    "  if (m.type === 'load') { load(); return; }",
+    "  if (m.type === 'load') { load().catch(e => postMessage({ type: 'fail', error: String((e && e.message) || e) })); return; }",
     "  if (m.type === 'speak' && tts) {",
     "    try {",
     "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 0.9 });",
@@ -3123,14 +3136,22 @@
       var vb = new Blob([VOICE_WORKER_SRC], { type: 'text/javascript' });
       vox.worker = new Worker(URL.createObjectURL(vb), { type: 'module' });
     } catch (e) { vox.state = 'failed'; return; }
+    var vLastPct = -1;
     vox.worker.onmessage = function (ev) {
       var m = ev.data || {};
+      if (m.type === 'link') { say('voice link ok: ' + m.step + ' via ' + (m.url || '').split('/')[2], true); return; }
+      if (m.type === 'linkerr') { say('voice link FAILED: ' + m.step + (m.url ? ' @ ' + m.url.split('/')[2] : '') + ' (' + (m.error || '?') + ')', true); return; }
+      if (m.type === 'progress') {
+        var p = Math.floor(m.pct / 25) * 25;
+        if (p > vLastPct) { vLastPct = p; say('voice model\u2026 ' + p + '%', true); }
+        return;
+      }
       if (m.type === 'ready') {
         vox.state = 'on';
         A.ttsReady = true;
-        A.voiceName = 'Kokoro am_adam (AI \u00b7 ' + (m.device || '') + ')';
+        A.voiceName = 'Kokoro ' + A.voiceChoice + ' (AI \u00b7 ' + (m.device || '') + ')';
         voiceTold = false;   // announce the switch on his next line
-        say('voice engine online \u2014 the Adam register, speed 0.9', true);
+        say('voice engine online \u2014 the ' + A.voiceChoice.replace('am_', '') + ' register, speed 0.9', true);
         return;
       }
       if (m.type === 'fail') {
@@ -3151,7 +3172,7 @@
     };
     vox.worker.postMessage({ type: 'load' });
   }
-  A.voiceChoice = 'am_adam';
+  A.voiceChoice = 'am_onyx';   // the ultra-deep register, by model not by pitch-bending
   A.speakNeural = function (text) {
     if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
   };
@@ -3247,10 +3268,11 @@
       say('you: ' + (req || label), true);
       if (req === '__neural__') { loadNeural(); return; }
       if (req === '__deepvoice__') {
-        A.voiceChoice = (A.voiceChoice === 'am_adam') ? 'am_michael' : 'am_adam';
+        var cyc = ['am_onyx', 'am_michael', 'am_adam'];
+        A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
         if (vox.state === 'off') loadVoice();
         say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        if (A.ttsReady) A.speak('This is the ' + (A.voiceChoice === 'am_michael' ? 'Michael' : 'Adam') + ' register.');
+        if (A.ttsReady) A.speak('This is the ' + A.voiceChoice.replace('am_', '') + ' register.');
         return;
       }
       game.request(req || label);

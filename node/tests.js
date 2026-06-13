@@ -1023,7 +1023,7 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
   ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/pickSigma/.test(aud) && /u\.pitch = 1\.0;/.test(aud) && /rate = 1\.0/.test(aud), 'operator voice at natural defaults (pitch 1.0, rate 1.0)');
+  ok(/pickSigma/.test(aud) && /u\.pitch = 0\.65;/.test(aud) && /rate = 0\.9/.test(aud), 'fallback system voice runs deep-but-clear (pitch 0.65, rate 0.9)');
   ok(/Google UK English Male/.test(aud) && /deliberately ABSENT/.test(aud) && !/Google US English\//.test(aud), 'exact named deep-male list; female-leaning Google US English removed');
   ok(/A\.voiceName = sigmaVoice/.test(aud), 'chosen voice name is exposed for the one-time announcement');
   ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
@@ -1147,6 +1147,16 @@ section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
   ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
   ok(/AI voice failed to load/.test(appA) && /cdn blocked/.test(appA), 'AI-voice load failure is now LOUD (no silent fallback) so we know if Kokoro did not load');
   ok(/am_michael/.test(appA) && /__deepvoice__/.test(appA), 'a deeper male (am_michael) is selectable via the deeper-voice chip');
+}
+
+
+section('voice chain: every link observable, depth by model (first principles)');
+{
+  const fsB = require('fs');
+  const appB = fsB.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/esm\.sh\/kokoro-js/.test(appB) && /LIB_URLS/.test(appB), 'library link has 3-CDN fallback (jsdelivr -> esm.sh -> latest)');
+  ok(/voice link ok: /.test(appB) && /voice link FAILED: /.test(appB) && /voice model\\u2026/.test(appB), 'every chain link reports by name - the breaking link names itself in the log');
+  ok(/A\.voiceChoice = 'am_onyx'/.test(appB) && /'am_onyx', 'am_michael', 'am_adam'/.test(appB), 'ultra-deep am_onyx is the default; the chip cycles the three male registers');
 }
 
 // ---------------------------------------------------------------- summary
