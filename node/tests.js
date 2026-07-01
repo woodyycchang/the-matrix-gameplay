@@ -1218,7 +1218,8 @@ section('wait shrunk on every lever physics allows');
   const fsH = require('fs');
   const appH = fsH.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/type: 'warmup'/.test(appH) && /max_new_tokens: 1 \}\); \} catch/.test(appH.replace(/\\/g,'')) || /warmup' && gen/.test(appH), 'a 1-token warmup compiles shaders right after load, not on the first real question');
-  ok(/localStorage\.setItem\('tc_ai'/.test(appH) && /getItem\('tc_ai'\) === '1'\) loadNeural/.test(appH), 'returning users auto-warm from cache at boot');
+  ok(/warm the worker at app bootstrap/.test(appH) && /conn\.saveData/.test(appH) && /neural\.quiet = true; loadNeural\(\)/.test(appH), 'the brain preloads at boot for everyone; data-saver keeps lazy consent');
+  ok(/function sayLoad/.test(appH) && /neural\.quiet = false;/.test(appH), 'preload is silent on the player channel and flips loud the moment the player asks');
   ok(/m\.pct \/ 10\) \* 10/.test(appH), 'download feedback in 10% steps - a big file never looks frozen');
   ok(/one-off ~0\.5 GB download; instant from cache/.test(appH), 'the waking line sets honest expectations');
 }

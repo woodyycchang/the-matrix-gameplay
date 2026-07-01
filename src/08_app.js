@@ -199,7 +199,7 @@
       say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
       return;
     }
-    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 your line is queued', true); return; }
+    if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued \u2014 answering the moment he is up', true); return; }
     say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
@@ -578,7 +578,8 @@
   var voiceTold = false;
   var dbg = false;                                  // telemetry channel, default OFF
   function sayDbg(t) { if (dbg) say(t, true); }     // plumbing speaks only when asked
-  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
+  function sayLoad(t) { if (neural.quiet) sayDbg(t); else say(t, true); }  // boot preload is silent; flips loud once the player asks
+  var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0, quiet: false }; // off -> loading -> on / failed
   // The model runs in a module Worker: download, init and every generation happen
   // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
   var NEURAL_WORKER_SRC = [
@@ -727,8 +728,7 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    try { localStorage.setItem('tc_ai', '1'); } catch (e) {}   // returning users get auto-warm boots
-    say('waking the operator \u2014 one-off ~0.5 GB download; instant from cache after that', true);
+    sayLoad('waking the operator \u2014 one-off ~0.5 GB download; instant from cache after that');
     sayDbg('model: Qwen3-0.6B (onnx-community, q4f16/webgpu \u2192 q4/wasm)');
     var lastPct = -1;
     try {
@@ -743,7 +743,7 @@
       var m = ev.data || {};
       if (m.type === 'progress') {
         var pct = Math.floor(m.pct / 10) * 10;   // 10% steps: a 0.5 GB file needs living feedback
-        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }  // kept: wait feedback
+        if (pct > lastPct) { lastPct = pct; neural.pct = pct; sayLoad('downloading the operator\u2026 ' + pct + '%'); }  // silent at boot, loud once asked
         return;
       }
       if (m.type === 'ready') {
@@ -814,7 +814,12 @@
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
     sayDbg('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'));
     checkStale(bt ? bt[1] : '');
-    try { if (localStorage.getItem('tc_ai') === '1') loadNeural(); } catch (e) {}   // returning users: cached brain warms itself at boot
+    // Preload the brain at boot - 'warm the worker at app bootstrap, not at first
+    // user interaction'. The white void IS the loading screen: by the time you ask,
+    // he answers for real - no placeholder wait. Metered / data-saver connections
+    // keep the old lazy consent path (no forced half-GB).
+    var conn = navigator.connection || {};
+    if (!(conn.saveData || /(^|-)2g/.test(String(conn.effectiveType || '')))) { neural.quiet = true; loadNeural(); }
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }
