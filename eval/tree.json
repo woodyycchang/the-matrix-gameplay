@@ -1,0 +1,307 @@
+{
+ "nodes": [
+  {
+   "path": "ROOT",
+   "type": "BRANCH",
+   "why": "端到端超高质量·对照原始愿景",
+   "priors": [
+    "ROOT/SOUND",
+    "ROOT/NEURAL",
+    "ROOT/INPUT",
+    "ROOT/DIEGESIS",
+    "ROOT/PERF",
+    "ROOT/WORLD",
+    "ROOT/TRUST"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/SOUND",
+   "type": "BRANCH",
+   "why": "声音世界成立",
+   "priors": [
+    "ROOT/SOUND/voice-pipeline",
+    "ROOT/SOUND/voice-model",
+    "ROOT/SOUND/sfx-residue",
+    "ROOT/SOUND/mix-levels",
+    "ROOT/SOUND/user-ear"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/SOUND/voice-pipeline",
+   "type": "UNIT",
+   "why": "单一播放通路,一次取证覆盖",
+   "status": "FIXED",
+   "evidence": "5956295: 斩首式stop定罪;运输主义(候播深度1+12ms推子)+voice自检"
+  },
+  {
+   "path": "ROOT/SOUND/voice-model",
+   "type": "UNIT",
+   "why": "三标量(dtype/sr/分块)grep即定",
+   "status": "PASS",
+   "evidence": "worker源: q8·sr透传·generate单块"
+  },
+  {
+   "path": "ROOT/SOUND/sfx-residue",
+   "type": "UNIT",
+   "why": "16事件逐一过'配得上存在'判据",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/SOUND/mix-levels",
+   "type": "UNIT",
+   "why": "总线增益表复核",
+   "status": "PASS",
+   "evidence": "0542fcb 全量审计表; 3214272 极简裁决"
+  },
+  {
+   "path": "ROOT/SOUND/user-ear",
+   "type": "UNIT",
+   "why": "涌现性质,只有人耳能结",
+   "status": "USER",
+   "evidence": "清单: ?v≥2209 · 打voice听固定台词 · 连发无腰斩无咔哒 · 虚空死寂/枪声炸裂"
+  },
+  {
+   "path": "ROOT/NEURAL",
+   "type": "BRANCH",
+   "why": "大脑管线正确且快",
+   "priors": [
+    "ROOT/NEURAL/routing",
+    "ROOT/NEURAL/no-think",
+    "ROOT/NEURAL/latency",
+    "ROOT/NEURAL/failure-paths",
+    "ROOT/NEURAL/reply-quality"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/NEURAL/routing",
+   "type": "UNIT",
+   "why": "派发三护栏(regex/词法/救援)语义",
+   "status": "PASS",
+   "evidence": "0a1a556: mention≠intent +6回归"
+  },
+  {
+   "path": "ROOT/NEURAL/no-think",
+   "type": "UNIT",
+   "why": "模板层enable_thinking:false+官方配方",
+   "status": "PASS",
+   "evidence": "ede85b7"
+  },
+  {
+   "path": "ROOT/NEURAL/latency",
+   "type": "UNIT",
+   "why": "等待方程四杠杆",
+   "status": "PASS",
+   "evidence": "82012dc串行+预热; 34e2d57开机预载"
+  },
+  {
+   "path": "ROOT/NEURAL/failure-paths",
+   "type": "UNIT",
+   "why": "CDN/加载失败路径响亮且可行动",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/NEURAL/reply-quality",
+   "type": "UNIT",
+   "why": "答复像不像接线员,涌现",
+   "status": "USER",
+   "evidence": "清单: 打hi/怪词/真意图各一,贴回答"
+  },
+  {
+   "path": "ROOT/INPUT",
+   "type": "BRANCH",
+   "why": "操控手感成立",
+   "priors": [
+    "ROOT/INPUT/no-capture",
+    "ROOT/INPUT/edge-turn-feel",
+    "ROOT/INPUT/keyboard-route",
+    "ROOT/INPUT/touch"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/INPUT/no-capture",
+   "type": "UNIT",
+   "why": "构造性不可捕获(熔断)",
+   "status": "PASS",
+   "evidence": "1612396 fused; 4c7aec陈旧横幅终审缓存争议"
+  },
+  {
+   "path": "ROOT/INPUT/edge-turn-feel",
+   "type": "UNIT",
+   "why": "EDGE_TURN=1100等参数,涌现",
+   "status": "USER",
+   "evidence": "清单: 边缘转身顺不顺·RMB拖看跟手否"
+  },
+  {
+   "path": "ROOT/INPUT/keyboard-route",
+   "type": "UNIT",
+   "why": "按键路径无同步重活",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/INPUT/touch",
+   "type": "UNIT",
+   "why": "触控与桌面同权",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/DIEGESIS",
+   "type": "BRANCH",
+   "why": "虚构成立",
+   "priors": [
+    "ROOT/DIEGESIS/channel-purity",
+    "ROOT/DIEGESIS/persona",
+    "ROOT/DIEGESIS/surface-wording"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/DIEGESIS/channel-purity",
+   "type": "UNIT",
+   "why": "玩家频道零遥测",
+   "status": "PASS",
+   "evidence": "38fe707分频; 后续sayLoad静默预载"
+  },
+  {
+   "path": "ROOT/DIEGESIS/persona",
+   "type": "UNIT",
+   "why": "全部台词一个声音一种人格",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/DIEGESIS/surface-wording",
+   "type": "UNIT",
+   "why": "chips/占位符/提示语入戏",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/PERF",
+   "type": "BRANCH",
+   "why": "帧预算与等待达标",
+   "priors": [
+    "ROOT/PERF/frame-budget",
+    "ROOT/PERF/hot-alloc",
+    "ROOT/PERF/load-waits"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/PERF/frame-budget",
+   "type": "UNIT",
+   "why": "ms表+自适应存在且真触发",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/PERF/hot-alloc",
+   "type": "UNIT",
+   "why": "热循环零分配审计",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/PERF/load-waits",
+   "type": "UNIT",
+   "why": "下载/初始化/首推理三项",
+   "status": "PASS",
+   "evidence": "等待方程+四杠杆已发货"
+  },
+  {
+   "path": "ROOT/WORLD",
+   "type": "BRANCH",
+   "why": "世界内容成立",
+   "priors": [
+    "ROOT/WORLD/infinite-scenes",
+    "ROOT/WORLD/bounded-scenes",
+    "ROOT/WORLD/density",
+    "ROOT/WORLD/void-onboarding"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/WORLD/infinite-scenes",
+   "type": "UNIT",
+   "why": "块流回收正确性",
+   "status": "PASS",
+   "evidence": "savepoint时代测试组(586)覆盖neon/city块循环"
+  },
+  {
+   "path": "ROOT/WORLD/bounded-scenes",
+   "type": "UNIT",
+   "why": "dojo/armory/rooftop有界即设计",
+   "status": "PASS",
+   "evidence": "方法论裁决在案"
+  },
+  {
+   "path": "ROOT/WORLD/density",
+   "type": "UNIT",
+   "why": "city道具削减等内容回填",
+   "status": "PENDING",
+   "evidence": "二期P4"
+  },
+  {
+   "path": "ROOT/WORLD/void-onboarding",
+   "type": "UNIT",
+   "why": "空虚空首分钟引导,涌现",
+   "status": "USER",
+   "evidence": "清单: 新人进虚空30秒内知道能干嘛吗"
+  },
+  {
+   "path": "ROOT/TRUST",
+   "type": "BRANCH",
+   "why": "可信度机件",
+   "priors": [
+    "ROOT/TRUST/build-stamp",
+    "ROOT/TRUST/gate",
+    "ROOT/TRUST/observability",
+    "ROOT/TRUST/tree-guard"
+   ],
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/TRUST/build-stamp",
+   "type": "UNIT",
+   "why": "戳+陈旧横幅",
+   "status": "PASS",
+   "evidence": "ef7872d; 4c7aec"
+  },
+  {
+   "path": "ROOT/TRUST/gate",
+   "type": "UNIT",
+   "why": "FAIL-0新鲜闸门",
+   "status": "PASS",
+   "evidence": "0a1a556诞生; 陈旧t.out漏洞已焊"
+  },
+  {
+   "path": "ROOT/TRUST/observability",
+   "type": "UNIT",
+   "why": "debug频道+raw探针",
+   "status": "PASS",
+   "evidence": "38fe707; raw«»探针"
+  },
+  {
+   "path": "ROOT/TRUST/tree-guard",
+   "type": "UNIT",
+   "why": "本执法器自身受测",
+   "status": "FIXED",
+   "evidence": "本提交: eval/tree.json+node/tree_guard.js接入套件"
+  }
+ ]
+}

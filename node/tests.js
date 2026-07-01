@@ -1307,6 +1307,18 @@ section('voice transport: no beheading, no clicks (Loop-1 N1a verdict)');
   ok(/lv === 'voice'/.test(appO) && /Nothing added\. Nothing shaped\./.test(appO), "typing 'voice' speaks a fixed test line - a reproducible ear target");
 }
 
+
+section('tree_guard: the eval run is ENFORCED, not requested');
+{
+  const validate = require('./tree_guard.js');
+  const tree = JSON.parse(require('fs').readFileSync(__dirname + '/../eval/tree.json', 'utf8'));
+  const errs = validate(tree);
+  ok(errs.length === 0, 'eval tree validates against R1-R5: ' + (errs[0] || 'clean'));
+  const root = tree.nodes.find(n => n.path === 'ROOT');
+  ok(root && root.status === 'PENDING', 'ROOT stays open until every machine node passes AND every USER node is confirmed by the human');
+  ok(tree.nodes.filter(n => n.status === 'USER').length >= 4, 'the emergent leaves (ear, feel, reply-quality, onboarding) are contractually reserved for the human');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
