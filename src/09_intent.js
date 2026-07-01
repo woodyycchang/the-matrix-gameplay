@@ -259,7 +259,9 @@
       // The model spoke plain prose (no SAY: field) - show HIS words, not a canned line.
       var plain = text.replace(/word\s*[:=]\s*[a-z]+/ig, ' ').replace(/\s+/g, ' ').trim();
       if (plain.length > 220) plain = plain.slice(0, 217) + '\u2026';
-      say = plain || (word ? ('Loading ' + word + '.') : 'The library is silent on that one.');
+      // word-without-say: stay SILENT here - the scene announces itself ('Sparring program loaded.'),
+      // and 'Loading dojo.' + that line was the same news twice.
+      say = plain || (word ? '' : 'The library is silent on that one.');
     }
     return { word: word, say: say };
   };

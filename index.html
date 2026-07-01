@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2242</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2248</span></div>
 </div>
 
 <script>
@@ -2727,7 +2727,7 @@
       say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
       return;
     }
-    if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued \u2014 answering the moment he is up', true); return; }
+    if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued.', true); return; }
     say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
@@ -3326,7 +3326,7 @@
         } else {
           var r = C.intent.parseReply(m.reply);
           var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
-          say(r.say, true);                 // ALWAYS show what the model said
+          if (r.say) say(r.say, true);                 // ALWAYS show what the model said   // empty say = the scene will speak for itself
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();
@@ -3717,7 +3717,9 @@
       // The model spoke plain prose (no SAY: field) - show HIS words, not a canned line.
       var plain = text.replace(/word\s*[:=]\s*[a-z]+/ig, ' ').replace(/\s+/g, ' ').trim();
       if (plain.length > 220) plain = plain.slice(0, 217) + '\u2026';
-      say = plain || (word ? ('Loading ' + word + '.') : 'The library is silent on that one.');
+      // word-without-say: stay SILENT here - the scene announces itself ('Sparring program loaded.'),
+      // and 'Loading dojo.' + that line was the same news twice.
+      say = plain || (word ? '' : 'The library is silent on that one.');
     }
     return { word: word, say: say };
   };

@@ -203,7 +203,7 @@
       say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
       return;
     }
-    if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued \u2014 answering the moment he is up', true); return; }
+    if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued.', true); return; }
     say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
@@ -802,7 +802,7 @@
         } else {
           var r = C.intent.parseReply(m.reply);
           var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
-          say(r.say, true);                 // ALWAYS show what the model said
+          if (r.say) say(r.say, true);                 // ALWAYS show what the model said   // empty say = the scene will speak for itself
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();

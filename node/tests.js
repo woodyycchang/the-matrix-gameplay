@@ -1341,6 +1341,17 @@ section('HUD wording is fluid and can never collide (Loop N3/N4 finding)');
   ok((tpl.match(/clamp\(/g) || []).length >= 7, 'HUD wording scales with the window: rem+vw clamp() on title/hint/aim/log/input/chips (zoom-safe)');
 }
 
+
+section('every string earns its place (surface-wording verdict)');
+{
+  const fsR = require('fs');
+  const intR = fsR.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
+  const appR = fsR.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/'Loading ' \+ word/.test(intR), "the double announcement is dead: the scene speaks for itself, 'Loading X.' does not");
+  ok(/if \(r\.say\) say\(r\.say/.test(appR), 'an empty say prints nothing - no blank lines in the log');
+  ok(/your line is queued\.'/.test(appR) && !/answering the moment he is up/.test(appR), 'still-waking says it once, not twice');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

@@ -178,15 +178,15 @@
    "path": "ROOT/DIEGESIS/persona",
    "type": "UNIT",
    "why": "全部台词一个声音一种人格",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "全语料审计: 明频统一小写终端人格, 失败台词入戏(line broke up/Say it again), 无出戏措辞"
   },
   {
    "path": "ROOT/DIEGESIS/surface-wording",
    "type": "UNIT",
    "why": "chips/占位符/提示语入戏",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 全语料逐句判决表; 双重播报(Loading X.)已剪; still-waking收紧; 休眠尸体标注不可达"
   },
   {
    "path": "ROOT/PERF",
