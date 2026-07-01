@@ -225,24 +225,7 @@
     if (i < la || j < lb) edits++;
     return edits <= 1;
   }
-  // Rescue a designated word from the USER text first, then from the model REPLY:
-  // exact token, prefix, or a single-typo neighbour. Determinism around a small model.
-  I.rescueWord = function (userText, replyText) {
-    function scan(text) {
-      var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });
-      var best = null, bestLen = 0;
-      for (var d = 0; d < I.designatedList.length; d++) {
-        var w = I.designatedList[d];
-        for (var i = 0; i < toks.length; i++) {
-          var t = toks[i];
-          if (w === t) return w;
-          if ((w.indexOf(t) === 0 || t.indexOf(w) === 0 || near1(w, t)) && t.length > bestLen) { best = w; bestLen = t.length; }
-        }
-      }
-      return best;
-    }
-    return scan(userText) || scan(replyText) || null;
-  };
+  // (legacy two-source rescueWord removed - the model's reply is never a dispatch source)
 
   I.lexicalGuess = function (text) {
     var toks = String(text || '').toLowerCase().split(/[^a-z]+/).filter(function (t) { return t.length >= 4; });

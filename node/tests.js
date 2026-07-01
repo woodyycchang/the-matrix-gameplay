@@ -1117,7 +1117,7 @@ section('deterministic rails around the tiny model (rescue + regex + temp)');
   ok(msgs.some(m => m.role === 'user' && m.content === 'motor'), 'few-shot includes the single-word elliptical example');
   const fs9 = require('fs');
   const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text, m\.reply\)/.test(app9), 'temperature cooled to 0.4 and the rescue is wired into the reply path');
+  ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text\)/.test(app9), 'temperature cooled to 0.4 and rescue reads the USER text only');
 }
 
 
