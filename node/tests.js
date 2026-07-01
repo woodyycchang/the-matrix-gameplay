@@ -1093,7 +1093,7 @@ section('UI layout sanity (template guards)');
   ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
   ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
-  ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the no-capture scheme');
+  ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
 }
 
 
@@ -1328,6 +1328,17 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
   ok(!/__deepvoice__/.test(appP) && /'__neural__'/.test(appP), 'voice chip stays gone; the other nine chips stand');
   const used = (appP.match(/\bdefs\b/g) || []).length;
   ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs) - a lone reference means a beheaded declaration');
+}
+
+
+section('HUD wording is fluid and can never collide (Loop N3/N4 finding)');
+{
+  const fsQ = require('fs');
+  const tpl = fsQ.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/#top\{[^}]*display:flex;justify-content:space-between/.test(tpl), 'title and hint share one flex bar - overlap is impossible by construction');
+  ok(/<div id="top"><div id="scene">THE CONSTRUCT<\/div><div id="lookhint">EDGES/.test(tpl), 'the markup actually nests both into the bar (default hint text intact)');
+  ok(/#scene\{[^}]*text-overflow:ellipsis/.test(tpl), 'a long scene line ellipsizes instead of invading the hint');
+  ok((tpl.match(/clamp\(/g) || []).length >= 7, 'HUD wording scales with the window: rem+vw clamp() on title/hint/aim/log/input/chips (zoom-safe)');
 }
 
 // ---------------------------------------------------------------- summary

@@ -17,13 +17,12 @@
        (plain cursor:crosshair is a hairline that melts into the void - 'my mouse was hidden') */
     cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M11 2v7M11 13v7M2 11h7M13 11h7' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M11 2v7M11 13v7M2 11h7M13 11h7' stroke='%23111' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E") 11 11, crosshair}
   /* HUD */
-  #scene{position:fixed;top:14px;left:16px;font-size:11px;letter-spacing:.22em;color:var(--faint);
-    text-transform:uppercase;pointer-events:none;mix-blend-mode:difference;color:#9a9a96}
-  #aim{position:fixed;left:50%;top:56%;transform:translateX(-50%);font-size:12px;letter-spacing:.14em;
+  #top{position:fixed;top:10px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:baseline;gap:1.2em;pointer-events:none;z-index:5}
+  #scene{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(10px,.5rem + .45vw,14px);letter-spacing:.22em;text-transform:uppercase;pointer-events:none;mix-blend-mode:difference;color:#9a9a96}
+  #aim{position:fixed;left:50%;top:56%;transform:translateX(-50%);font-size:clamp(11px,.55rem + .4vw,14px);letter-spacing:.14em;
     color:var(--ink);background:rgba(251,251,249,.72);padding:3px 10px;border:1px solid rgba(42,42,40,.25);
     opacity:0;transition:opacity .15s;pointer-events:none}
-  #lookhint{position:fixed;top:14px;right:16px;font-size:11px;letter-spacing:.18em;color:var(--faint);
-    opacity:0;transition:opacity .3s;pointer-events:none}
+  #lookhint{flex:1 1 auto;min-width:0;text-align:right;font-size:clamp(9px,.45rem + .4vw,12px);letter-spacing:.18em;opacity:0;transition:opacity .3s;pointer-events:none;mix-blend-mode:difference;color:#9a9a96}
   #mic{flex:0 0 auto;width:30px;height:30px;border-radius:50%;
     border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:13px;cursor:pointer;color:var(--ink)}
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
@@ -31,20 +30,20 @@
   #console{position:fixed;left:0;bottom:0;width:min(720px,92vw);padding:10px 16px 12px;pointer-events:none;
     background:linear-gradient(to top,rgba(251,251,249,.9),rgba(251,251,249,.55) 55%,transparent)}
   #log{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
-  #log .line{font-size:12px;letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
+  #log .line{font-size:clamp(11px,.55rem + .5vw,15px);letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
     transition:opacity 1.2s;max-width:72ch}
   #log .line.sys{color:var(--faint)}
   #log .line.fade{opacity:0}
   #inrow{display:flex;gap:8px;align-items:center;pointer-events:auto;opacity:.55;transition:opacity .15s}
   #inrow.open{opacity:1}
-  #inrow .gt{color:#0d7a3a;font-size:13px}
+  #inrow .gt{color:#0d7a3a;font-size:clamp(12px,.6rem + .5vw,15px)}
   #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
-    font:inherit;font-size:13px;color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
+    font:inherit;font-size:clamp(12px,.6rem + .5vw,15px);color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
   #cmd::placeholder{color:#9a9a96}
   #chips{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin-top:8px;pointer-events:auto;
     scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
   #chips::-webkit-scrollbar{display:none}
-  .chip{font:inherit;font-size:11px;letter-spacing:.12em;text-transform:lowercase;color:var(--ink);flex:0 0 auto;white-space:nowrap;
+  .chip{font:inherit;font-size:clamp(10px,.5rem + .4vw,13px);letter-spacing:.12em;text-transform:lowercase;color:var(--ink);flex:0 0 auto;white-space:nowrap;
     background:transparent;border:1px solid rgba(42,42,40,.3);padding:4px 11px;cursor:pointer;border-radius:2px}
   .chip:hover{border-color:var(--ink);background:rgba(42,42,40,.05)}
   /* touch */
@@ -70,12 +69,11 @@
 <body>
 <canvas id="c"></canvas>
 
-<div id="scene">THE CONSTRUCT</div>
+<div id="top"><div id="scene">THE CONSTRUCT</div><div id="lookhint">EDGES = TURN · HOLD RIGHT-DRAG = LOOK · CLICK = ACT · ESC = TYPE</div></div>
 <div id="aim"></div>
 <div id="stale" style="display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:40;
   background:#b3261e;color:#fff;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.08em;
   padding:6px 14px;border-radius:3px;pointer-events:none"></div>
-<div id="lookhint">EDGES = TURN · HOLD RIGHT-DRAG = LOOK · CLICK = ACT · ESC = TYPE</div>
 <div id="console">
   <div id="log"></div>
   <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
