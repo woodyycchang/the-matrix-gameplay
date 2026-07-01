@@ -1277,6 +1277,18 @@ section('the fallback can never sound British again');
   ok(/passes = \[\/\^en-US\/i, \/\^en\/i\]/.test(audL), 'selection runs en-US strictly first, any-English only as last resort');
 }
 
+
+section('minimalism: a sound must earn its place');
+{
+  const fsM = require('fs');
+  const audM = fsM.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/case 'tick': break;/.test(audM) && /case 'jump': break;/.test(audM) && /case 'pickup': break;/.test(audM), 'tick, jump-hiss and pickup-ding are CUT: each duplicated what the eye already sees');
+  ok(/case 'mount': engineStart\(\); break;/.test(audM) && /case 'dismount': engineStop\(\); break;/.test(audM), 'mount/dismount decorations trimmed - the engine ramp is the signal');
+  ok(/'void' \? 0 : 0\.22/.test(audM), 'the void is truly SILENT (film-accurate) - remaining sounds land harder by contrast');
+  ok(/i < 3; i\+\+\) blip\(700/.test(audM), 'materialize trimmed 7 notes -> 3: signature kept, ornament gone');
+  ok(/case 'shot':/.test(audM) && /case 'land':/.test(audM) && /case 'freeze':/.test(audM) && /function ring/.test(audM), 'combat, physics, state-changes and the summons all KEEP their sound (information the eye lacks)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

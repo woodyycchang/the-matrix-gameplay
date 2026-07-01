@@ -90,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2145</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2154</span></div>
 </div>
 
 <script>
@@ -2424,7 +2424,7 @@
       else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.14, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.05, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
-      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0.1 : 0.22, t1 + 1.4);
+      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : 0.22, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
     }, 220);
   };
 
@@ -2443,11 +2443,11 @@
     }
     switch (name) {
       case 'whoosh': hiss(0.55, 0.34, 2200, 260, 1.1); break;
-      case 'materialize': for (var i = 0; i < 7; i++) blip(700 + i * 180 + Math.random() * 90, 0.07, 0.12, 'triangle', i * 0.045); hiss(0.6, 0.18, 1400, 4200, 2); break;
+      case 'materialize': for (var i = 0; i < 3; i++) blip(700 + i * 180 + Math.random() * 90, 0.07, 0.12, 'triangle', i * 0.045); hiss(0.6, 0.18, 1400, 4200, 2); break;
       case 'scene': hiss(0.8, 0.35, 160, 1800, 1); break;
       case 'codeOn': hiss(0.45, 0.26, 300, 3200, 2); blip(180, 0.18, 0.12, 'sine'); blip(360, 0.22, 0.1, 'sine', 0.06); break;
       case 'codeOff': hiss(0.4, 0.24, 3200, 300, 2); blip(360, 0.16, 0.08, 'sine'); break;
-      case 'jump': hiss(0.18, 0.18, 500, 1400, 1); break;
+      case 'jump': break;   // CUT: the jump is visible; LAND carries the physics
       case 'land': thump(150, 0.12, 0.22); break;
       case 'step':
         var f0 = 700 + Math.random() * 300;
@@ -2464,10 +2464,10 @@
       case 'rise': hiss(1.2, 0.15, 120, 600, 0.8); break;
       case 'success': blip(523, 0.18, 0.12, 'triangle'); blip(784, 0.25, 0.12, 'triangle', 0.12); blip(1046, 0.4, 0.1, 'triangle', 0.24); break;
       case 'shot': crack(0.5); thump(120, 0.05, 0.4); hiss(0.18, 0.10, 500, 90, 1.2, 0.02); break;
-      case 'pickup': blip(660, 0.06, 0.12, 'square'); blip(990, 0.08, 0.1, 'square', 0.06); break;
+      case 'pickup': break;   // CUT: the weapon visibly appears in hand; 'a ding every pickup undermines immersion'
       case 'pickupBlade': hiss(0.18, 0.22, 1800, 5200, 2.2); blip(1320, 0.06, 0.08, 'triangle', 0.04); break;
-      case 'mount': engineStart(); blip(520, 0.05, 0.1, 'square'); thump(70, 0.18, 0.35, 0.02); break;
-      case 'dismount': engineStop(); blip(360, 0.06, 0.08, 'square'); break;
+      case 'mount': engineStart(); break;    // engine ramp IS the signal - decorations trimmed
+      case 'dismount': engineStop(); break;
       case 'scrape': hiss(0.13, 0.22, 1200, 500, 1.1); thump(90, 0.06, 0.12); break;
       case 'slash': hiss(0.14, 0.3, 1400, 500, 1.8); blip(300, 0.08, 0.08, 'sawtooth', 0.01); break;
       case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
@@ -2478,7 +2478,7 @@
       case 'ring': if (!ringTimer) { ring(); ringTimer = setInterval(ring, 2100); } break;
       case 'ringStop': if (ringTimer) { clearInterval(ringTimer); ringTimer = null; } break;
       case 'exitFlash': hiss(0.5, 0.4, 2000, 200, 1); break;
-      case 'tick': blip(1900 + Math.random() * 400, 0.018, 0.05, 'square'); break;
+      case 'tick': break;   // CUT (minimalism): duplicates visible teletype; highest-frequency sound = noise floor
       case 'chirp': blip(1240, 0.05, 0.08, 'square'); break;
     }
   };
