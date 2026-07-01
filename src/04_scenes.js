@@ -181,48 +181,143 @@
     return s;
   }
 
-  // ---------------- CITY (lunch hour) ----------------
-  function sceneCity() {
-    var s = {
-      name: 'lunch hour', sky: 'day', fog: { near: 30, far: 95, col: '#cfd4d6' },
-      groundY: 0, ambience: 'crowd', colliders: [], insts: [],
-      spawn: { pos: [-14, 0, 0.4], yaw: Math.PI / 2 },
-      crowd: [], update: null
-    };
+  // ---------------- CITY (lunch hour — INFINITE boulevard) ----------------
+  // Same first-principles result as neon: the street is a block pattern repeated along
+  // x, so it streams. Chunks of boulevard spawn around the walker; crowd recycles around
+  // the player. The plaza and storefronts continue forever.
+  var CITY_CHUNK = 88;
+  var CITY_AHEAD = 2, CITY_BEHIND = 2;
+  function cityChunkMesh(ci) {
     var m = C.newMesh();
-    C.addQuadY(m, -60, -20, 60, 20, 0.001, '#b9bcbe', 'floor');         // plaza
-    C.addQuadY(m, -60, -7.2, 60, 7.2, 0.004, '#c6c9cb', 'floor');       // walkway
-    for (var sx = -56; sx < 60; sx += 4) {                               // paving seams
-      C.addQuadY(m, sx, -7.2, sx + 0.06, 7.2, 0.006, '#aeb1b3', 'floor');
-    }
-    var r = C.rng(515);
-    for (var i = 0; i < 9; i++) {                                        // building rows
+    var x0 = ci * CITY_CHUNK, x1 = x0 + CITY_CHUNK;
+    C.addQuadY(m, x0, -20, x1, 20, 0.001, '#b9bcbe', 'floor');         // plaza
+    C.addQuadY(m, x0, -7.2, x1, 7.2, 0.004, '#c6c9cb', 'floor');       // walkway
+    for (var sx = x0; sx < x1; sx += 4) C.addQuadY(m, sx, -7.2, sx + 0.06, 7.2, 0.006, '#aeb1b3', 'floor');
+    var r = C.rng(515 + ci * 13);
+    for (var i = 0; i < 8; i++) {
+      var bx = x0 + i * 11;
       var bw = 9 + r() * 5, bh = 9 + r() * 14;
-      var bx = -44 + i * 11;
       C.addBox(m, bx, 0, -14.5, bw, bh, 9, C.mixHex('#8c9094', '#b3a999', r()), { noBottom: true });
-      C.addBox(m, bx, 0, -9.6, bw, 3.4, 0.9, '#6f7478', { noBottom: true }); // storefront band
+      C.addBox(m, bx, 0, -9.6, bw, 3.4, 0.9, '#6f7478', { noBottom: true });
       var bw2 = 9 + r() * 5, bh2 = 9 + r() * 14;
       C.addBox(m, bx + 4, 0, 14.5, bw2, bh2, 9, C.mixHex('#8c9094', '#a9a294', r()), { noBottom: true });
       C.addBox(m, bx + 4, 0, 9.6, bw2, 3.4, 0.9, '#6f7478', { noBottom: true });
     }
     C.anchorize(m, 0.045, 73, 8); C.meshBounds(m);
-    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'street' }));
-    var props = [
-      inst(P.fountain(), [12, 0, 0], 0, { label: 'fountain' }),
-      inst(P.lamppost(), [-8, 0, -6.6], 0, { label: 'lamp' }),
-      inst(P.lamppost(), [4, 0, 6.6], Math.PI, { label: 'lamp' }),
-      inst(P.lamppost(), [22, 0, -6.6], 0, { label: 'lamp' }),
-      inst(P.bench(), [-2, 0, -6.4], 0, { label: 'bench' }),
-      inst(P.bench(), [18, 0, 6.4], Math.PI, { label: 'bench' }),
-      inst(P.tree(61), [-20, 0, -6.6], 0, { label: 'tree' }),
-      inst(P.tree(62), [28, 0, 6.6], 0, { label: 'tree' }),
-      inst(P.car('#4d5a64'), [-30, 0, 10.5], 0.06, { label: 'car' }),
-      inst(P.car('#6a5f55'), [34, 0, -10.8], Math.PI - 0.05, { label: 'car' })
-    ];
-    for (var p = 0; p < props.length; p++) s.insts.push(props[p]);
-    s.colliders.push(box([9.6, 0, -2.4], [14.4, 1.1, 2.4]));            // fountain
-    s.colliders.push(box([-60, 0, -20.5], [60, 12, -9.4]));             // building rows
-    s.colliders.push(box([-60, 0, 9.4], [60, 12, 20.5]));
+    return m;
+  }
+  function sceneCity() {
+    var s = {
+      name: 'lunch hour', sky: 'day', fog: { near: 30, far: 95, col: '#cfd4d6' },
+      groundY: 0, ambience: 'crowd', colliders: [], insts: [],
+      spawn: { pos: [0, 0, 0.4], yaw: Math.PI / 2 },
+      crowd: [], update: null, infinite: true, chunks: {}
+    };
+    // persistent building-row walls along both sides (span far in x)
+    s.colliders.push(box([-1e6, 0, -20.5], [1e6, 12, -9.4]));
+    s.colliders.push(box([-1e6, 0, 9.4], [1e6, 12, 20.5]));
+    // a couple of landmarks near the origin so the start isn't bare
+    s.insts.push(inst(P.fountain(), [12, 0, -6], 0, { label: 'fountain' }));
+    s.insts.push(inst(P.bench(), [-2, 0, -6.4], 0, { label: 'bench' }));
+    s.insts.push(inst(P.tree(61), [-20, 0, 6.6], 0, { label: 'tree' }));
+    s.colliders.push(box([9.6, 0, -8.4], [14.4, 1.1, -3.6]));            // fountain (off to the side)
+    s._cityChunkAt = cityChunkMesh;
+    s._streamCity = function (game) {
+      var px = game.player.pos[0];
+      var cur = Math.round(px / CITY_CHUNK);
+      var lo = cur - CITY_BEHIND, hi = cur + CITY_AHEAD;
+      for (var ci = lo; ci <= hi; ci++) {
+        if (!s.chunks[ci]) {
+          var it = inst(cityChunkMesh(ci), [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'street' });
+          it.loadT = 1; it.loadDir = 0;
+          s.chunks[ci] = it; s.insts.push(it);
+        }
+      }
+      for (var key in s.chunks) {
+        var k = +key;
+        if (k < lo || k > hi) {
+          var idx = s.insts.indexOf(s.chunks[k]);
+          if (idx >= 0) s.insts.splice(idx, 1);
+          delete s.chunks[k];
+        }
+      }
+    };
+    s._streamCity({ player: { pos: s.spawn.pos } });   // seed first chunks
+    return s;
+  }
+
+  // ---------------- NEON (the cyber street — an INFINITE riding program) ----------------
+  // Evaluated by first principles: the mile is a pattern repeated along -z, so it can
+  // stream forever. Chunks of street spawn ahead of the rider and recycle behind; the
+  // ground and side-walls follow the player. Memory stays constant, the road never ends.
+  var NEON_CHUNK = 95;        // length of one street segment
+  var NEON_AHEAD = 4;         // chunks kept in front
+  var NEON_BEHIND = 2;        // chunks kept behind
+  function neonChunkMesh(ci) {
+    var m = C.newMesh();
+    var z0 = -ci * NEON_CHUNK, z1 = z0 - NEON_CHUNK;
+    var r = C.rng(820 + ci * 7), hues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
+    // road + sidewalks for this segment
+    C.addQuadY(m, -7.4, z1, 7.4, z0, 0.001, '#07070e', 'floor');
+    C.addQuadY(m, -7.4, z1, -5.2, z0, 0.004, '#0c0c16', 'floor');
+    C.addQuadY(m, 5.2, z1, 7.4, z0, 0.004, '#0c0c16', 'floor');
+    // curb neon strips
+    C.addQuadY(m, -5.3, z1, -5.0, z0, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, 5.0, z1, 5.3, z0, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, -3.3, z1, -3.05, z0, 0.02, '#19e3ff', 'floor');
+    C.addQuadY(m, 3.05, z1, 3.3, z0, 0.02, '#19e3ff', 'floor');
+    // centreline dashes
+    for (var cz = z0 - 4; cz > z1; cz -= 9) C.addQuadY(m, -0.28, cz, 0.28, cz + 4.4, 0.02, '#ff2bd6', 'floor');
+    // towers along this segment, both rows
+    for (var i = 0; i < 10; i++) {
+      var z = z0 - 4 - i * 9.5;
+      var htL = 14 + r() * 26;
+      C.addBox(m, -10.5 - r() * 2, 0, z, 4 + r() * 2.5, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -7.4, hues[(i + ci) % 5], true);
+      var htR = 14 + r() * 26;
+      C.addBox(m, 10.5 + r() * 2, 0, z + 4, 4 + r() * 2.5, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 7.4, hues[(i + ci + 2) % 5], false);
+    }
+    C.anchorize(m, 0.05, 73, 8); C.meshBounds(m);
+    return m;
+  }
+  function sceneNeon() {
+    var s = {
+      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
+      groundY: 0, ambience: 'neon', colliders: [],
+      insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }, infinite: true, chunks: {}
+    };
+    // persistent side-walls + a bike at the line
+    s.colliders.push(box([-11, 0, -1e6], [-5.0, 14, 1e6]));
+    s.colliders.push(box([5.0, 0, -1e6], [11, 14, 1e6]));
+    s.insts.push(inst(P.lamppost(), [-5.6, 0, -6], 0, { label: 'lamp' }));
+    s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
+    // chunk manager: keep a window of segments around the rider's z
+    s.update = function (game) {
+      var pz = game.player.pos[2];
+      var cur = Math.max(0, Math.round(-pz / NEON_CHUNK));
+      var lo = Math.max(0, cur - NEON_BEHIND), hi = cur + NEON_AHEAD;
+      // spawn missing chunks in range
+      for (var ci = lo; ci <= hi; ci++) {
+        if (!s.chunks[ci]) {
+          var it = inst(neonChunkMesh(ci), [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'the mile' });
+          it.loadT = 1; it.loadDir = 0;
+          s.chunks[ci] = it; s.insts.push(it);
+        }
+      }
+      // recycle chunks outside the window
+      for (var key in s.chunks) {
+        var k = +key;
+        if (k < lo || k > hi) {
+          var inst2 = s.chunks[k];
+          var idx = s.insts.indexOf(inst2);
+          if (idx >= 0) s.insts.splice(idx, 1);
+          delete s.chunks[k];
+        }
+      }
+    };
+    // seed the first window immediately so the road exists on the first frame
+    s.update({ player: { pos: s.spawn.pos } });
     return s;
   }
 
@@ -232,6 +327,7 @@
       case 'dojo': return sceneDojo();
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
+      case 'neon': return sceneNeon();
       default: return sceneVoid();
     }
   };

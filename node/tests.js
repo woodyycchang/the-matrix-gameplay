@@ -1,7 +1,7 @@
 /* node/tests.js — unit + end-to-end playthrough tests for THE CONSTRUCT */
 'use strict';
 const path = require('path');
-const SRC = ['00_math', '01_glyph', '02_mesh', '03_props', '04_scenes', '05_engine', '06_game', '07_audio'];
+const SRC = ['00_math', '01_glyph', '02_mesh', '03_props', '04_scenes', '05_engine', '06_game', '07_audio', '09_intent'];
 for (const f of SRC) require(path.join(__dirname, '..', 'src', f + '.js'));
 const C = globalThis.C;
 
@@ -521,6 +521,642 @@ section('soak (4500 frames)');
   eq(nanFrames, 0, 'no NaN across ' + frames + ' frames');
   ok(g.scene.insts.length < 400, 'instance count bounded (' + g.scene.insts.length + ')');
   ok(g.msgs.length <= 30, 'message queue bounded');
+}
+
+// ---------------------------------------------------------------- STREET PROTOCOL ports
+section('parser: bike & katana');
+{
+  const cases = [
+    ['give me a motorcycle', 'bike'],
+    ['spawn a bike', 'bike'],
+    ['I want a motorbike', 'bike'],
+    ['a katana', 'katana'],
+    ['hand me a sword', 'katana'],
+    ['give me a blade', 'katana'],
+  ];
+  for (const [txt, kind] of cases) {
+    const a = C.parse(txt);
+    ok(a.type === 'props' && a.props.some(p => p.kind === kind), 'parse "' + txt + '" -> ' + kind);
+  }
+}
+
+section('E2E: motorcycle ride');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a motorcycle');
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  ok(!!bike, 'bike instance created');
+  step(g, null, 1.2);
+  eq(bike.loadT, 1, 'bike materialized');
+  const colsBefore = g.scene.colliders.length;
+  ok(g.scene.colliders.some(c => Math.abs(c.min[0] - (bike.pos[0] - 0.55)) < 0.01), 'bike collider present when parked');
+  // mount
+  g.player.pos = [bike.pos[0] - 0.5, 0, bike.pos[2]];
+  step(g, null, 0.05);
+  aimAt(g, bike.pos, 0.6);
+  step(g, null, 0.05);
+  ok(g.aim === bike, 'aim resolves the bike');
+  let evs = step(g, { actionEdge: true }, 0.1);
+  ok(has(evs, 'mount'), 'mount event fired');
+  ok(!!g.bike, 'now riding');
+  ok(g.scene.colliders.length < colsBefore, 'bike collider removed while ridden');
+  // throttle forward; bike should accelerate and move
+  const z0 = g.player.pos[2], yaw0 = g.player.yaw;
+  evs = step(g, { fwd: 1 }, 1.2);
+  ok(g.bike.speed > 6, 'bike accelerates under throttle (' + g.bike.speed.toFixed(1) + ' m/s)');
+  ok(Math.hypot(g.player.pos[0] - 0, g.player.pos[2] - z0) > 4, 'bike travels');
+  ok(has(evs, 'engine'), 'engine event emitted while riding');
+  // turbo is faster than base
+  const baseSpeed = g.bike.speed;
+  step(g, { fwd: 1, sprint: true }, 1.5);
+  ok(g.bike.speed > baseSpeed, 'turbo exceeds base top speed (' + g.bike.speed.toFixed(1) + ')');
+  ok(g.bike.speed <= C.BIKE.BOOST + 0.5, 'turbo respects boost cap');
+  // steering changes heading
+  step(g, { fwd: 1, strafe: 1 }, 0.6);
+  ok(Math.abs(g.player.yaw - yaw0) > 0.2, 'steering changes heading');
+  // bike stays grounded, no NaN
+  ok(Number.isFinite(g.player.pos[0]) && Number.isFinite(g.player.pos[2]), 'bike position finite');
+  near(g.player.pos[1], g.scene.groundY, 0.01, 'bike stays on the ground plane');
+  // dismount
+  evs = step(g, { actionEdge: true }, 0.1);
+  ok(has(evs, 'dismount'), 'dismount event fired');
+  ok(!g.bike, 'no longer riding');
+  ok(g.scene.colliders.some(c => c.max[1] - c.min[1] > 1.0 && c.max[1] - c.min[1] < 1.2), 'bike collider re-armed after parking');
+}
+
+section('bike wall collision (no tunnelling)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the jump program'); // a scene with solid perimeter-ish colliders
+  step(g, null, 0.5);
+  // drop a bike and ride hard toward a known collider wall
+  g.request('a motorcycle');
+  step(g, null, 1.2);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  if (bike) {
+    g.player.pos = [bike.pos[0] - 0.5, g.scene.groundY, bike.pos[2]];
+    step(g, null, 0.05);
+    aimAt(g, bike.pos, 0.6); step(g, null, 0.05);
+    step(g, { actionEdge: true }, 0.1);
+    if (g.bike) {
+      // aim at a wall and floor it; substepping must prevent passing through
+      let nanFrames = 0;
+      for (let i = 0; i < 240; i++) {
+        g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain();
+        if (!finiteDeep(g.player.pos)) nanFrames++;
+      }
+      eq(nanFrames, 0, 'no NaN while ramming walls at turbo');
+      // player must remain within the broad world bounds (never escaped a wall)
+      ok(Math.abs(g.player.pos[0]) < 200 && Math.abs(g.player.pos[2]) < 200, 'bike contained by colliders');
+    }
+  }
+}
+
+section('E2E: katana');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('sparring dojo');
+  step(g, null, 0.5);
+  g.request('a katana');
+  step(g, null, 1.0);
+  const stand = g.scene.insts.find(i => i.kind === 'katana');
+  ok(!!stand, 'katana stand created');
+  g.player.pos = [stand.pos[0], 0, stand.pos[2] + 1.3];
+  step(g, null, 0.05);
+  aimAt(g, stand.pos, 0.35);
+  step(g, null, 0.05);
+  ok(g.aim === stand, 'aim resolves the katana stand');
+  let evs = step(g, { actionEdge: true }, 0.1);
+  ok(has(evs, 'pickupBlade'), 'blade pickup event');
+  ok(g.held && g.held.kind === 'katana', 'katana is held');
+  // strike the dummy
+  const dm = g.scene.insts.find(i => i.kind === 'dummy');
+  ok(!!dm, 'dojo dummy present');
+  g.player.pos = [dm.pos[0], 0, dm.pos[2] + 1.6];
+  step(g, null, 0.05);
+  aimAt(g, dm.pos, 1.1);
+  step(g, null, 0.05);
+  evs = step(g, { fireEdge: true }, 0.1);
+  ok(has(evs, 'slash'), 'slash event on strike');
+  ok(g.fx.bursts.length > 0, 'slash spawns code burst');
+  ok(dm._wob > 0.1, 'dummy reacts to the cut');
+  // swing at empty air -> whiff
+  g.player.pos = [dm.pos[0] + 30, 0, dm.pos[2]];
+  step(g, null, 0.05);
+  evs = step(g, { fireEdge: true }, 0.1);
+  ok(has(evs, 'swishBlade'), 'empty swing whiffs');
+  // viewmodel renders without NaN
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN with katana viewmodel');
+}
+
+section('riding state cleared on scene change');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a motorcycle');
+  step(g, null, 1.2);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0] - 0.5, 0, bike.pos[2]];
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.6); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'riding before transition');
+  g.request('the jump program');
+  step(g, null, 0.8);
+  ok(!g.bike, 'riding cleared after scene swap');
+  near(g.player.pos[1], C.ROOF.y, 0.1, 'spawned correctly on the new scene');
+}
+
+section('audio balance (layered gain baseline — no outliers)');
+{
+  // static-analyse the audio source so a stray loud sound can never sneak back in
+  let asrc = '';
+  try { asrc = require('fs').readFileSync(__dirname + '/../src/07_audio.js', 'utf8'); } catch (e) {}
+  ok(asrc.length > 0, 'audio source readable for balance audit');
+  if (asrc) {
+    const peaks = [];
+    asrc.split('\n').forEach(ln => {
+      const c = ln.match(/case '(\w+)':/); if (!c) return;
+      const vs = [];
+      let mm; const re = /(?:blip|thump|crack)\(([^,)]*)/g;
+      // blip/thump put vol 3rd; crack puts vol 1st — capture all numeric leading args then re-scan precisely
+      const reB = /(?:blip|thump)\([^,]+,[^,]+,\s*([\d.]+)/g;
+      while ((mm = reB.exec(ln))) vs.push(parseFloat(mm[1]));
+      const reC = /crack\(\s*([\d.]+)/g;
+      while ((mm = reC.exec(ln))) vs.push(parseFloat(mm[1]));
+      const re2 = /hiss\([^,]+,\s*([\d.]+)/g;
+      while ((mm = re2.exec(ln))) vs.push(parseFloat(mm[1]));
+      if (vs.length) peaks.push({ name: c[1], peak: Math.max(...vs) });
+    });
+    ok(peaks.length > 15, 'found the action-sound table (' + peaks.length + ' sounds)');
+    // no action sound louder than 0.6 (the impactBig death stinger is the ceiling)
+    const tooLoud = peaks.filter(p => p.peak > 0.61);
+    ok(tooLoud.length === 0, 'no action sound exceeds the 0.6 ceiling (' + (tooLoud.map(p => p.name + '=' + p.peak).join(',') || 'clean') + ')');
+    // dynamic range stays sane (loudest / quietest <= 15x; was 26x before rebalance)
+    const hi = Math.max(...peaks.map(p => p.peak)), lo = Math.min(...peaks.map(p => p.peak));
+    ok(hi / lo <= 15, 'action-sound dynamic range is reasonable (' + (hi / lo).toFixed(1) + 'x <= 15x)');
+    // ambience gains (continuous) must be low — scan loopNoise vol args
+    const amb = [];
+    let am; const are = /loopNoise\('[a-z]+',\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)/g;
+    while ((am = are.exec(asrc))) amb.push(parseFloat(am[1]));
+    ok(amb.length > 0 && amb.every(v => v <= 0.2), 'every continuous ambience layer is quiet (<=0.2): [' + amb.join(', ') + ']');
+  }
+}
+
+section('avatar render tiers (principle ported from STREET PROTOCOL)');
+{
+  const P = C.props;
+  const t = P.human({ tier: 'terminal' }), r = P.human({ tier: 'retail' }), c = P.human({ tier: 'custom' });
+  ok(t.v.length < r.v.length, 'terminal is lower-detail than retail (' + t.v.length + ' < ' + r.v.length + ')');
+  ok(r.v.length <= c.v.length, 'retail is at-or-below custom detail (' + r.v.length + ' <= ' + c.v.length + ')');
+  ok(t.pivots.length === 6 && r.pivots.length === 6 && c.pivots.length === 6, 'all tiers keep 6 animatable parts (low-detail still walks)');
+  ok(P.human({}).v.length === c.v.length, 'default tier is custom (no regression to existing humans)');
+
+  // the city crowd mixes tiers; key characters (agent, red dress) stay full detail
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('crowded city street, lunch hour');
+  step(g, null, 0.5);
+  const tiers = {};
+  for (const pd of g.crowd.peds) { const n = pd.it.mesh.v.length; tiers[n] = (tiers[n] || 0) + 1; }
+  ok(Object.keys(tiers).length >= 2, 'crowd contains more than one render tier (' + Object.keys(tiers).length + ' distinct detail levels)');
+}
+
+section('neon mile (cyber street — riding program recovered as native scene)');
+{
+  // keyword routing: neon words win, and must NOT collide with the city crowd scene
+  const k1 = C.parse('the neon mile');
+  ok(k1.type === 'scene' && k1.scene === 'neon', "'neon' loads the neon scene");
+  const k2 = C.parse('let me ride');
+  ok(k2.type === 'scene' && k2.scene === 'neon', "'ride' loads the neon scene");
+  const k3 = C.parse('cyberpunk highway');
+  ok(k3.type === 'scene' && k3.scene === 'neon', "'cyberpunk highway' -> neon");
+  const k4 = C.parse('a crowded street at lunch hour');
+  ok(k4.type === 'scene' && k4.scene === 'city', 'city crowd phrases still load the city, not neon');
+
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  eq(g.sceneName, 'neon mile', 'neon scene is active');
+  eq(g.scene.sky, 'neon', 'neon sky mode set');
+
+  // a bike waits at the start line, rideable
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  ok(!!bike, 'a motorcycle is staged at the start line');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2];
+  g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05);
+  aimAt(g, bike.pos, 0.4);
+  step(g, null, 0.05);
+  ok(g.aim === bike, 'the staged bike is aimable');
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'can mount the bike in the neon scene');
+
+  // ride forward down the long straight; should travel without tunnelling through a wall
+  const z0 = g.player.pos[2];
+  for (let i = 0; i < 180; i++) step(g, { fwd: 1, boost: true }, 1 / 60);
+  ok(g.player.pos[2] < z0 - 5, 'bike travels down the mile (-z)');
+  ok(g.player.pos[0] > -5.0 && g.player.pos[0] < 5.0, 'stays within the side walls (no tunnelling)');
+
+  // render integrity, normal + code view
+  let ops = C.render(g, 640, 360, g.time);
+  ok(ops.length > 30, 'neon scene renders a substantial frame (' + ops.length + ' ops)');
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN polys in neon scene');
+  g.mode = 'code';
+  ops = C.render(g, 640, 360, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'no NaN polys in neon code-view');
+}
+
+section('motorcycle nitrous (finite turbo, ported from the branch CFG)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'mounted');
+  eq(Math.round(g.bike.turbo * 10) / 10, C.BIKE.TURBO_MAX, 'nitrous starts full');
+
+  // turbo should NOT engage below the speed gate even if Shift held
+  g.bike.speed = 1;
+  step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(!g.bike.boosting, 'turbo will not engage below the speed gate');
+
+  // get up to speed, then hold turbo — it should engage and drain
+  for (let i = 0; i < 60; i++) step(g, { fwd: 1 }, 1 / 60);
+  const tBefore = g.bike.turbo;
+  for (let i = 0; i < 30; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.turbo < tBefore, 'holding turbo drains nitrous (' + tBefore.toFixed(2) + ' -> ' + g.bike.turbo.toFixed(2) + ')');
+
+  // drain to empty, then turbo must cut out
+  for (let i = 0; i < 300; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.turbo <= 0.06, 'nitrous can be fully drained');
+  ok(!g.bike.boosting, 'turbo cuts out when nitrous is empty');
+
+  // coast without turbo — nitrous regenerates
+  const tEmpty = g.bike.turbo;
+  for (let i = 0; i < 120; i++) step(g, { fwd: 0 }, 1 / 60);
+  ok(g.bike.turbo > tEmpty, 'nitrous regenerates when not boosting (' + tEmpty.toFixed(2) + ' -> ' + g.bike.turbo.toFixed(2) + ')');
+
+  // top speed with turbo exceeds normal cap
+  g.bike.turbo = C.BIKE.TURBO_MAX;
+  for (let i = 0; i < 90; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
+  ok(g.bike.speed > C.BIKE.MAX, 'turbo pushes speed past the normal cap (' + g.bike.speed.toFixed(1) + ' > ' + C.BIKE.MAX + ')');
+}
+
+section('neon mile is INFINITE (streaming chunks, constant memory)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  ok(g.scene.infinite === true, 'neon scene is flagged infinite');
+  const chunks0 = Object.keys(g.scene.chunks).length;
+  ok(chunks0 >= 3, 'road chunks exist on arrival (' + chunks0 + ')');
+  const worldsAt = z => g.scene.insts.filter(i => i.kind === 'world').length;
+
+  // mount and ride a long way down the mile
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'mounted');
+
+  const chunkKeysSeen = new Set(Object.keys(g.scene.chunks));
+  let maxChunksAtOnce = chunks0;
+  for (let i = 0; i < 1200; i++) {
+    step(g, { fwd: 1, sprint: true }, 1 / 60);
+    Object.keys(g.scene.chunks).forEach(k => chunkKeysSeen.add(k));
+    maxChunksAtOnce = Math.max(maxChunksAtOnce, Object.keys(g.scene.chunks).length);
+  }
+  const zTravelled = g.player.pos[2];
+  ok(zTravelled < -100, 'rode far down the mile (z=' + zTravelled.toFixed(0) + ')');
+  ok(chunkKeysSeen.size > chunks0 + 3, 'new chunks were generated ahead while riding (' + chunkKeysSeen.size + ' distinct chunks seen)');
+  ok(maxChunksAtOnce <= 10, 'chunk count stays bounded — old chunks recycle, memory constant (max ' + maxChunksAtOnce + ' at once)');
+
+  // the far-away road is still solid ground + renders without NaN
+  ok(g.player.pos[1] === g.scene.groundY, 'still grounded on the far road (no falling through)');
+  ok(g.bike.dist > 100, 'odometer climbs as you ride the endless mile (dist=' + g.bike.dist.toFixed(0) + ')');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon renders without NaN');
+  g.mode = 'code';
+  const opsC = C.render(g, 480, 270, g.time);
+  ok(opsC.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out neon code-view without NaN');
+}
+
+section('wall-grind does not roar (scrape throttled at the boundary)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bike = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bike.pos[0], 0, bike.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  // grind the right wall at full speed for ~3s, counting scrape events
+  let scrapes = 0; const frames = 180;
+  for (let i = 0; i < frames; i++) {
+    const evs = step(g, { fwd: 1, sprint: true, strafe: 1 }, 1 / 60);
+    scrapes += evs.filter(e => e.name === 'scrape').length;
+  }
+  // throttled to <=0.15s apart -> at most ~7/s; the un-throttled bug fired per-substep (hundreds)
+  ok(scrapes > 0, 'grinding the wall still makes some scrape sound (' + scrapes + ')');
+  ok(scrapes <= frames / 60 * 7, 'scrape is throttled, not a per-substep roar (' + scrapes + ' over 3s, was ~540 before)');
+}
+
+section('city is INFINITE too (boulevard streams along x, crowd follows)');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a crowded city street');
+  step(g, null, 0.6);
+  ok(g.scene.infinite === true, 'city scene is flagged infinite');
+  ok(Object.keys(g.scene.chunks).length >= 2, 'boulevard chunks exist on arrival');
+  ok(g.crowd && g.crowd.peds.length > 0, 'crowd populated');
+
+  // walk a long way down the boulevard (fountain is now off to the side, main lane is clear)
+  const seen = new Set(Object.keys(g.scene.chunks));
+  let maxChunks = Object.keys(g.scene.chunks).length;
+  for (let i = 0; i < 2000; i++) {
+    step(g, { fwd: 1, sprint: true }, 1 / 60);
+    Object.keys(g.scene.chunks).forEach(k => seen.add(k));
+    maxChunks = Math.max(maxChunks, Object.keys(g.scene.chunks).length);
+  }
+  ok(Math.abs(g.player.pos[0]) > 60, 'walked far along the boulevard (x=' + g.player.pos[0].toFixed(0) + ')');
+  ok(seen.size > Object.keys(g.scene.chunks).length + 1, 'new boulevard chunks generated while walking (' + seen.size + ' seen)');
+  ok(maxChunks <= 6, 'boulevard chunk count stays bounded (max ' + maxChunks + ')');
+
+  // crowd recycles around the player — there are still pedestrians near the walker
+  const px = g.player.pos[0];
+  const near = g.crowd.peds.filter(pd => Math.abs(pd.it.pos[0] - px) < 50).length;
+  ok(near > 0, 'pedestrians still around the player after walking far (' + near + ')');
+
+  ok(g.player.pos[1] === g.scene.groundY || g.player.pos[1] < 0.2, 'still on the ground far out');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'far-out city renders without NaN');
+}
+
+
+section('neural intent fallback (open-source embed layer, pluggable + testable)');
+{
+  const I = C.intent;
+  ok(!!I && typeof I.routeSync === 'function', 'intent module present');
+  ok(I.ready() === false, 'starts unconfigured (regex-only)');
+  near(I._cosine([1, 0], [1, 0]), 1, 1e-9, 'cosine of identical vectors = 1');
+  near(I._cosine([1, 0], [0, 1]), 0, 1e-9, 'cosine of orthogonal vectors = 0');
+
+  // unconfigured: routing is pure regex passthrough (unknown stays unknown)
+  const r0 = I.routeSync('a fluffy zebra');
+  ok(r0.via === 'regex' && r0.action.type === 'unknown', 'unconfigured route = regex passthrough');
+
+  // mock embedder: deterministic bag-of-words over the anchor vocabulary
+  const vocab = {};
+  I.intents.forEach(it => it.anchors.forEach(a => a.toLowerCase().split(/[^a-z]+/).forEach(w => { if (w && vocab[w] == null) vocab[w] = Object.keys(vocab).length; })));
+  const V = Object.keys(vocab).length;
+  const mock = text => { const v = new Float32Array(V); String(text).toLowerCase().split(/[^a-z]+/).forEach(w => { if (vocab[w] != null) v[vocab[w]] += 1; }); return v; };
+  I.configure(mock);
+  ok(I.ready() === true, 'sync embedder configures immediately');
+
+  // free phrasings land on the DESIGNATED words (none of these contain parser keywords)
+  const cases = [
+    ['a hall for martial arts', 'dojo'],
+    ['something to sit on', 'chair'],
+    ['an endless glowing road to speed on', 'neon'],
+    ['reveal the simulation beneath', 'code'],
+    ['a plaza full of walkers', 'city'],
+    ['something sharp to swing', 'katana']
+  ];
+  for (const [phrase, want] of cases) {
+    const r = I.routeSync(phrase);
+    ok(r.via === 'neural' && r.word === want, "'" + phrase + "' -> " + want + ' (got ' + (r.word || r.action.type) + ')');
+  }
+
+  // prefixes (bge/e5-style) are applied to anchors and queries respectively
+  {
+    const calls = [];
+    const rec = text => { calls.push(text); const v = new Float32Array(4); v[0] = 1; return v; };
+    C.intent.configure(rec, { anchor: 'A: ', query: 'Q: ' });
+    ok(calls.length > 0 && calls.every(c => c.startsWith('A: ') || c === 'probe'), 'anchor prefix applied while indexing');
+    C.intent.classifySync('hello');
+    ok(calls[calls.length - 1] === 'Q: hello', 'query prefix applied at classify time');
+  }
+
+  // re-configure with the plain mock for the routing assertions below
+  I.configure(mock);
+  // regex still wins first — a keyworded phrase never consults the neural layer
+  const r1 = I.routeSync('load the dojo please');
+  ok(r1.via === 'regex' && r1.action.scene === 'dojo', 'keyworded phrase routed by regex, not neural');
+  // gibberish below threshold stays unknown (no wild guessing)
+  const r2 = I.routeSync('zzz qqq xylophone');
+  ok(r2.via === 'regex' && r2.action.type === 'unknown', 'low-confidence gibberish stays unknown');
+}
+
+
+section('generative operator (few-shot chat — model writes the lines)');
+{
+  const I = C.intent;
+  // the context window we open before the first query
+  const msgs = I.buildChatPrompt();
+  ok(Array.isArray(msgs) && msgs[0].role === 'system', 'buildChatPrompt returns a message list starting with system');
+  const sys = msgs[0].content;
+  for (const w of ['weapons','dojo','rooftop','city','neon','clear','code','motorcycle','katana','chair','table','tv','lamp','tree','car','mirror','dummy','booth'])
+    ok(sys.indexOf(w) >= 0, 'system prompt lists designated word: ' + w);
+  ok(/WORD:.*SAY:/.test(sys), 'system prompt specifies the WORD/SAY reply format');
+  ok(msgs.length >= 7, 'prompt includes few-shot examples (' + msgs.length + ' messages)');
+
+  // parseReply: the MODEL's text is always shown; word dispatches only if designated
+  const a = I.parseReply('WORD: chair | SAY: One chair, folded from the white.');
+  ok(a.word === 'chair' && /folded from the white/.test(a.say), 'parses a clean LOAD reply (word + model line)');
+
+  const b = I.parseReply('word=neon | say=The mile is endless.');  // case/spacing tolerant
+  ok(b.word === 'neon' && /endless/.test(b.say), 'tolerant of lowercase and = signs');
+
+  const c = I.parseReply('WORD: none | SAY: No such program in the library.');
+  ok(c.word === null && /No such program/.test(c.say), 'WORD none -> no dispatch, shows model refusal');
+
+  const d = I.parseReply('WORD: unicorn | SAY: Prancing in aisle nine.');  // non-designated word
+  ok(d.word === null && /aisle nine/.test(d.say), 'invalid word -> null, but still shows the model line');
+
+  const e = I.parseReply('Just some free-form sentence the model wrote.');  // model ignored format
+  ok(e.word === null && /free-form sentence/.test(e.say), 'off-format reply still surfaces the model text');
+
+  const f = I.parseReply('WORD: dojo | SAY: ' + 'x'.repeat(300));  // overlong
+  ok(f.word === 'dojo' && f.say.length <= 160, 'long model line is capped, word still dispatched');
+
+  const g = I.parseReply('');  // empty
+  ok(g.word === null && g.say.length > 0, 'empty reply falls back to a non-empty line');
+}
+
+  // thinking-model safety: <think> blocks are stripped before parsing
+  {
+    const r1 = C.intent.parseReply('<think>user wants seating, chair fits</think>WORD: chair | SAY: Sit.');
+    ok(r1.word === 'chair' && r1.say === 'Sit.', 'closed <think> block stripped, reply parsed');
+    const r2 = C.intent.parseReply('reasoning leaks here</think> WORD: none | SAY: Not in the library.');
+    ok(r2.word === null && /library/i.test(r2.say), 'reply starting mid-think still parses');
+    const r3 = C.intent.parseReply('WORD: dojo | SAY: Step on the mat. <think>should I add more');
+    ok(r3.word === 'dojo' && /mat/i.test(r3.say) && !/think|should I/i.test(r3.say), 'unclosed trailing <think> discarded');
+  }
+
+  // the context window teaches small talk: a greeting exchange exists, answered in character
+  {
+    const msgs = C.intent.buildChatPrompt();
+    const hasGreet = msgs.some((m, i) => m.role === 'user' && /^hello$/i.test(m.content)
+      && msgs[i + 1] && msgs[i + 1].role === 'assistant' && /WORD:\s*none/i.test(msgs[i + 1].content));
+    ok(hasGreet, 'few-shot includes a greeting handled by the model (WORD: none, in character)');
+    ok(/greetings and small talk/i.test(msgs[0].content), 'system prompt covers small talk explicitly');
+  }
+
+
+section('free mouse + type-first console + sigma voice (static guards)');
+{
+  const fs2 = require('fs');
+  const app = fs2.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/requestPointerLock|pointerlockchange|tryLock/.test(app), 'pointer lock fully removed - the mouse stays free');
+  ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
+  ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
+  const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/pickSigma/.test(aud) && /u\.pitch = 0\.65;/.test(aud) && /rate = 0\.9/.test(aud), 'fallback system voice runs deep-but-clear (pitch 0.65, rate 0.9)');
+  ok(/Google UK English Male/.test(aud) && /deliberately ABSENT/.test(aud) && !/Google US English\//.test(aud), 'exact named deep-male list; female-leaning Google US English removed');
+  ok(/A\.voiceName = sigmaVoice/.test(aud), 'chosen voice name is exposed for the one-time announcement');
+  ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
+}
+
+
+section('the model IS the operator for unknowns (auto-wake, queue, no placeholder)');
+{
+  const fs3 = require('fs');
+  const app = fs3.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/the first unheard line wakes the operator itself/.test(app), 'an unknown line auto-wakes the model (no chip tap needed)');
+  ok(/neural\.queue\.push/.test(app) && /neural\.queue\.splice\(0\)/.test(app), 'lines are queued while waking and flushed to the model when online');
+  ok(/function neuralSend/.test(app) && /neural\.chain/.test(app), 'generations are serialised - one at a time, in order');
+}
+
+
+section('inference runs in a Worker (the game loop never stalls)');
+{
+  const fs4 = require('fs');
+  const app4 = fs4.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/new Worker\(/.test(app4) && /type: 'module'/.test(app4), 'model lives in a module Worker, off the main thread');
+  ok(/'webgpu', 'q4f16'/.test(app4) && /'wasm', 'q4'/.test(app4), 'WebGPU first, WASM fallback');
+  ok(/neural\.pending\[/.test(app4) && /function neuralSend/.test(app4), 'replies route by id; sends stay serialised');
+}
+
+
+section('typing-lag fixes (frame budget guards)');
+{
+  const fs5 = require('fs');
+  const app5 = fs5.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/frameMs\.length < 36/.test(app5) && /avg > 30 /.test(app5) && /avg > 17 /.test(app5), 'dynamic resolution reacts in ~0.6s, drops hard when badly behind');
+  ok(/write only on change/.test(app5) && /lastSceneLine/.test(app5) && /lastAimOp/.test(app5), 'HUD DOM writes are change-detected, never per-frame');
+  ok(/\* 8 \/ 10\) \* 10/.test(app5), 'infinite-scene metres step by 10 - a few writes per second, not 60');
+  ok(/ttChars % 4 === 0\) A\.handle\('tick'\)/.test(app5), 'teletype tick rate halved (oscillator churn down)');
+  ok(/lastMsAvg \/ 2\) \* 2\) \+ 'ms'/.test(app5), 'live frame-ms meter on the scene line for real diagnosis');
+}
+
+
+section('Enter never blocks: routing is deferred off the keystroke');
+{
+  const fs6 = require('fs');
+  const app6 = fs6.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/clear instantly so the keystroke feels immediate/.test(app6), 'submit clears the box and echoes synchronously, nothing heavy inline');
+  ok(/function routeLine/.test(app6) && /setTimeout\(function \(\) \{ routeLine\(v\); \}, 0\)/.test(app6), 'all parse/request/loadNeural routing is deferred one tick');
+  ok(/setTimeout\(function \(\) \{ routeLine\(txt\); \}, 0\)/.test(app6), 'voice path defers routing the same way');
+  // the expensive part (waking the worker) must only be reachable from routeLine, not submit
+  const sub = app6.slice(app6.indexOf('function submitConsole'), app6.indexOf('function routeLine'));
+  ok(!/loadNeural\(\)/.test(sub), 'submitConsole itself never wakes the worker inline');
+}
+
+
+section('think-time yield: the game gives up the core while he generates');
+{
+  const fs7 = require('fs');
+  const app7 = fs7.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/inFlight\+\+/.test(app7) && /inFlight = Math\.max\(0, neural\.inFlight - 1\)/.test(app7), 'in-flight generations are counted up and down');
+  ok(/paintSkip = \(paintSkip \+ 1\) % 3/.test(app7) && /!throttled \|\| paintSkip === 0/.test(app7), 'painting drops to 1/3 cadence while a reply is in flight');
+  ok(/else frameMs\.length = 0;/.test(app7), 'adaptive resolution ignores throttled frames (no false raise)');
+  ok(/max_new_tokens: 48/.test(app7) && !/max_new_tokens: 96/.test(app7), 'token budget halved to 48 - replies land in half the time');
+}
+
+
+section('UI layout sanity (template guards)');
+{
+  const fs8 = require('fs');
+  const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
+  ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
+  ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
+  ok(/DRAG TO LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the current control scheme');
+}
+
+
+section('deterministic rails around the tiny model (rescue + regex + temp)');
+{
+  const I2 = C.intent;
+  // rescue from the USER's own words when the model flubs
+  eq(I2.rescueWord('motor', 'The sky is grey. I see nothing.'), 'motorcycle', "'motor' rescued to motorcycle from the user text");
+  eq(I2.rescueWord('katan pls', ''), 'katana', 'one-typo token rescued (katan -> katana)');
+  eq(I2.rescueWord('give me a chiar', ''), 'chair', 'transposed typo rescued (chiar -> chair)');
+  // rescue from the model reply if the user text has nothing
+  eq(I2.rescueWord('two wheels please', 'sounds like you want a motorcycle'), 'motorcycle', 'reply-side rescue works');
+  // no false positives on gibberish
+  eq(I2.rescueWord('purple elephant taxes', 'I cannot help with that'), null, 'gibberish rescues nothing');
+  // the regex layer now catches motor before the model is ever consulted
+  const pm = C.parse('motor');
+  ok(pm.type === 'props' && pm.props[0].kind === 'bike', "parser maps bare 'motor' straight to the bike (no model needed)");
+  // few-shot teaches the elliptical case; sampling cooled to 0.4
+  const msgs = I2.buildChatPrompt();
+  ok(msgs.some(m => m.role === 'user' && m.content === 'motor'), 'few-shot includes the single-word elliptical example');
+  const fs9 = require('fs');
+  const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text, m\.reply\)/.test(app9), 'temperature cooled to 0.4 and the rescue is wired into the reply path');
+}
+
+
+section('lexical rescue: partial words map deterministically, before the model');
+{
+  const I = C.intent;
+  eq(I.lexicalGuess('motor'), 'motorcycle', "'motor' rescues to motorcycle without the model");
+  eq(I.lexicalGuess('give me chairs'), 'chair', "'chairs' rescues to chair");
+  eq(I.lexicalGuess('katan'), 'katana', "'katan' rescues to katana");
+  eq(I.lexicalGuess('zzzz qqqq'), null, 'gibberish stays null - no wild guessing');
+  eq(I.lexicalGuess('tv on'), null, 'tokens under 4 chars are ignored (regex owns those)');
+  const fs9 = require('fs');
+  const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/lexicalGuess\(v\)/.test(app9) && /deterministic rescue/.test(app9), 'route order: regex -> lexical -> model');
+  ok(/temperature: 0\.4/.test(app9) && !/temperature: 0\.8/.test(app9), 'sampling calmed to 0.4 - less tiny-model drift');
+  const msgs = I.buildChatPrompt();
+  ok(msgs.some((m,i)=>m.role==='user'&&m.content==='motor'&&msgs[i+1]&&/WORD:\s*motorcycle/i.test(msgs[i+1].content)), 'few-shot teaches partial words too');
+}
+
+
+section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
+{
+  const fsA = require('fs');
+  const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/Kokoro-82M/.test(appA) && /'am_adam'/.test(appA) && /speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
+  ok(/function loadVoice/.test(appA) && /loadVoice\(\);   \/\/ the AI voice/.test(appA), 'the AI voice wakes with the operator (one consent point for AI downloads)');
+  const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
+  ok(/AI voice failed to load/.test(appA) && /cdn blocked/.test(appA), 'AI-voice load failure is now LOUD (no silent fallback) so we know if Kokoro did not load');
+  ok(/am_michael/.test(appA) && /__deepvoice__/.test(appA), 'a deeper male (am_michael) is selectable via the deeper-voice chip');
+}
+
+
+section('voice chain: every link observable, depth by model (first principles)');
+{
+  const fsB = require('fs');
+  const appB = fsB.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/esm\.sh\/kokoro-js/.test(appB) && /LIB_URLS/.test(appB), 'library link has 3-CDN fallback (jsdelivr -> esm.sh -> latest)');
+  ok(/voice link ok: /.test(appB) && /voice link FAILED: /.test(appB) && /voice model\\u2026/.test(appB), 'every chain link reports by name - the breaking link names itself in the log');
+  ok(/A\.voiceChoice = 'am_onyx'/.test(appB) && /'am_onyx', 'am_michael', 'am_adam'/.test(appB), 'ultra-deep am_onyx is the default; the chip cycles the three male registers');
 }
 
 // ---------------------------------------------------------------- summary

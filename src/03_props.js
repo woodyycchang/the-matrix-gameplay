@@ -214,10 +214,60 @@
     return fin(m, 1.5, 44, 10);
   };
 
+  // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
+  P.bike = function () { // original naked street bike; nose at +z like every prop front
+    var m = C.newMesh();
+    var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';
+    function wheel(cz) {
+      C.addBox(m, 0, 0.34, cz, 0.16, 0.66, 0.66, dark);            // tire block
+      C.addBox(m, 0, 0.34, cz, 0.18, 0.30, 0.30, '#23262b');       // hub
+      C.addBox(m, 0, 0.34, cz, 0.20, 0.08, 0.50, '#3a3d42');       // spoke v
+      C.addBox(m, 0, 0.34, cz, 0.20, 0.50, 0.08, '#3a3d42');       // spoke h
+    }
+    wheel(-0.62); wheel(0.64);
+    C.addBox(m, 0, 0.40, 0.02, 0.40, 0.34, 0.58, body);            // engine/frame mass
+    C.addBox(m, 0.22, 0.30, -0.34, 0.08, 0.08, 0.66, steel);       // exhaust pipe
+    C.addBox(m, 0, 0.70, 0.08, 0.36, 0.26, 0.52, tank);            // fuel tank (raised)
+    C.addQuadY(m, -0.12, 0.20, 0.12, 0.40, 0.831, accent);         // code-green tank stripe
+    C.addBox(m, 0, 0.66, -0.42, 0.34, 0.12, 0.50, '#191b1f');      // seat
+    C.addBox(m, 0, 0.76, -0.70, 0.30, 0.14, 0.20, body);           // tail cowl
+    C.addBox(m, -0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);       // front forks
+    C.addBox(m,  0.12, 0.34, 0.58, 0.07, 0.62, 0.07, steel);
+    C.addBox(m, 0, 0.98, 0.52, 0.70, 0.06, 0.07, '#1b1d20');       // handlebar
+    C.addBox(m, -0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');   // grips
+    C.addBox(m,  0.34, 0.96, 0.50, 0.07, 0.10, 0.10, '#101216');
+    C.addBox(m, 0, 0.82, 0.70, 0.20, 0.18, 0.07, '#f0ead0', { flat: true }); // headlamp
+    return fin(m, 2.4, 71, 12);
+  };
+  P.katanaStand = function () { // low rack, blade resting across it
+    var m = C.newMesh(), wood = '#3a3026';
+    C.addBox(m, 0, 0, 0, 0.74, 0.06, 0.24, wood);
+    C.addBox(m, -0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
+    C.addBox(m,  0.26, 0.06, 0, 0.06, 0.30, 0.16, wood);
+    C.addBox(m, -0.52, 0.33, 0, 0.22, 0.05, 0.05, '#1b1d20');           // handle
+    C.addBox(m, -0.40, 0.305, 0, 0.045, 0.10, 0.09, '#23262b');         // guard
+    C.addBox(m, 0.06, 0.335, 0, 0.88, 0.035, 0.04, '#d6dde2');          // blade
+    return fin(m, 16, 72, 8);
+  };
+  // Viewmodel katana (engine subtracts 0.42 from y; build around y≈0.30–0.58, +x forward)
+  P.heldKatana = function () {
+    var m = C.newMesh();
+    C.addBox(m, 0.05, 0.385, 0, 0.24, 0.055, 0.05, '#1b1d20');          // wrapped handle
+    C.addBox(m, 0.18, 0.355, 0, 0.045, 0.115, 0.095, '#23262b');        // guard
+    C.addBox(m, 0.63, 0.405, 0, 0.86, 0.038, 0.02, '#d6dde2');          // blade
+    C.addBox(m, 0.63, 0.437, 0, 0.86, 0.012, 0.014, '#9aa6ad');         // spine
+    C.meshBounds(m); m.an = [];
+    return m;
+  };
+
   // ---------- articulated human ----------
   // parts: 0 body, 1 legL, 2 legR, 3 armL, 4 armR, 5 head
+  // Render tiers — the principle lifted from STREET PROTOCOL (not its WebGL code):
+  // geometry detail encodes a figure's status. 'terminal' = lowest-detail (a few coarse
+  // blocks), 'retail' = mid, 'custom' = full detail (the original P.human look).
   P.human = function (opt) {
     opt = opt || {};
+    var tier = opt.tier || 'custom';
     var m = C.newMesh();
     m.vp = []; m.pivots = [];
     function part(pid, pivot, fn) {
@@ -229,23 +279,37 @@
     var suit = opt.suit || '#5a5c60', pants = opt.pants || C.scaleHex(suit, 0.8);
     var skin = opt.skin || '#b7b2aa', hair = opt.hair || '#3a3a3c', shoe = '#222428';
     var dress = !!opt.dress;
+
+    if (tier === 'terminal') {
+      // lowest render budget: a blocky torso, two stub legs, a cube head — no shoes, hands, hair detail
+      part(0, [0, 0, 0], function () {
+        C.addBox(m, 0, 0.78, 0, 0.5, 0.7, 0.32, suit, { flat: true });     // slab torso
+      });
+      part(1, [-0.12, 0.78, 0], function () { C.addBox(m, -0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
+      part(2, [0.12, 0.78, 0], function () { C.addBox(m, 0.12, 0.06, 0, 0.2, 0.72, 0.24, pants, { flat: true }); });
+      part(3, [-0.3, 1.34, 0], function () { C.addBox(m, -0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
+      part(4, [0.3, 1.34, 0], function () { C.addBox(m, 0.3, 0.74, 0, 0.14, 0.6, 0.16, suit, { flat: true }); });
+      part(5, [0, 1.4, 0], function () { C.addBox(m, 0, 1.42, 0, 0.3, 0.32, 0.3, skin, { flat: true }); }); // cube head
+      return fin(m, 2.0, opt.seed || 45, 4);
+    }
+
     part(0, [0, 0, 0], function () {
       if (dress) {
         C.addBox(m, 0, 0.42, 0, 0.52, 0.55, 0.34, opt.suit || '#c1121f'); // skirt
         C.addBox(m, 0, 0.97, 0, 0.4, 0.45, 0.26, opt.suit || '#c1121f');  // bodice
       } else {
         C.addBox(m, 0, 0.84, 0, 0.44, 0.58, 0.26, suit);                  // jacket
-        if (opt.shirt) C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
+        if (opt.shirt && tier === 'custom') C.addQuadZ(m, -0.07, 0.96, 0.07, 1.36, 0.131, opt.shirt, true);
       }
     });
     var legY = dress ? 0.42 : 0.86, legH = legY - 0.02;
     part(1, [-0.11, legY, 0], function () {
       C.addBox(m, -0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      if (tier === 'custom') C.addBox(m, -0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     part(2, [0.11, legY, 0], function () {
       C.addBox(m, 0.11, 0.1, 0, 0.17, legH - 0.1, 0.2, dress ? skin : pants);
-      C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
+      if (tier === 'custom') C.addBox(m, 0.11, 0, 0.04, 0.18, 0.1, 0.3, shoe);
     });
     var shY = 1.36;
     part(3, [-0.28, shY, 0], function () {
@@ -260,13 +324,13 @@
       if (opt.longhair) C.addBox(m, 0, 1.3, -0.13, 0.26, 0.36, 0.08, hair);
       if (opt.glasses) C.addQuadZ(m, -0.11, 1.5, 0.11, 1.57, 0.125, '#0b0d0f', true);
     });
-    return fin(m, 4.5, opt.seed || 45, 6);
+    return fin(m, tier === 'retail' ? 3.2 : 4.5, opt.seed || 45, 6);
   };
 
   P.agent = function () {
-    return P.human({ suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
+    return P.human({ tier: 'custom', suit: '#1c1e22', pants: '#191b1f', skin: '#c4bdb2', hair: '#2a2620', shirt: '#e8e6e0', glasses: true, seed: 46 });
   };
   P.redDress = function () {
-    return P.human({ dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
+    return P.human({ tier: 'custom', dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
