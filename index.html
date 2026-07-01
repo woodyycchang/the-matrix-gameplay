@@ -90,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2114</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2125</span></div>
 </div>
 
 <script>
@@ -2525,8 +2525,20 @@
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
       src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
-      var g = ctx.createGain(); g.gain.value = 1.0;
-      src.connect(g); g.connect(master); src.start();
+      // dark-knight chain (cached once): soft tanh saturation = gravel harmonics ->
+      // lowshelf 140Hz +5dB = chest weight -> peaking 3kHz -3.5dB = dark tilt ->
+      // 0.95 into master. Deliberately NO reverb: this voice is close, not distant.
+      if (!A._vChain) {
+        var ws = ctx.createWaveShaper(); var N = 1024, cv = new Float32Array(N);
+        for (var ci = 0; ci < N; ci++) { var vx = ci / (N - 1) * 2 - 1; cv[ci] = Math.tanh(1.6 * vx); }
+        ws.curve = cv; ws.oversample = '2x';
+        var lo = ctx.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 140; lo.gain.value = 5;
+        var dip = ctx.createBiquadFilter(); dip.type = 'peaking'; dip.frequency.value = 3000; dip.Q.value = 0.9; dip.gain.value = -3.5;
+        var vg = ctx.createGain(); vg.gain.value = 0.95;
+        ws.connect(lo); lo.connect(dip); dip.connect(vg); vg.connect(master);
+        A._vChain = ws;
+      }
+      src.connect(A._vChain); src.start();
       A._ttsNode = src;
     } catch (e) {}
   };

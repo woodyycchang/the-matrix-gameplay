@@ -1256,6 +1256,16 @@ section('voice plays at natural speed');
   ok(/playbackRate\.value = 1\.0/.test(audJ) && !/playbackRate\.value = 0\.9/.test(audJ), 'depth comes from am_onyx itself, not from slowing playback (which smeared formants)');
 }
 
+
+section('dark-knight voice chain (research-grounded approximation)');
+{
+  const fsK = require('fs');
+  const audK = fsK.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/Math\.tanh\(1\.6 \* vx\)/.test(audK) && /oversample = '2x'/.test(audK), 'soft tanh saturation adds gravel harmonics (no obvious distortion)');
+  ok(/lowshelf'; lo\.frequency\.value = 140; lo\.gain\.value = 5/.test(audK) && /peaking'; dip\.frequency\.value = 3000/.test(audK) && /-3\.5/.test(audK), 'chest weight (140Hz +5dB) plus dark tilt (3kHz -3.5dB)');
+  ok(/A\._vChain = ws/.test(audK) && /src\.connect\(A\._vChain\)/.test(audK) && /playbackRate\.value = 1\.0/.test(audK), 'chain is cached, voice routes through it, playback stays natural speed');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
