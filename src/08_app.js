@@ -645,7 +645,7 @@
     "  if (m.type === 'load') { load().catch(e => postMessage({ type: 'fail', error: String((e && e.message) || e) })); return; }",
     "  if (m.type === 'speak' && tts) {",
     "    try {",
-    "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 0.9 });",
+    "      const out = await tts.generate(m.text, { voice: (m.voice || 'am_adam'), speed: 1.0 });",
     "      const f = out.audio;",
     "      postMessage({ type: 'audio', sr: out.sampling_rate, buf: f }, [f.buffer]);",
     "    } catch (e) { postMessage({ type: 'audioerr' }); }",
@@ -696,7 +696,7 @@
     };
     vox.worker.postMessage({ type: 'load' });
   }
-  A.voiceChoice = 'am_onyx';   // the ultra-deep register, by model not by pitch-bending
+  A.voiceChoice = 'am_adam';   // the ultra-deep register, by model not by pitch-bending
   A.speakNeural = function (text) {
     if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
   };

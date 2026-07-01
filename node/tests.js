@@ -1138,11 +1138,11 @@ section('lexical rescue: partial words map deterministically, before the model')
 }
 
 
-section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
+section('the AI sigma voice: Kokoro am_adam at natural speed (exact web params)');
 {
   const fsA = require('fs');
   const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/Kokoro-82M/.test(appA) && /'am_adam'/.test(appA) && /speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
+  ok(/'am_adam'/.test(appA) && !/speed: 0\.9/.test(appA), "the literal 'am_adam' voice, raw at natural speed - no transferred tuning left");
   ok(/function loadVoice/.test(appA) && /loadVoice\(\);          \/\/ voice follows AFTER the brain/.test(appA), 'downloads are serialized: the 0.5 GB brain gets full bandwidth, the voice follows');
   const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
@@ -1157,7 +1157,7 @@ section('voice chain: every link observable, depth by model (first principles)')
   const appB = fsB.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/esm\.sh\/kokoro-js/.test(appB) && /LIB_URLS/.test(appB), 'library link has 3-CDN fallback (jsdelivr -> esm.sh -> latest)');
   ok(/voice link ok: /.test(appB) && /voice link FAILED: /.test(appB) && /voice model\\u2026/.test(appB), 'every chain link reports by name - the breaking link names itself in the log');
-  ok(/A\.voiceChoice = 'am_onyx'/.test(appB) && /'am_onyx', 'am_michael', 'am_adam'/.test(appB), 'ultra-deep am_onyx is the default; the chip cycles the three male registers');
+  ok(/voiceChoice = 'am_adam'/.test(appB) && /am_onyx/.test(appB) && /am_michael/.test(appB), 'am_adam (116 Hz measured) is the default; onyx and michael remain in the cycle');
 }
 
 
@@ -1257,13 +1257,15 @@ section('voice plays at natural speed');
 }
 
 
-section('dark-knight voice chain (research-grounded approximation)');
+section('raw deepest voice - measured, not customized');
 {
   const fsK = require('fs');
   const audK = fsK.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/Math\.tanh\(1\.25 \* vx\)/.test(audK) && /oversample = '2x'/.test(audK), 'soft tanh saturation adds gravel harmonics (no obvious distortion)');
-  ok(/lowshelf'; lo\.frequency\.value = 140; lo\.gain\.value = 4/.test(audK) && /peaking'; dip\.frequency\.value = 3000/.test(audK) && /-2\.5/.test(audK), 'chest weight (140Hz +5dB) plus dark tilt (3kHz -3.5dB)');
-  ok(/A\._vChain = ws/.test(audK) && /src\.connect\(A\._vChain\)/.test(audK) && /playbackRate\.value = 1\.0/.test(audK), 'chain is cached, voice routes through it, playback stays natural speed');
+  const appK = fsK.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/createWaveShaper/.test(audK) && !/_vChain/.test(audK) && /src\.connect\(master\); src\.start\(\)/.test(audK), 'ALL custom voice processing removed - PCM goes straight to master');
+  ok(!/speed: 0\.9/.test(audK) && !/speed: 0\.9/.test(appK), 'no speed customization anywhere - the voice runs natural');
+  ok(/playbackRate\.value = 1\.0/.test(audK), 'playback rate stays 1.0');
+  ok(/'am_adam'/.test(appK), 'default voice = am_adam, the lowest measured pitch (116 Hz) in the US male roster');
 }
 
 

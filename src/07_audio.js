@@ -252,20 +252,9 @@
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
       src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
-      // dark-knight chain (cached once): soft tanh saturation = gravel harmonics ->
-      // lowshelf 140Hz +4dB = chest weight -> peaking 3kHz -2.5dB = dark tilt ->
-      // 0.95 into master. Deliberately NO reverb: this voice is close, not distant.
-      if (!A._vChain) {
-        var ws = ctx.createWaveShaper(); var N = 1024, cv = new Float32Array(N);
-        for (var ci = 0; ci < N; ci++) { var vx = ci / (N - 1) * 2 - 1; cv[ci] = Math.tanh(1.25 * vx); }   // gentler drive: grit without garble
-        ws.curve = cv; ws.oversample = '2x';
-        var lo = ctx.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 140; lo.gain.value = 4;
-        var dip = ctx.createBiquadFilter(); dip.type = 'peaking'; dip.frequency.value = 3000; dip.Q.value = 0.9; dip.gain.value = -2.5;
-        var vg = ctx.createGain(); vg.gain.value = 0.95;
-        ws.connect(lo); lo.connect(dip); dip.connect(vg); vg.connect(master);
-        A._vChain = ws;
-      }
-      src.connect(A._vChain); src.start();
+      // RAW voice, zero processing - depth comes from the voice itself:
+      // am_adam is the lowest MEASURED pitch in Kokoro's US male roster (116 Hz).
+      src.connect(master); src.start();
       A._ttsNode = src;
     } catch (e) {}
   };
