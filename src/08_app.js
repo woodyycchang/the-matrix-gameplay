@@ -597,6 +597,7 @@
     "onmessage = async (ev) => {",
     "  const m = ev.data || {};",
     "  if (m.type === 'load') { load(); return; }",
+    "  if (m.type === 'warmup' && gen) { try { await gen([{ role: 'user', content: 'hi' }], { max_new_tokens: 1 }); } catch (e) {} postMessage({ type: 'warm' }); return; }",
     "  if (m.type === 'chat') {",
     "    try {",
     "      const out = await gen(m.messages, { max_new_tokens: 64, do_sample: true, temperature: 0.4, top_p: 0.9 });",
@@ -726,8 +727,8 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    loadVoice();   // the AI voice (Kokoro am_adam) wakes with the operator
-    say('waking the operator \u2014 first time is a one-off download, then cached', true);
+    try { localStorage.setItem('tc_ai', '1'); } catch (e) {}   // returning users get auto-warm boots
+    say('waking the operator \u2014 one-off ~0.5 GB download; instant from cache after that', true);
     sayDbg('model: Qwen3-0.6B (onnx-community, q4f16/webgpu \u2192 q4/wasm)');
     var lastPct = -1;
     try {
@@ -741,7 +742,7 @@
     neural.worker.onmessage = function (ev) {
       var m = ev.data || {};
       if (m.type === 'progress') {
-        var pct = Math.floor(m.pct / 25) * 25;   // quarter steps, less chatter
+        var pct = Math.floor(m.pct / 10) * 10;   // 10% steps: a 0.5 GB file needs living feedback
         if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }  // kept: wait feedback
         return;
       }
@@ -754,6 +755,8 @@
         say('operator online.', true);
         sayDbg('engine: ' + (m.device || 'cpu'));
         var q = neural.queue.splice(0);
+        loadVoice();          // voice follows AFTER the brain - the big file gets the bandwidth first
+        if (q.length === 0) neural.worker.postMessage({ type: 'warmup' });   // compile shaders now, not on your first real question
         for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
         return;
       }
@@ -762,6 +765,7 @@
         say('the operator could not wake (' + String(m.error || 'load error').slice(0, 44) + ')', true);
         return;
       }
+      if (m.type === 'warm') { sayDbg('warmup done \u2014 shaders compiled'); return; }
       if (m.type === 'reply' || m.type === 'replyerr') {
         var cb = neural.pending[m.id];
         if (cb) { delete neural.pending[m.id]; cb(m); }
@@ -810,6 +814,7 @@
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
     sayDbg('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'));
     checkStale(bt ? bt[1] : '');
+    try { if (localStorage.getItem('tc_ai') === '1') loadNeural(); } catch (e) {}   // returning users: cached brain warms itself at boot
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }

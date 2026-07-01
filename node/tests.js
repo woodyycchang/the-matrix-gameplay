@@ -1143,7 +1143,7 @@ section('the AI sigma voice: Kokoro am_adam at speed 0.9 (exact web params)');
   const fsA = require('fs');
   const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/Kokoro-82M/.test(appA) && /'am_adam'/.test(appA) && /speed: 0.9/.test(appA), "the literal 'am_adam' voice at speed 0.9 - the two params that transfer verbatim");
-  ok(/function loadVoice/.test(appA) && /loadVoice\(\);   \/\/ the AI voice/.test(appA), 'the AI voice wakes with the operator (one consent point for AI downloads)');
+  ok(/function loadVoice/.test(appA) && /loadVoice\(\);          \/\/ voice follows AFTER the brain/.test(appA), 'downloads are serialized: the 0.5 GB brain gets full bandwidth, the voice follows');
   const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
   ok(/AI voice failed to load/.test(appA) && /cdn blocked/.test(appA), 'AI-voice load failure is now LOUD (no silent fallback) so we know if Kokoro did not load');
@@ -1210,6 +1210,17 @@ section('quiet boot + Qwen3 brain (research-grounded)');
   ok(/say\('operator online\.', true\)/.test(appG), 'the player hears one clean diegetic line when he wakes');
   ok(/onnx-community\/Qwen3-0\.6B-ONNX/.test(appG) && !/SmolLM2-360M-Instruct/.test(appG), 'brain upgraded to Qwen3-0.6B (official transformers.js drop-in)');
   ok(/\/no_think/.test(appG), "Qwen3's thinking mode is disabled via the documented /no_think soft switch");
+}
+
+
+section('wait shrunk on every lever physics allows');
+{
+  const fsH = require('fs');
+  const appH = fsH.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/type: 'warmup'/.test(appH) && /max_new_tokens: 1 \}\); \} catch/.test(appH.replace(/\\/g,'')) || /warmup' && gen/.test(appH), 'a 1-token warmup compiles shaders right after load, not on the first real question');
+  ok(/localStorage\.setItem\('tc_ai'/.test(appH) && /getItem\('tc_ai'\) === '1'\) loadNeural/.test(appH), 'returning users auto-warm from cache at boot');
+  ok(/m\.pct \/ 10\) \* 10/.test(appH), 'download feedback in 10% steps - a big file never looks frozen');
+  ok(/one-off ~0\.5 GB download; instant from cache/.test(appH), 'the waking line sets honest expectations');
 }
 
 // ---------------------------------------------------------------- summary
