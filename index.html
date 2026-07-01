@@ -90,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2109</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2114</span></div>
 </div>
 
 <script>
@@ -2524,7 +2524,7 @@
       var buf = ctx.createBuffer(1, f32.length, sr);
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
-      src.playbackRate.value = 0.94;   // drop it a touch deeper still
+      src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
       var g = ctx.createGain(); g.gain.value = 1.0;
       src.connect(g); g.connect(master); src.start();
       A._ttsNode = src;

@@ -246,7 +246,7 @@
       var buf = ctx.createBuffer(1, f32.length, sr);
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
-      src.playbackRate.value = 0.94;   // drop it a touch deeper still
+      src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
       var g = ctx.createGain(); g.gain.value = 1.0;
       src.connect(g); g.connect(master); src.start();
       A._ttsNode = src;

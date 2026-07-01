@@ -1248,6 +1248,14 @@ section('Qwen3 thinking is dead at the template level');
   ok(/sayDbg\('raw \\u00ab'/.test(appI), 'the raw model output is observable on the debug channel');
 }
 
+
+section('voice plays at natural speed');
+{
+  const fsJ = require('fs');
+  const audJ = fsJ.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/playbackRate\.value = 1\.0/.test(audJ) && !/playbackRate\.value = 0\.9/.test(audJ), 'depth comes from am_onyx itself, not from slowing playback (which smeared formants)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
