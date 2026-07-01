@@ -1024,10 +1024,9 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/rmbRelease/.test(app) && /Esc from lock -> type mode/.test(app) && /contextmenu/.test(app) && /mdWasTyping/.test(app), 'releasing the right button returns the cursor without stealing focus; Esc still exits to type; context menu suppressed; drag fallback kept');
   ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/pickSigma/.test(aud) && /u\.pitch = 0\.65;/.test(aud) && /rate = 0\.9/.test(aud), 'fallback system voice runs deep-but-clear (pitch 0.65, rate 0.9)');
-  ok(!/UK English Male/.test(aud) && !/\\bDaniel\\b/.test(aud), 'no British voices anywhere in the fallback ranking');
-  ok(/A\.voiceName = sigmaVoice/.test(aud), 'chosen voice name is exposed for the one-time announcement');
-  ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
+  ok(!/pitch = 0\.65/.test(aud) && !/SpeechSynthesisUtterance/.test(aud), 'no fallback voice remains anywhere - copy-only policy holds');
+  ok(!/pickSigma/.test(aud), 'the fallback voice picker is gone; naming lives on the neural-ready path');
+  ok(/_ttsNode\.stop\(\)/.test(aud), 'latest line wins via PCM node stop - the copied voice cannot lag behind');
 }
 
 
@@ -1269,12 +1268,9 @@ section('raw deepest voice - measured, not customized');
 }
 
 
-section('the fallback can never sound British again');
 {
   const fsL = require('fs');
   const audL = fsL.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(!/UK English/.test(audL) && !/Daniel/.test(audL), 'UK voices excised from the preference list entirely');
-  ok(/passes = \[\/\^en-US\/i, \/\^en\/i\]/.test(audL), 'selection runs en-US strictly first, any-English only as last resort');
 }
 
 
@@ -1287,6 +1283,16 @@ section('minimalism: a sound must earn its place');
   ok(/'void' \? 0 : 0\.22/.test(audM), 'the void is truly SILENT (film-accurate) - remaining sounds land harder by contrast');
   ok(/i < 3; i\+\+\) blip\(700/.test(audM), 'materialize trimmed 7 notes -> 3: signature kept, ornament gone');
   ok(/case 'shot':/.test(audM) && /case 'land':/.test(audM) && /case 'freeze':/.test(audM) && /function ring/.test(audM), 'combat, physics, state-changes and the summons all KEEP their sound (information the eye lacks)');
+}
+
+
+section('voice is COPY-ONLY: copied Kokoro as-is, or silence');
+{
+  const fsN = require('fs');
+  const audN = fsN.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(!/SpeechSynthesisUtterance/.test(audN) && !/pickSigma/.test(audN) && !/pitch = 0\.65/.test(audN), 'the constructed system-voice fallback is gone entirely');
+  ok(/A\.speakNeural/.test(audN) && /Never a constructed voice/.test(audN), 'speak routes ONLY through the copied neural voice; otherwise silence');
+  ok(/src\.connect\(master\); src\.start\(\)/.test(audN), 'and that copy plays raw - straight to master, zero processing');
 }
 
 // ---------------------------------------------------------------- summary

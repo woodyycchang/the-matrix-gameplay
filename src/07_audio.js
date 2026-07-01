@@ -45,7 +45,6 @@
   A.toggleMute = function () {
     A.muted = !A.muted;
     if (master) master.gain.value = A.muted ? 0 : 0.6;
-    if (A.muted && window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
     return A.muted;
   };
 
@@ -208,41 +207,9 @@
   // the operator speaks in the sigma register: deepest male voice on the device,
   // pitch dropped, pace unhurried. Voice inventory differs per OS/browser, so we
   // hunt a ranked preference list and fall back to any English voice + low pitch.
-  var sigmaVoice = null;
-  function pickSigma() {
-    try {
-      var vs = window.speechSynthesis.getVoices();
-      // AMERICAN deep males ONLY - the operator is not British. Two UK voices
-      // used to sit on top of this list and produced the 'weird english sound'
-      // whenever the fallback spoke while the neural voice was still loading.
-      // 'Google US English' stays ABSENT (leans female).
-      var pref = [
-        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural US males
-        /Natural.*\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b/i,
-        /Microsoft\s+(David|Mark)\b/i,                                       // Windows classic US males
-        /\bAlex\b/i,                                                          // macOS natural US male
-        /\bAaron\b/i,                                                         // iOS US male
-        /\bFred\b/i,
-        /\bmale\b/i
-      ];
-      // two passes: strictly en-US first, any English only as a last resort
-      var passes = [/^en-US/i, /^en/i];
-      for (var pa = 0; pa < passes.length && !sigmaVoice; pa++) {
-        for (var p = 0; p < pref.length && !sigmaVoice; p++) {
-          for (var i = 0; i < vs.length; i++) {
-            if (passes[pa].test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
-          }
-        }
-      }
-      if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
-      A.voiceName = sigmaVoice ? sigmaVoice.name : '';
-    } catch (e) {}
-  }
-  try {
-    if (window.speechSynthesis && window.speechSynthesis.addEventListener) {
-      window.speechSynthesis.addEventListener('voiceschanged', function () { sigmaVoice = null; pickSigma(); });
-    }
-  } catch (e) {}
+  // COPY-ONLY VOICE POLICY: the operator speaks with the copied Kokoro voice,
+  // as-is, or not at all. No system-voice fallback, no constructed/processed
+  // speech of any kind. Until the copy is ready, silence - text carries the line.
   A.ttsReady = false;
   A.playPCM = function (f32, sr) {
     if (!ctx) return;
@@ -259,16 +226,7 @@
     } catch (e) {}
   };
   A.speak = function (text) {
-    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); return; } catch (e) {} }
-    if (A.muted) return;
-    try {
-      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-      var u = new SpeechSynthesisUtterance(text.replace(/\u00b7/g, ','));
-      if (!sigmaVoice) pickSigma();
-      if (sigmaVoice) u.voice = sigmaVoice;
-      u.rate = 0.9; u.pitch = 0.65; u.volume = 1.0;   // fallback runs deep too (0 was mud, 1.0 was plain; 0.65 is deep-but-clear)
-      window.speechSynthesis.cancel();             // latest line wins \u2014 no spoken backlog, no lag
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
+    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); } catch (e) {} }
+    // else: SILENCE. Never a constructed voice.
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
