@@ -69,7 +69,7 @@
 
 <div id="scene">THE CONSTRUCT</div>
 <div id="aim"></div>
-<div id="lookhint">CLICK WORLD = MOUSE-LOOK · CLICK = ACT · ESC = TYPE</div>
+<div id="lookhint">HOLD RIGHT-CLICK = LOOK · CLICK = ACT · ESC = TYPE</div>
 <div id="console">
   <div id="log"></div>
   <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
@@ -82,7 +82,7 @@
   <div class="t">THE CONSTRUCT</div>
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
-  <div class="keys">WASD move · SHIFT sprint · SPACE jump · mouse-look (click world) · C code vision<br>
+  <div class="keys">WASD move · SHIFT sprint · SPACE jump · hold right-click to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute</div>
 </div>
 
@@ -2583,34 +2583,37 @@
   }
   // The mouse is FREE — no pointer lock. Drag to look around; a quick click (no drag)
   // is the act/strike. Clicking the world while typing drops you into walk mode.
-  // Mouse model (first principles + MDN/web.dev): FPS look needs UNBOUNDED relative
-  // deltas, which only pointer lock provides - drag-look dies at the screen edge.
-  // So: TYPE mode keeps the cursor free for the console; clicking the world enters
-  // WALK mode and locks the pointer (raw, unaccelerated input where supported);
-  // while locked, a click acts (fire/strike) and Esc unlocks back to type mode.
-  // Where lock is unavailable (mobile / old Safari) the old drag-look remains.
+  // Mouse model v3 - "borrowed while held", never eaten. Three constraints, met at once:
+  // (1) the cursor is ALWAYS free and visible in normal play (a plain click never
+  //     captures it); (2) unbounded FPS look exists - HOLD the right button and the
+  //     pointer locks (raw, unaccelerated) for exactly as long as you hold; release
+  //     and the cursor is back instantly; (3) type mode is untouched.
+  // Left click = act. Left drag = casual edge-bounded look (fallback, also mobile).
   function plocked() { return document.pointerLockElement === canvas; }
-  function enterWalk() {
-    if (consoleOpen) hud.input.blur();
-    if (canvas.requestPointerLock) {
-      try {
-        var p = canvas.requestPointerLock({ unadjustedMovement: true });
-        if (p && p.catch) p.catch(function () { try { canvas.requestPointerLock(); } catch (e) {} });
-      } catch (e) { try { canvas.requestPointerLock(); } catch (e2) {} }
-    }
+  var rmbRelease = false;   // our own unlock (right-button up) must NOT yank focus to the console
+  function lockPointer() {
+    if (!canvas.requestPointerLock) return;
+    try {
+      var p = canvas.requestPointerLock({ unadjustedMovement: true });
+      if (p && p.catch) p.catch(function () { try { canvas.requestPointerLock(); } catch (e) {} });
+    } catch (e) { try { canvas.requestPointerLock(); } catch (e2) {} }
   }
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
     if (paused) { setPaused(false); return; }
     if (touch.active) return;
-    if (consoleOpen) { enterWalk(); return; }               // first click only switches mode
-    if (plocked()) { if (e.button === 0) fireEdge = true; return; }   // locked FPS: click = act
-    // unlocked walk (no lock available): drag-look fallback; quick click still acts
+    if (e.button === 2) {                       // HOLD right button = mouse-look (borrowed)
+      if (consoleOpen) hud.input.blur();
+      lockPointer();
+      return;
+    }
+    if (consoleOpen) { hud.input.blur(); return; }          // first left click: to walk, cursor stays
+    if (plocked()) { if (e.button === 0) fireEdge = true; return; }
+    // free-cursor walk: drag-look fallback; quick click acts
     mdWasTyping = false;
     dragging = true; lastMX = e.clientX; lastMY = e.clientY;
     mdX = e.clientX; mdY = e.clientY; mdT = performance.now(); mdMoved = 0;
-    enterWalk();   // keep offering the lock on each click
   }
 
   // ---------- touch ----------
@@ -3318,7 +3321,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
-    hud.hint.textContent = 'click world = mouse-look \u00b7 click = act \u00b7 Esc = type';
+    hud.hint.textContent = 'HOLD right-click = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 
     var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
@@ -3341,9 +3344,17 @@
     window.addEventListener('mouseup', function (e) {
       if (dragging && e.button === 0 && !paused && !mdWasTyping && mdMoved < 6 && performance.now() - mdT < 300) fireEdge = true;
       dragging = false;
+      if (e.button === 2 && plocked()) {        // release the borrowed pointer instantly
+        rmbRelease = true;
+        try { document.exitPointerLock(); } catch (er) {}
+      }
     });
+    canvas.addEventListener('contextmenu', function (e) { if (started) e.preventDefault(); });
     document.addEventListener('pointerlockchange', function () {
-      if (!plocked() && started && !touch.active) openConsole();   // Esc from lock -> type mode
+      if (!plocked()) {
+        if (rmbRelease) { rmbRelease = false; }                       // stay in walk, cursor back
+        else if (started && !touch.active) openConsole();            // Esc from lock -> type mode
+      }
       hud.hint.style.opacity = plocked() ? 0 : ((started && !touch.active) ? 1 : 0);
     });
     document.addEventListener('pointerlockerror', function () {});
