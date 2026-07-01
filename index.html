@@ -90,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2218</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2224</span></div>
 </div>
 
 <script>
@@ -3370,7 +3370,7 @@
         A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
         if (vox.state === 'off') loadVoice();
         say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        if (A.ttsReady) A.speak('This is the ' + A.voiceChoice.replace('am_', '') + ' register.');
+        // situation-2 disabled by user: voice switching is SILENT - the next scripted line demonstrates the new register.
         return;
       }
       game.request(req || label);

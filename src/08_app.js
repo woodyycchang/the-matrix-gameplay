@@ -845,7 +845,7 @@
         A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
         if (vox.state === 'off') loadVoice();
         say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        if (A.ttsReady) A.speak('This is the ' + A.voiceChoice.replace('am_', '') + ' register.');
+        // situation-2 disabled by user: voice switching is SILENT - the next scripted line demonstrates the new register.
         return;
       }
       game.request(req || label);
