@@ -1106,7 +1106,7 @@ section('deterministic rails around the tiny model (rescue + regex + temp)');
   eq(I2.rescueWord('katan pls', ''), 'katana', 'one-typo token rescued (katan -> katana)');
   eq(I2.rescueWord('give me a chiar', ''), 'chair', 'transposed typo rescued (chiar -> chair)');
   // rescue from the model reply if the user text has nothing
-  eq(I2.rescueWord('two wheels please', 'sounds like you want a motorcycle'), 'motorcycle', 'reply-side rescue works');
+  eq(I2.rescueWord('two wheels please', 'sounds like you want a motorcycle'), null, 'a mention in the MODEL reply never dispatches - mention is not intent');
   // no false positives on gibberish
   eq(I2.rescueWord('purple elephant taxes', 'I cannot help with that'), null, 'gibberish rescues nothing');
   // the regex layer now catches motor before the model is ever consulted
@@ -1221,6 +1221,20 @@ section('wait shrunk on every lever physics allows');
   ok(/localStorage\.setItem\('tc_ai'/.test(appH) && /getItem\('tc_ai'\) === '1'\) loadNeural/.test(appH), 'returning users auto-warm from cache at boot');
   ok(/m\.pct \/ 10\) \* 10/.test(appH), 'download feedback in 10% steps - a big file never looks frozen');
   ok(/one-off ~0\.5 GB download; instant from cache/.test(appH), 'the waking line sets honest expectations');
+}
+
+
+section("greeting typo regression: 'helo' must never load a scene");
+{
+  const I3 = C.intent;
+  eq(I3.lexicalGuess('helo'), null, "lexicalGuess passes 'helo' through untouched");
+  eq(I3.rescueWord('helo'), null, "rescueWord finds no designated word in 'helo'");
+  const r1 = I3.parseReply('Hey there. What do you need?');
+  ok(r1.word === null && r1.say === 'Hey there. What do you need?', 'plain-prose replies are shown verbatim (no canned deny)');
+  const r2 = I3.parseReply('You could try the dojo or grab weapons.');
+  ok(r2.word === null && /dojo/.test(r2.say), 'a reply that merely mentions designated words displays but dispatches NOTHING');
+  const r3 = I3.parseReply('');
+  ok(/library is silent/.test(r3.say), 'the canned line survives only as the empty-reply fallback');
 }
 
 // ---------------------------------------------------------------- summary

@@ -793,7 +793,7 @@
           say('\u2026the line broke up (' + String(m.error || 'generation error').slice(0, 44) + '). Say it again.', true);
         } else {
           var r = C.intent.parseReply(m.reply);
-          var w = r.word || C.intent.rescueWord(text, m.reply);  // deterministic rails around a tiny model
+          var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
           say(r.say, true);                 // ALWAYS show what the model said
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }

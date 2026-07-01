@@ -183,19 +183,19 @@
   function fuzzy(tk, w) {                      // typo-close for >=5-char tokens
     return editDist(tk, w) <= 1 || transposed(tk, w);
   }
-  I.rescueWord = function (userText, modelReply) {
-    var sources = [String(userText || ''), String(modelReply || '')];
-    for (var si = 0; si < sources.length; si++) {
-      var toks = sources[si].toLowerCase().split(/[^a-z]+/);
-      for (var ti = 0; ti < toks.length; ti++) {
-        var tk = toks[ti];
-        if (tk.length < 3) continue;
-        for (var wi = 0; wi < INTENTS.length; wi++) {
-          var w = INTENTS[wi].word;
-          if (tk === w) return w;
-          if (tk.length >= 4 && w.indexOf(tk) === 0) return w;         // 'motor' -> motorcycle
-          if (tk.length >= 5 && fuzzy(tk, w)) return w;                 // 'katan' / 'chiar'
-        }
+  I.rescueWord = function (userText) {
+    // USER text ONLY. The model's reply is deliberately not scanned: a designated
+    // word appearing in HIS sentence ('try the dojo') is a mention, not an intent -
+    // scanning it teleported players who merely said hello.
+    var toks = String(userText || '').toLowerCase().split(/[^a-z]+/);
+    for (var ti = 0; ti < toks.length; ti++) {
+      var tk = toks[ti];
+      if (tk.length < 3) continue;
+      for (var wi = 0; wi < INTENTS.length; wi++) {
+        var w = INTENTS[wi].word;
+        if (tk === w) return w;
+        if (tk.length >= 4 && w.indexOf(tk) === 0) return w;         // 'motor' -> motorcycle
+        if (tk.length >= 5 && fuzzy(tk, w)) return w;                 // 'katan' / 'chiar'
       }
     }
     return null;
@@ -272,7 +272,12 @@
     var say = sm ? sm[1] : text;
     say = say.replace(/word\s*[:=][^|\n]*\|?/ig, '').replace(/\s+/g, ' ').trim();
     if (say.length > 160) say = say.slice(0, 157) + '...';
-    if (!say) say = word ? ('Loading ' + word + '.') : 'The library is silent on that one.';
+    if (!say) {
+      // The model spoke plain prose (no SAY: field) - show HIS words, not a canned line.
+      var plain = text.replace(/word\s*[:=]\s*[a-z]+/ig, ' ').replace(/\s+/g, ' ').trim();
+      if (plain.length > 220) plain = plain.slice(0, 217) + '\u2026';
+      say = plain || (word ? ('Loading ' + word + '.') : 'The library is silent on that one.');
+    }
     return { word: word, say: say };
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
