@@ -12,3 +12,6 @@ js = open('dist/_bundle.js').read()
 open(sys.argv[1],'w').write(tpl.replace('/*__INJECT__*/', js))
 PY
 echo "built $OUT ($(wc -c < $OUT) bytes)"
+# stamp the build so cache-vs-current is decidable at a glance
+STAMP=$(date -u +%m%d-%H%M)
+sed -i "s/__BUILD__/$STAMP/g" dist/the-construct.html

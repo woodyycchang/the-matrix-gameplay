@@ -1160,6 +1160,15 @@ section('voice chain: every link observable, depth by model (first principles)')
   ok(/A\.voiceChoice = 'am_onyx'/.test(appB) && /'am_onyx', 'am_michael', 'am_adam'/.test(appB), 'ultra-deep am_onyx is the default; the chip cycles the three male registers');
 }
 
+
+section('build stamp (cache-vs-current decidable at a glance)');
+{
+  const fsC = require('fs');
+  ok(/BUILD __BUILD__/.test(fsC.readFileSync(__dirname + '/../template.html', 'utf8')), 'template carries the build placeholder');
+  ok(/__BUILD__/.test(fsC.readFileSync(__dirname + '/../build.sh', 'utf8')), 'build.sh stamps the placeholder with the UTC build time');
+  ok(/construct online .* build /.test(fsC.readFileSync(__dirname + '/../src/08_app.js', 'utf8').replace(/\\u00b7/g,'.')), 'first log line announces the running build');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

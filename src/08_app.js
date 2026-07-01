@@ -741,6 +741,8 @@
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
     A.init();
     A.setAmbience('void');
+    var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
+    say('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'), true);
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }
