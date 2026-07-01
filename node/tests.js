@@ -1025,7 +1025,7 @@ section('free mouse + type-first console + sigma voice (static guards)');
   ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/pickSigma/.test(aud) && /u\.pitch = 0\.65;/.test(aud) && /rate = 0\.9/.test(aud), 'fallback system voice runs deep-but-clear (pitch 0.65, rate 0.9)');
-  ok(/Google UK English Male/.test(aud) && /deliberately ABSENT/.test(aud) && !/Google US English\//.test(aud), 'exact named deep-male list; female-leaning Google US English removed');
+  ok(!/UK English Male/.test(aud) && !/\\bDaniel\\b/.test(aud), 'no British voices anywhere in the fallback ranking');
   ok(/A\.voiceName = sigmaVoice/.test(aud), 'chosen voice name is exposed for the one-time announcement');
   ok(/speechSynthesis\.cancel\(\)/.test(aud), 'spoken backlog is cancelled - the latest line wins, voice cannot lag behind');
 }
@@ -1261,9 +1261,18 @@ section('dark-knight voice chain (research-grounded approximation)');
 {
   const fsK = require('fs');
   const audK = fsK.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/Math\.tanh\(1\.6 \* vx\)/.test(audK) && /oversample = '2x'/.test(audK), 'soft tanh saturation adds gravel harmonics (no obvious distortion)');
-  ok(/lowshelf'; lo\.frequency\.value = 140; lo\.gain\.value = 5/.test(audK) && /peaking'; dip\.frequency\.value = 3000/.test(audK) && /-3\.5/.test(audK), 'chest weight (140Hz +5dB) plus dark tilt (3kHz -3.5dB)');
+  ok(/Math\.tanh\(1\.25 \* vx\)/.test(audK) && /oversample = '2x'/.test(audK), 'soft tanh saturation adds gravel harmonics (no obvious distortion)');
+  ok(/lowshelf'; lo\.frequency\.value = 140; lo\.gain\.value = 4/.test(audK) && /peaking'; dip\.frequency\.value = 3000/.test(audK) && /-2\.5/.test(audK), 'chest weight (140Hz +5dB) plus dark tilt (3kHz -3.5dB)');
   ok(/A\._vChain = ws/.test(audK) && /src\.connect\(A\._vChain\)/.test(audK) && /playbackRate\.value = 1\.0/.test(audK), 'chain is cached, voice routes through it, playback stays natural speed');
+}
+
+
+section('the fallback can never sound British again');
+{
+  const fsL = require('fs');
+  const audL = fsL.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(!/UK English/.test(audL) && !/Daniel/.test(audL), 'UK voices excised from the preference list entirely');
+  ok(/passes = \[\/\^en-US\/i, \/\^en\/i\]/.test(audL), 'selection runs en-US strictly first, any-English only as last resort');
 }
 
 // ---------------------------------------------------------------- summary

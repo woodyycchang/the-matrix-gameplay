@@ -212,21 +212,26 @@
   function pickSigma() {
     try {
       var vs = window.speechSynthesis.getVoices();
-      // exact named deep-male voices, ordered by web reputation. 'Google US English'
-      // is deliberately ABSENT (it leans female - it was being picked before).
+      // AMERICAN deep males ONLY - the operator is not British. Two UK voices
+      // used to sit on top of this list and produced the 'weird english sound'
+      // whenever the fallback spoke while the neural voice was still loading.
+      // 'Google US English' stays ABSENT (leans female).
       var pref = [
-        /Google UK English Male/i,                                            // deepest male on Chrome
-        /\bDaniel\b/i,                                                       // macOS/iOS: the 40-50yo direct British male
-        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural males
+        /\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b.*(Natural|Online)/i,  // Edge neural US males
         /Natural.*\b(Guy|Christopher|Eric|Andrew|Brian|Davis)\b/i,
-        /Microsoft\s+(David|Mark|George)\b/i,                                // Windows classic males
-        /\bAlex\b/i,                                                         // macOS natural male
+        /Microsoft\s+(David|Mark)\b/i,                                       // Windows classic US males
+        /\bAlex\b/i,                                                          // macOS natural US male
+        /\bAaron\b/i,                                                         // iOS US male
         /\bFred\b/i,
         /\bmale\b/i
       ];
-      for (var p = 0; p < pref.length && !sigmaVoice; p++) {
-        for (var i = 0; i < vs.length; i++) {
-          if (/^en/i.test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
+      // two passes: strictly en-US first, any English only as a last resort
+      var passes = [/^en-US/i, /^en/i];
+      for (var pa = 0; pa < passes.length && !sigmaVoice; pa++) {
+        for (var p = 0; p < pref.length && !sigmaVoice; p++) {
+          for (var i = 0; i < vs.length; i++) {
+            if (passes[pa].test(vs[i].lang) && pref[p].test(vs[i].name)) { sigmaVoice = vs[i]; break; }
+          }
         }
       }
       if (!sigmaVoice) { for (var j = 0; j < vs.length; j++) { if (/^en/i.test(vs[j].lang)) { sigmaVoice = vs[j]; break; } } }
@@ -248,14 +253,14 @@
       var src = ctx.createBufferSource(); src.buffer = buf;
       src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
       // dark-knight chain (cached once): soft tanh saturation = gravel harmonics ->
-      // lowshelf 140Hz +5dB = chest weight -> peaking 3kHz -3.5dB = dark tilt ->
+      // lowshelf 140Hz +4dB = chest weight -> peaking 3kHz -2.5dB = dark tilt ->
       // 0.95 into master. Deliberately NO reverb: this voice is close, not distant.
       if (!A._vChain) {
         var ws = ctx.createWaveShaper(); var N = 1024, cv = new Float32Array(N);
-        for (var ci = 0; ci < N; ci++) { var vx = ci / (N - 1) * 2 - 1; cv[ci] = Math.tanh(1.6 * vx); }
+        for (var ci = 0; ci < N; ci++) { var vx = ci / (N - 1) * 2 - 1; cv[ci] = Math.tanh(1.25 * vx); }   // gentler drive: grit without garble
         ws.curve = cv; ws.oversample = '2x';
-        var lo = ctx.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 140; lo.gain.value = 5;
-        var dip = ctx.createBiquadFilter(); dip.type = 'peaking'; dip.frequency.value = 3000; dip.Q.value = 0.9; dip.gain.value = -3.5;
+        var lo = ctx.createBiquadFilter(); lo.type = 'lowshelf'; lo.frequency.value = 140; lo.gain.value = 4;
+        var dip = ctx.createBiquadFilter(); dip.type = 'peaking'; dip.frequency.value = 3000; dip.Q.value = 0.9; dip.gain.value = -2.5;
         var vg = ctx.createGain(); vg.gain.value = 0.95;
         ws.connect(lo); lo.connect(dip); dip.connect(vg); vg.connect(master);
         A._vChain = ws;
