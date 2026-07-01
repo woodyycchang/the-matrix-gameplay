@@ -1090,7 +1090,7 @@ section('UI layout sanity (template guards)');
 {
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
+  ok(/#console\{position:fixed;left:50%;transform:translateX\(-50%\);bottom:0;width:min\(860px,94vw\)/.test(tpl), 'console is centered and width-fluid - no more bottom-left stranding on wide screens');
   ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
@@ -1350,6 +1350,15 @@ section('every string earns its place (surface-wording verdict)');
   ok(!/'Loading ' \+ word/.test(intR), "the double announcement is dead: the scene speaks for itself, 'Loading X.' does not");
   ok(/if \(r\.say\) say\(r\.say/.test(appR), 'an empty say prints nothing - no blank lines in the log');
   ok(/your line is queued\.'/.test(appR) && !/answering the moment he is up/.test(appR), 'still-waking says it once, not twice');
+}
+
+
+section('real-view layout: nothing pinned, nothing bleeding');
+{
+  const fsS = require('fs');
+  const tplS = fsS.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/html,body\{height:100%;overflow:hidden/.test(tplS), 'the page itself can never scroll or reveal a background band (rule pre-existed)');
+  ok(!/#console\{position:fixed;left:0;/.test(tplS), 'the console no longer hugs the left edge');
 }
 
 // ---------------------------------------------------------------- summary
