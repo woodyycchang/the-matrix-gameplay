@@ -1090,7 +1090,7 @@ section('UI layout sanity (template guards)');
 {
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#console\{position:fixed;left:50%;transform:translateX\(-50%\);bottom:0;width:min\(860px,94vw\)/.test(tpl), 'console is centered and width-fluid - no more bottom-left stranding on wide screens');
+  ok(/#console\{position:fixed;left:0;right:0;bottom:0;/.test(tpl) && /align-items:center/.test(tpl), 'console is a FULL-WIDTH lower-third strip; content centers inside it');
   ok(/#chips\{display:flex;gap:8px;flex-wrap:wrap;justify-content:center/.test(tpl) && !/#chips\{position:fixed/.test(tpl), 'chips WRAP inside the console - every chip visible at any width, nothing ever clipped');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
@@ -1358,7 +1358,7 @@ section('real-view layout: nothing pinned, nothing bleeding');
   const fsS = require('fs');
   const tplS = fsS.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/html,body\{height:100%;overflow:hidden/.test(tplS), 'the page itself can never scroll or reveal a background band (rule pre-existed)');
-  ok(!/#console\{position:fixed;left:0;/.test(tplS), 'the console no longer hugs the left edge');
+  ok(/#console\{position:fixed;left:0;right:0;bottom:0;/.test(tplS), 'console spans FULL width (left:0+right:0) - never a narrow left-pinned box');
 }
 
 
@@ -1367,6 +1367,17 @@ section('console reads over ANY scene (world-text collision fixed)');
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/#console\{[^}]*background:linear-gradient\(to top, rgba\(251,251,249,\.94\)/.test(tplT.replace(/\n\s*/g,'')), 'a fading paper backdrop keeps the log readable over summoned objects and dark scenes');
+}
+
+
+section('full screen, dynamically adjusted');
+{
+  const fsU = require('fs');
+  const tplU = fsU.readFileSync(__dirname + '/../template.html', 'utf8');
+  const appU = fsU.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok((tplU.match(/width:min\(860px,94vw\)/g) || []).length >= 3, 'log, input row and chips all share the fluid centered cap inside the strip');
+  ok(/requestFullscreen/.test(appU) && /exitFullscreen/.test(appU), 'F toggles true browser fullscreen');
+  ok(/F fullscreen/.test(tplU), 'the boot keys teach it');
 }
 
 // ---------------------------------------------------------------- summary

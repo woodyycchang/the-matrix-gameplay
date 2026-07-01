@@ -27,21 +27,21 @@
     border:1px solid rgba(42,42,40,.35);background:rgba(251,251,249,.8);font-size:13px;cursor:pointer;color:var(--ink)}
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
   /* console */
-  #console{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(860px,94vw);padding:10px 16px 12px;pointer-events:none;
+  #console{position:fixed;left:0;right:0;bottom:0;padding:10px 0 12px;pointer-events:none;display:flex;flex-direction:column;align-items:center;
     background:linear-gradient(to top, rgba(251,251,249,.94) 0%, rgba(251,251,249,.82) 62%, rgba(251,251,249,0) 100%);
     background:linear-gradient(to top,rgba(251,251,249,.9),rgba(251,251,249,.55) 55%,transparent)}
-  #log{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+  #log{display:flex;flex-direction:column;gap:2px;margin-bottom:6px;width:min(860px,94vw);padding:0 16px;box-sizing:border-box}
   #log .line{font-size:clamp(11px,.55rem + .5vw,15px);letter-spacing:.04em;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);
     transition:opacity 1.2s;max-width:72ch}
   #log .line.sys{color:var(--faint)}
   #log .line.fade{opacity:0}
-  #inrow{display:flex;gap:8px;align-items:center;pointer-events:auto;opacity:.55;transition:opacity .15s}
+  #inrow{display:flex;gap:8px;align-items:center;pointer-events:auto;opacity:.55;transition:opacity .15s;width:min(860px,94vw);padding-left:16px;padding-right:16px;box-sizing:border-box}
   #inrow.open{opacity:1}
   #inrow .gt{color:#0d7a3a;font-size:clamp(12px,.6rem + .5vw,15px)}
   #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
     font:inherit;font-size:clamp(12px,.6rem + .5vw,15px);color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
   #cmd::placeholder{color:#9a9a96}
-  #chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;pointer-events:auto}   /* wrap, never clip: every chip visible at any width */
+  #chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;pointer-events:auto;width:min(860px,94vw);padding:0 16px;box-sizing:border-box}   /* wrap, never clip: every chip visible at any width */
   #chips::-webkit-scrollbar{display:none}
   .chip{font:inherit;font-size:clamp(10px,.5rem + .4vw,13px);letter-spacing:.12em;text-transform:lowercase;color:var(--ink);flex:0 0 auto;white-space:nowrap;
     background:transparent;border:1px solid rgba(42,42,40,.3);padding:4px 11px;cursor:pointer;border-radius:2px}
@@ -87,8 +87,8 @@
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
-  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2353</span></div>
+  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2358</span></div>
 </div>
 
 <script>
@@ -2550,6 +2550,12 @@
       if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
       if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
+      if (k === 'f') {
+        try {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else document.documentElement.requestFullscreen();
+        } catch (e) {}
+      }
       if (k === 'h') game.request('help');
       if (k === 'v') startListen();
       if (k === 'escape') closeConsole();

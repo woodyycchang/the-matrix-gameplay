@@ -26,6 +26,12 @@
       if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
       if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
+      if (k === 'f') {
+        try {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else document.documentElement.requestFullscreen();
+        } catch (e) {}
+      }
       if (k === 'h') game.request('help');
       if (k === 'v') startListen();
       if (k === 'escape') closeConsole();
