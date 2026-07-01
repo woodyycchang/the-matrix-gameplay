@@ -12,7 +12,10 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden;background:var(--white)}
   body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink)}
-  #c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;
+    /* halo crosshair: black core + white outline, visible on the white void AND dark scenes.
+       (plain cursor:crosshair is a hairline that melts into the void - 'my mouse was hidden') */
+    cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cg stroke-linecap='round'%3E%3Cpath d='M11 2v7M11 13v7M2 11h7M13 11h7' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M11 2v7M11 13v7M2 11h7M13 11h7' stroke='%23111' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E") 11 11, crosshair}
   /* HUD */
   #scene{position:fixed;top:14px;left:16px;font-size:11px;letter-spacing:.22em;color:var(--faint);
     text-transform:uppercase;pointer-events:none;mix-blend-mode:difference;color:#9a9a96}
@@ -87,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2036</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2038</span></div>
 </div>
 
 <script>

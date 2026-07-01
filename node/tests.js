@@ -1191,6 +1191,15 @@ section('stale cached builds confess by themselves');
   ok(/checkStale\(bt \? bt\[1\] : ''\)/.test(appE) && /OLD cached build/.test(appE), 'boot compares its own build stamp and warns loudly when stale');
 }
 
+
+section('the cursor is visible on ANY background (halo crosshair)');
+{
+  const fsF = require('fs');
+  const tplF = fsF.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/cursor:url\("data:image\/svg\+xml/.test(tplF) && /stroke='%23fff' stroke-width='5'/.test(tplF), 'canvas cursor is a white-halo crosshair - cannot melt into the white void');
+  ok(/\) 11 11, crosshair\}/.test(tplF), 'hotspot centered and plain crosshair kept as the fallback');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
