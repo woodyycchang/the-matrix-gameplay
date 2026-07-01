@@ -35,6 +35,7 @@
 
   function onMouseMove(e) {
     if (!started) return;
+    if (plocked()) { mouseDX += e.movementX || 0; mouseDY += e.movementY || 0; return; }
     if (dragging) {
       var dx = e.clientX - lastMX, dy = e.clientY - lastMY;
       mouseDX += dx; mouseDY += dy; mdMoved += Math.abs(dx) + Math.abs(dy);
@@ -43,15 +44,34 @@
   }
   // The mouse is FREE — no pointer lock. Drag to look around; a quick click (no drag)
   // is the act/strike. Clicking the world while typing drops you into walk mode.
+  // Mouse model (first principles + MDN/web.dev): FPS look needs UNBOUNDED relative
+  // deltas, which only pointer lock provides - drag-look dies at the screen edge.
+  // So: TYPE mode keeps the cursor free for the console; clicking the world enters
+  // WALK mode and locks the pointer (raw, unaccelerated input where supported);
+  // while locked, a click acts (fire/strike) and Esc unlocks back to type mode.
+  // Where lock is unavailable (mobile / old Safari) the old drag-look remains.
+  function plocked() { return document.pointerLockElement === canvas; }
+  function enterWalk() {
+    if (consoleOpen) hud.input.blur();
+    if (canvas.requestPointerLock) {
+      try {
+        var p = canvas.requestPointerLock({ unadjustedMovement: true });
+        if (p && p.catch) p.catch(function () { try { canvas.requestPointerLock(); } catch (e) {} });
+      } catch (e) { try { canvas.requestPointerLock(); } catch (e2) {} }
+    }
+  }
   function onMouseDown(e) {
     if (!started) return;
     anyEdge = true;
     if (paused) { setPaused(false); return; }
     if (touch.active) return;
-    mdWasTyping = consoleOpen;
-    if (consoleOpen) hud.input.blur();     // click the world -> walk mode
+    if (consoleOpen) { enterWalk(); return; }               // first click only switches mode
+    if (plocked()) { if (e.button === 0) fireEdge = true; return; }   // locked FPS: click = act
+    // unlocked walk (no lock available): drag-look fallback; quick click still acts
+    mdWasTyping = false;
     dragging = true; lastMX = e.clientX; lastMY = e.clientY;
     mdX = e.clientX; mdY = e.clientY; mdT = performance.now(); mdMoved = 0;
+    enterWalk();   // keep offering the lock on each click
   }
 
   // ---------- touch ----------
@@ -120,6 +140,7 @@
   }
   function openConsole() {
     consoleOpen = true;
+    if (document.exitPointerLock && document.pointerLockElement) { try { document.exitPointerLock(); } catch (e) {} }
     hud.inRow.classList.add('open');
     hud.input.focus();
   }
@@ -758,7 +779,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
-    hud.hint.textContent = 'drag to look \u00b7 quick click = act \u00b7 Esc \u21c4 walk/type';
+    hud.hint.textContent = 'click world = mouse-look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 
     var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
@@ -771,6 +792,7 @@
         else if (e.key.indexOf('Arrow') === 0 && hud.input.value === '') { e.preventDefault(); key(e, true); }
         return;
       }
+      if (e.key === 'Escape') { openConsole(); return; }
       if ([' ', 'arrowup', 'arrowdown'].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
       key(e, true);
     });
@@ -781,6 +803,11 @@
       if (dragging && e.button === 0 && !paused && !mdWasTyping && mdMoved < 6 && performance.now() - mdT < 300) fireEdge = true;
       dragging = false;
     });
+    document.addEventListener('pointerlockchange', function () {
+      if (!plocked() && started && !touch.active) openConsole();   // Esc from lock -> type mode
+      hud.hint.style.opacity = plocked() ? 0 : ((started && !touch.active) ? 1 : 0);
+    });
+    document.addEventListener('pointerlockerror', function () {});
     window.addEventListener('resize', resize);
     bindTouch();
 

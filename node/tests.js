@@ -1019,8 +1019,9 @@ section('free mouse + type-first console + sigma voice (static guards)');
 {
   const fs2 = require('fs');
   const app = fs2.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(!/requestPointerLock|pointerlockchange|tryLock/.test(app), 'pointer lock fully removed - the mouse stays free');
-  ok(/click the world -> walk mode/.test(app) && /mdWasTyping/.test(app), 'click-the-world switches to walk mode; quick click acts, drag looks');
+  ok(/function enterWalk/.test(app) && /unadjustedMovement: true/.test(app) && !/tryLock/.test(app), 'walk mode locks the pointer with raw unaccelerated input (unbounded FPS look)');
+  ok(app.indexOf('requestPointerLock') > app.indexOf('function enterWalk'), 'lock is requested only from enterWalk (clicking the world) - never at boot');
+  ok(/Esc from lock -> type mode/.test(app) && /pointerlockerror/.test(app) && /mdWasTyping/.test(app), 'Esc exits lock back to type mode; drag-look remains the no-lock fallback');
   ok(/clear instantly so the keystroke feels immediate/.test(app) && /openConsole\(\); hud\.hint/.test(app), 'console is the default: focused at boot, submit clears + stays in type mode');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/pickSigma/.test(aud) && /u\.pitch = 0\.65;/.test(aud) && /rate = 0\.9/.test(aud), 'fallback system voice runs deep-but-clear (pitch 0.65, rate 0.9)');
@@ -1093,7 +1094,7 @@ section('UI layout sanity (template guards)');
   ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
   ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
-  ok(/DRAG TO LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the current control scheme');
+  ok(/MOUSE-LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the current control scheme');
 }
 
 
