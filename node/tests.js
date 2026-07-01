@@ -1091,7 +1091,7 @@ section('UI layout sanity (template guards)');
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/#console\{position:fixed;left:50%;transform:translateX\(-50%\);bottom:0;width:min\(860px,94vw\)/.test(tpl), 'console is centered and width-fluid - no more bottom-left stranding on wide screens');
-  ok(/#chips\{position:fixed;left:50%;transform:translateX\(-50%\);bottom:10px;width:min\(860px,94vw\)/.test(tpl) && /flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips share the console anchor and fluid width - one scrollable centered row, no viewport clipping');
+  ok(/#chips\{display:flex;gap:8px;flex-wrap:wrap;justify-content:center/.test(tpl) && !/#chips\{position:fixed/.test(tpl), 'chips WRAP inside the console - every chip visible at any width, nothing ever clipped');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
 }
