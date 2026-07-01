@@ -48,8 +48,8 @@
    "path": "ROOT/SOUND/sfx-residue",
    "type": "UNIT",
    "why": "16事件逐一过'配得上存在'判据",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "0542fcb全量清单表 + 3214272极简判决(6砍留16,每个留任者有不可替代职务)"
   },
   {
    "path": "ROOT/SOUND/mix-levels",
@@ -104,8 +104,8 @@
    "path": "ROOT/NEURAL/failure-paths",
    "type": "UNIT",
    "why": "CDN/加载失败路径响亮且可行动",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "app:746/772/783 三处'could not wake'响亮可见; linkerr明频; 加载失败降级classic-mode有台词; 陈旧构建红幅可行动"
   },
   {
    "path": "ROOT/NEURAL/reply-quality",
