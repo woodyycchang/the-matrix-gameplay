@@ -90,7 +90,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2038</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2047</span></div>
 </div>
 
 <script>
@@ -2723,6 +2723,11 @@
       say('pointer lock ARMED \u2014 hold right-click for true FPS look; Esc releases. type \u201cunlock\u201d to disarm.', true);
       return;
     }
+    if (lv === 'debug') {
+      dbg = !dbg;
+      say('debug channel ' + (dbg ? 'ON \u2014 telemetry visible' : 'off'), true);
+      return;
+    }
     if (lv === 'unlock') {
       lockAllowed = false;
       if (document.pointerLockElement) { try { document.exitPointerLock(); } catch (e) {} }
@@ -2737,10 +2742,10 @@
     if (neural.state === 'off') {
       neural.queue.push(v);
       loadNeural();   // the first unheard line wakes the operator itself
-      say('that needs the neural operator \u2014 waking him now (~250 MB once). I will answer when he is up.', true);
+      say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
       return;
     }
-    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 ' + neural.pct + '% \u2014 your line is queued', true); return; }
+    if (neural.state === 'loading') { neural.queue.push(v); say('still waking\u2026 your line is queued', true); return; }
     say('the neural operator could not load here \u2014 classic mode', true);
     game.request(v);
   }
@@ -3044,7 +3049,7 @@
     var evs = game.drain();
     for (var i = 0; i < evs.length; i++) {
       var e = evs[i];
-      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; say('voice: ' + A.voiceName, true); } }
+      if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; sayDbg('voice: ' + A.voiceName); } }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
       else A.handle(e.name);
@@ -3117,6 +3122,8 @@
   // prompt describing the game, then EVERY user line is answered by the model itself.
   // Whatever the model says is what we show — no templates.
   var voiceTold = false;
+  var dbg = false;                                  // telemetry channel, default OFF
+  function sayDbg(t) { if (dbg) say(t, true); }     // plumbing speaks only when asked
   var neural = { state: 'off', worker: null, ctx: null, pct: 0, queue: [], chain: null, seq: 0, pending: {}, inFlight: 0 }; // off -> loading -> on / failed
   // The model runs in a module Worker: download, init and every generation happen
   // OFF the main thread, so the render loop never stalls. WebGPU first, WASM fallback.
@@ -3124,7 +3131,7 @@
     "import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';",
     "env.allowLocalModels = false;",
     "let gen = null;",
-    "const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';",
+    "const MODEL = 'onnx-community/Qwen3-0.6B-ONNX';",
     "const opts = (device, dtype) => ({ device, dtype, progress_callback: p => {",
     "  if (p && p.status === 'progress' && typeof p.progress === 'number') postMessage({ type: 'progress', pct: p.progress });",
     "} });",
@@ -3138,7 +3145,7 @@
     "  if (m.type === 'load') { load(); return; }",
     "  if (m.type === 'chat') {",
     "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 48, do_sample: true, temperature: 0.4, top_p: 0.9 });",
+    "      const out = await gen(m.messages, { max_new_tokens: 64, do_sample: true, temperature: 0.4, top_p: 0.9 });",
     "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
     "      let reply = '';",
     "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
@@ -3197,11 +3204,11 @@
     var vLastPct = -1;
     vox.worker.onmessage = function (ev) {
       var m = ev.data || {};
-      if (m.type === 'link') { say('voice link ok: ' + m.step + ' via ' + (m.url || '').split('/')[2], true); return; }
+      if (m.type === 'link') { sayDbg('voice link ok: ' + m.step + ' via ' + (m.url || '').split('/')[2]); return; }
       if (m.type === 'linkerr') { say('voice link FAILED: ' + m.step + (m.url ? ' @ ' + m.url.split('/')[2] : '') + ' (' + (m.error || '?') + ')', true); return; }
       if (m.type === 'progress') {
         var p = Math.floor(m.pct / 25) * 25;
-        if (p > vLastPct) { vLastPct = p; say('voice model\u2026 ' + p + '%', true); }
+        if (p > vLastPct) { vLastPct = p; sayDbg('voice model\u2026 ' + p + '%'); }
         return;
       }
       if (m.type === 'ready') {
@@ -3209,7 +3216,7 @@
         A.ttsReady = true;
         A.voiceName = 'Kokoro ' + A.voiceChoice + ' (AI \u00b7 ' + (m.device || '') + ')';
         voiceTold = false;   // announce the switch on his next line
-        say('voice engine online \u2014 the ' + A.voiceChoice.replace('am_', '') + ' register, speed 0.9', true);
+        sayDbg('voice engine online \u2014 the ' + A.voiceChoice.replace('am_', '') + ' register, speed 0.9');
         return;
       }
       if (m.type === 'fail') {
@@ -3266,7 +3273,8 @@
     if (neural.state !== 'off') return;
     neural.state = 'loading';
     loadVoice();   // the AI voice (Kokoro am_adam) wakes with the operator
-    say('waking the operator \u2014 open-source SmolLM2-360M, ~250 MB once, then cached', true);
+    say('waking the operator \u2014 first time is a one-off download, then cached', true);
+    sayDbg('model: Qwen3-0.6B (onnx-community, q4f16/webgpu \u2192 q4/wasm)');
     var lastPct = -1;
     try {
       var blob = new Blob([NEURAL_WORKER_SRC], { type: 'text/javascript' });
@@ -3279,14 +3287,18 @@
     neural.worker.onmessage = function (ev) {
       var m = ev.data || {};
       if (m.type === 'progress') {
-        var pct = Math.floor(m.pct / 10) * 10;
-        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }
+        var pct = Math.floor(m.pct / 25) * 25;   // quarter steps, less chatter
+        if (pct > lastPct) { lastPct = pct; neural.pct = pct; say('downloading the operator\u2026 ' + pct + '%', true); }  // kept: wait feedback
         return;
       }
       if (m.type === 'ready') {
         neural.ctx = C.intent.buildChatPrompt();
+        // Qwen3 thinks by default; the documented soft switch is '/no_think' in the
+        // system message - without it the token budget burns on <think> blocks.
+        if (neural.ctx && neural.ctx[0] && neural.ctx[0].role === 'system') neural.ctx[0].content += ' /no_think';
         neural.state = 'on';
-        say('operator online (' + (m.device || 'cpu') + ') \u2014 tell me what you want. I answer for myself now.', true);
+        say('operator online.', true);
+        sayDbg('engine: ' + (m.device || 'cpu'));
         var q = neural.queue.splice(0);
         for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
         return;
@@ -3342,7 +3354,7 @@
     A.init();
     A.setAmbience('void');
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
-    say('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'), true);
+    sayDbg('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'));
     checkStale(bt ? bt[1] : '');
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}

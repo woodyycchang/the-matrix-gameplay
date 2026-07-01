@@ -1083,7 +1083,7 @@ section('think-time yield: the game gives up the core while he generates');
   ok(/inFlight\+\+/.test(app7) && /inFlight = Math\.max\(0, neural\.inFlight - 1\)/.test(app7), 'in-flight generations are counted up and down');
   ok(/paintSkip = \(paintSkip \+ 1\) % 3/.test(app7) && /!throttled \|\| paintSkip === 0/.test(app7), 'painting drops to 1/3 cadence while a reply is in flight');
   ok(/else frameMs\.length = 0;/.test(app7), 'adaptive resolution ignores throttled frames (no false raise)');
-  ok(/max_new_tokens: 48/.test(app7) && !/max_new_tokens: 96/.test(app7), 'token budget halved to 48 - replies land in half the time');
+  ok(/max_new_tokens: 64/.test(app7) && !/max_new_tokens: 96/.test(app7), 'token budget 64 - snappy but roomy for Qwen3');
 }
 
 
@@ -1198,6 +1198,18 @@ section('the cursor is visible on ANY background (halo crosshair)');
   const tplF = fsF.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/cursor:url\("data:image\/svg\+xml/.test(tplF) && /stroke='%23fff' stroke-width='5'/.test(tplF), 'canvas cursor is a white-halo crosshair - cannot melt into the white void');
   ok(/\) 11 11, crosshair\}/.test(tplF), 'hotspot centered and plain crosshair kept as the fallback');
+}
+
+
+section('quiet boot + Qwen3 brain (research-grounded)');
+{
+  const fsG = require('fs');
+  const appG = fsG.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/function sayDbg/.test(appG) && /var dbg = false/.test(appG) && /lv === 'debug'/.test(appG), 'telemetry channel exists, defaults OFF, toggles via typing debug');
+  ok(/sayDbg\('construct online/.test(appG) && /sayDbg\('voice link ok/.test(appG) && /sayDbg\('voice: '/.test(appG), 'build/probe/voice telemetry routed off the player channel');
+  ok(/say\('operator online\.', true\)/.test(appG), 'the player hears one clean diegetic line when he wakes');
+  ok(/onnx-community\/Qwen3-0\.6B-ONNX/.test(appG) && !/SmolLM2-360M-Instruct/.test(appG), 'brain upgraded to Qwen3-0.6B (official transformers.js drop-in)');
+  ok(/\/no_think/.test(appG), "Qwen3's thinking mode is disabled via the documented /no_think soft switch");
 }
 
 // ---------------------------------------------------------------- summary
