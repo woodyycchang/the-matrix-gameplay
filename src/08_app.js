@@ -177,6 +177,11 @@
       say('pointer lock ARMED \u2014 hold right-click for true FPS look; Esc releases. type \u201cunlock\u201d to disarm.', true);
       return;
     }
+    if (lv === 'voice') {
+      say('voice check \u2014 one clean line follows.', true);
+      A.speak('This is the Construct. My voice reaches you exactly as recorded. Nothing added. Nothing shaped.');
+      return;
+    }
     if (lv === 'debug') {
       dbg = !dbg;
       say('debug channel ' + (dbg ? 'ON \u2014 telemetry visible' : 'off'), true);

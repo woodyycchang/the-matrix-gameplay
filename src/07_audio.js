@@ -214,16 +214,31 @@
   A.playPCM = function (f32, sr) {
     if (!ctx) return;
     try {
-      if (A._ttsNode) { try { A._ttsNode.stop(); } catch (e) {} }
+      // COPY-ONLY playback TRANSPORT (not processing). Two rules:
+      // 1) never behead a line mid-word: if a line is speaking, the NEW line
+      //    waits in a depth-1 queue (older pending lines are replaced, so
+      //    there is no backlog lag either); it plays the instant this one ends.
+      // 2) forced interrupts never hard-cut: they ride a ~12 ms fader to zero
+      //    first - preventing the click WE would otherwise create.
+      if (A._ttsNode) { A._ttsQ = { f: f32, sr: sr }; return; }
       var buf = ctx.createBuffer(1, f32.length, sr);
       buf.copyToChannel(f32, 0);
       var src = ctx.createBufferSource(); src.buffer = buf;
-      src.playbackRate.value = 1.0;    // natural playback: slowing smeared the formants ('drunk' voice); depth comes from am_onyx itself
-      // RAW voice, zero processing - depth comes from the voice itself:
-      // am_adam is the lowest MEASURED pitch in Kokoro's US male roster (116 Hz).
-      src.connect(master); src.start();
-      A._ttsNode = src;
+      var g = ctx.createGain(); g.gain.value = 1.0;   // unity fader - transport, not an effect
+      src.connect(g); g.connect(master);
+      src.onended = function () {
+        A._ttsNode = null;
+        var q = A._ttsQ; A._ttsQ = null;
+        if (q) A.playPCM(q.f, q.sr);
+      };
+      src.start();
+      A._ttsNode = { src: src, g: g };
     } catch (e) {}
+  };
+  A.stopVoice = function () {   // the ONLY sanctioned interrupt: fade 12 ms, then stop
+    var n = A._ttsNode; if (!n || !ctx) return;
+    try { n.g.gain.setTargetAtTime(0, ctx.currentTime, 0.004); n.src.stop(ctx.currentTime + 0.015); } catch (e) {}
+    A._ttsNode = null; A._ttsQ = null;
   };
   A.speak = function (text) {
     if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); } catch (e) {} }

@@ -1026,7 +1026,7 @@ section('free mouse + type-first console + sigma voice (static guards)');
   const aud = fs2.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(!/pitch = 0\.65/.test(aud) && !/SpeechSynthesisUtterance/.test(aud), 'no fallback voice remains anywhere - copy-only policy holds');
   ok(!/pickSigma/.test(aud), 'the fallback voice picker is gone; naming lives on the neural-ready path');
-  ok(/_ttsNode\.stop\(\)/.test(aud), 'latest line wins via PCM node stop - the copied voice cannot lag behind');
+  ok(/A\._ttsQ = \{ f: f32/.test(aud) && /onended/.test(aud), 'lines are never beheaded: a speaking line finishes, the LATEST pending line follows');
 }
 
 
@@ -1252,7 +1252,7 @@ section('voice plays at natural speed');
 {
   const fsJ = require('fs');
   const audJ = fsJ.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/playbackRate\.value = 1\.0/.test(audJ) && !/playbackRate\.value = 0\.9/.test(audJ), 'depth comes from am_onyx itself, not from slowing playback (which smeared formants)');
+  ok(!/playbackRate\.value = 0\./.test(audJ), 'playback is never slowed - depth comes from the copied voice itself');
 }
 
 
@@ -1261,9 +1261,9 @@ section('raw deepest voice - measured, not customized');
   const fsK = require('fs');
   const audK = fsK.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   const appK = fsK.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(!/createWaveShaper/.test(audK) && !/_vChain/.test(audK) && /src\.connect\(master\); src\.start\(\)/.test(audK), 'ALL custom voice processing removed - PCM goes straight to master');
+  ok(!/createWaveShaper/.test(audK) && !/_vChain/.test(audK) && /unity fader/.test(audK), 'ALL custom voice processing removed - only a unity transport fader between copy and master');
   ok(!/speed: 0\.9/.test(audK) && !/speed: 0\.9/.test(appK), 'no speed customization anywhere - the voice runs natural');
-  ok(/playbackRate\.value = 1\.0/.test(audK), 'playback rate stays 1.0');
+  ok(!/playbackRate\.value = 0\./.test(audK), 'no rate hack anywhere - the copy plays at its native speed');
   ok(/'am_adam'/.test(appK), 'default voice = am_adam, the lowest measured pitch (116 Hz) in the US male roster');
 }
 
@@ -1292,7 +1292,19 @@ section('voice is COPY-ONLY: copied Kokoro as-is, or silence');
   const audN = fsN.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(!/SpeechSynthesisUtterance/.test(audN) && !/pickSigma/.test(audN) && !/pitch = 0\.65/.test(audN), 'the constructed system-voice fallback is gone entirely');
   ok(/A\.speakNeural/.test(audN) && /Never a constructed voice/.test(audN), 'speak routes ONLY through the copied neural voice; otherwise silence');
-  ok(/src\.connect\(master\); src\.start\(\)/.test(audN), 'and that copy plays raw - straight to master, zero processing');
+  ok(/g\.connect\(master\)/.test(audN) && /unity fader/.test(audN), 'the copy plays raw: source -> unity fader -> master, zero processing');
+}
+
+
+section('voice transport: no beheading, no clicks (Loop-1 N1a verdict)');
+{
+  const fsO = require('fs');
+  const audO = fsO.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  const appO = fsO.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/A\._ttsNode\.stop\(\)/.test(audO), 'the bare hard-stop (mid-word beheading + audible click) is gone');
+  ok(/setTargetAtTime\(0, ctx\.currentTime, 0\.004\)/.test(audO) && /stop\(ctx\.currentTime \+ 0\.015\)/.test(audO), 'the only sanctioned interrupt rides a ~12ms fader to zero before stopping');
+  ok(/g\.gain\.value = 1\.0;   \/\/ unity fader/.test(audO), 'the fader sits at unity - transport, never an effect (copy-only policy holds)');
+  ok(/lv === 'voice'/.test(appO) && /Nothing added\. Nothing shaped\./.test(appO), "typing 'voice' speaks a fixed test line - a reproducible ear target");
 }
 
 // ---------------------------------------------------------------- summary
