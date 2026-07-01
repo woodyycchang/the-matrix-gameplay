@@ -35,7 +35,7 @@
    "type": "UNIT",
    "why": "单一播放通路,一次取证覆盖",
    "status": "FIXED",
-   "evidence": "5956295: 斩首式stop定罪;运输主义(候播深度1+12ms推子)+voice自检"
+   "evidence": "5956295: 斩首式stop定罪;运输主义(候播深度1+12ms推子)+voice自检 | 后续: 用户指令全量禁用人声(本提交), 运输层保留不可达"
   },
   {
    "path": "ROOT/SOUND/voice-model",
@@ -63,7 +63,7 @@
    "type": "UNIT",
    "why": "涌现性质,只有人耳能结",
    "status": "USER",
-   "evidence": "清单: ?v≥2209 · 打voice听固定台词 · 连发无腰斩无咔哒 · 虚空死寂/枪声炸裂"
+   "evidence": "清单(改): 世界音效终审 - 枪声炸裂/引擎随速/虚空死寂/无爆音; 人声已由用户全量禁用"
   },
   {
    "path": "ROOT/NEURAL",

@@ -240,8 +240,9 @@
     try { n.g.gain.setTargetAtTime(0, ctx.currentTime, 0.004); n.src.stop(ctx.currentTime + 0.015); } catch (e) {}
     A._ttsNode = null; A._ttsQ = null;
   };
-  A.speak = function (text) {
-    if (A.ttsReady && A.speakNeural) { try { A.speakNeural(String(text).replace(/\u00b7/g, ',')); } catch (e) {} }
-    // else: SILENCE. Never a constructed voice.
+  A.speak = function () {
+    // ALL human voice DISABLED by user directive. Every line is text; the world
+    // (SFX, engine, ambience) still sounds. Transport code below is retained but
+    // unreachable - re-enabling is one line in the neural-ready handler.
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

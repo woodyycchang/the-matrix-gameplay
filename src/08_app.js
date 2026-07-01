@@ -178,8 +178,7 @@
       return;
     }
     if (lv === 'voice') {
-      say('voice check \u2014 one clean line follows.', true);
-      A.speak('This is the Construct. My voice reaches you exactly as recorded. Nothing added. Nothing shaped.');
+      say('human voice is disabled \u2014 every line is text. the world still sounds.', true);
       return;
     }
     if (lv === 'debug') {
@@ -763,7 +762,7 @@
         say('operator online.', true);
         sayDbg('engine: ' + (m.device || 'cpu'));
         var q = neural.queue.splice(0);
-        loadVoice();          // voice follows AFTER the brain - the big file gets the bandwidth first
+        // human voice disabled: no voice engine download (saves ~90 MB; world SFX unaffected)
         if (q.length === 0) neural.worker.postMessage({ type: 'warmup' });   // compile shaders now, not on your first real question
         for (var qi = 0; qi < q.length; qi++) neuralSend(q[qi]);
         return;
@@ -840,14 +839,6 @@
       ev.stopPropagation();
       say('you: ' + (req || label), true);
       if (req === '__neural__') { loadNeural(); return; }
-      if (req === '__deepvoice__') {
-        var cyc = ['am_onyx', 'am_michael', 'am_adam'];
-        A.voiceChoice = cyc[(cyc.indexOf(A.voiceChoice) + 1) % cyc.length];
-        if (vox.state === 'off') loadVoice();
-        say('voice set to ' + A.voiceChoice + (vox.state === 'on' ? '' : ' \u2014 loading the AI voice engine'), true);
-        // situation-2 disabled by user: voice switching is SILENT - the next scripted line demonstrates the new register.
-        return;
-      }
       game.request(req || label);
       A.handle('chirp');
     });
@@ -873,7 +864,6 @@
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {

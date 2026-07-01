@@ -1142,11 +1142,11 @@ section('the AI sigma voice: Kokoro am_adam at natural speed (exact web params)'
   const fsA = require('fs');
   const appA = fsA.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/'am_adam'/.test(appA) && !/speed: 0\.9/.test(appA), "the literal 'am_adam' voice, raw at natural speed - no transferred tuning left");
-  ok(/function loadVoice/.test(appA) && /loadVoice\(\);          \/\/ voice follows AFTER the brain/.test(appA), 'downloads are serialized: the 0.5 GB brain gets full bandwidth, the voice follows');
+  ok(/human voice disabled: no voice engine download/.test(appA), 'voice engine is never downloaded - ~90 MB saved, world SFX unaffected');
   const audA = fsA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/A\.playPCM/.test(audA) && /A\.ttsReady && A\.speakNeural/.test(audA), 'neural voice plays through the master bus; system male voice stays as fallback');
+  ok(/ALL human voice DISABLED/.test(audA), 'ALL human voice is disabled by user directive - text carries every line');
   ok(/AI voice failed to load/.test(appA) && /cdn blocked/.test(appA), 'AI-voice load failure is now LOUD (no silent fallback) so we know if Kokoro did not load');
-  ok(/am_michael/.test(appA) && /__deepvoice__/.test(appA), 'a deeper male (am_michael) is selectable via the deeper-voice chip');
+  ok(!/__deepvoice__/.test(appA), 'the voice chip is removed along with the voice');
 }
 
 
@@ -1156,7 +1156,7 @@ section('voice chain: every link observable, depth by model (first principles)')
   const appB = fsB.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/esm\.sh\/kokoro-js/.test(appB) && /LIB_URLS/.test(appB), 'library link has 3-CDN fallback (jsdelivr -> esm.sh -> latest)');
   ok(/voice link ok: /.test(appB) && /voice link FAILED: /.test(appB) && /voice model\\u2026/.test(appB), 'every chain link reports by name - the breaking link names itself in the log');
-  ok(/voiceChoice = 'am_adam'/.test(appB) && /am_onyx/.test(appB) && /am_michael/.test(appB), 'am_adam (116 Hz measured) is the default; onyx and michael remain in the cycle');
+  ok(!/__deepvoice__/.test(appB) && !/loading the AI voice engine/.test(appB), 'no voice cycle, no voice loader strings remain in the UI path');
 }
 
 
@@ -1291,7 +1291,7 @@ section('voice is COPY-ONLY: copied Kokoro as-is, or silence');
   const fsN = require('fs');
   const audN = fsN.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(!/SpeechSynthesisUtterance/.test(audN) && !/pickSigma/.test(audN) && !/pitch = 0\.65/.test(audN), 'the constructed system-voice fallback is gone entirely');
-  ok(/A\.speakNeural/.test(audN) && /Never a constructed voice/.test(audN), 'speak routes ONLY through the copied neural voice; otherwise silence');
+  ok(/A\.speak = function \(\) \{/.test(audN) && /ALL human voice DISABLED/.test(audN), 'A.speak is a documented no-op - silence, never a constructed voice');
   ok(/g\.connect\(master\)/.test(audN) && /unity fader/.test(audN), 'the copy plays raw: source -> unity fader -> master, zero processing');
 }
 
@@ -1304,7 +1304,7 @@ section('voice transport: no beheading, no clicks (Loop-1 N1a verdict)');
   ok(!/A\._ttsNode\.stop\(\)/.test(audO), 'the bare hard-stop (mid-word beheading + audible click) is gone');
   ok(/setTargetAtTime\(0, ctx\.currentTime, 0\.004\)/.test(audO) && /stop\(ctx\.currentTime \+ 0\.015\)/.test(audO), 'the only sanctioned interrupt rides a ~12ms fader to zero before stopping');
   ok(/g\.gain\.value = 1\.0;   \/\/ unity fader/.test(audO), 'the fader sits at unity - transport, never an effect (copy-only policy holds)');
-  ok(/lv === 'voice'/.test(appO) && /Nothing added\. Nothing shaped\./.test(appO), "typing 'voice' speaks a fixed test line - a reproducible ear target");
+  ok(/human voice is disabled/.test(appO), "typing 'voice' explains the state in text - nothing is spoken");
 }
 
 
