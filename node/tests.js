@@ -1094,7 +1094,7 @@ section('UI layout sanity (template guards)');
   ok(/width:min\(720px,92vw\)/.test(tpl), 'console is width-capped - clears the ride gauges bottom-right');
   ok(/flex-wrap:nowrap;overflow-x:auto/.test(tpl), 'chips sit in one scrollable row, never two stacked rows');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
-  ok(/HOLD RIGHT-CLICK = LOOK/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the hold-to-look scheme');
+  ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl), 'boot keys + hint match the no-capture scheme');
 }
 
 
@@ -1167,6 +1167,17 @@ section('build stamp (cache-vs-current decidable at a glance)');
   ok(/BUILD __BUILD__/.test(fsC.readFileSync(__dirname + '/../template.html', 'utf8')), 'template carries the build placeholder');
   ok(/__BUILD__/.test(fsC.readFileSync(__dirname + '/../build.sh', 'utf8')), 'build.sh stamps the placeholder with the UTC build time');
   ok(/construct online .* build /.test(fsC.readFileSync(__dirname + '/../src/08_app.js', 'utf8').replace(/\\u00b7/g,'.')), 'first log line announces the running build');
+}
+
+
+section('the cursor can NEVER be captured by default (lock is opt-in)');
+{
+  const fsD = require('fs');
+  const appD = fsD.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/var lockAllowed = false/.test(appD) && /if \(!lockAllowed\) return;/.test(appD), 'pointer lock is fused off by default - no code path can take the cursor');
+  ok(/lv === 'lock'/.test(appD) && /lv === 'unlock'/.test(appD) && /exitPointerLock/.test(appD), "typing 'lock' arms FPS capture; 'unlock' disarms and releases immediately");
+  ok(/EDGE_TURN/.test(appD) && /window\.innerWidth \* 0\.12/.test(appD) && /!game\.bike/.test(appD), 'edge-turn gives unbounded rotation with zero capture (off while riding)');
+  ok(/mdMoved = 999/.test(appD), 'right-drag look never fires a click on release');
 }
 
 // ---------------------------------------------------------------- summary

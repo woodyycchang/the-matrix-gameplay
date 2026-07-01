@@ -69,7 +69,7 @@
 
 <div id="scene">THE CONSTRUCT</div>
 <div id="aim"></div>
-<div id="lookhint">HOLD RIGHT-CLICK = LOOK · CLICK = ACT · ESC = TYPE</div>
+<div id="lookhint">EDGES = TURN · HOLD RIGHT-DRAG = LOOK · CLICK = ACT · ESC = TYPE</div>
 <div id="console">
   <div id="log"></div>
   <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
@@ -82,9 +82,9 @@
   <div class="t">THE CONSTRUCT</div>
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
-  <div class="keys">WASD move · SHIFT sprint · SPACE jump · hold right-click to look · C code vision<br>
+  <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2025</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2030</span></div>
 </div>
 
 <script>
@@ -2576,6 +2576,7 @@
   function onMouseMove(e) {
     if (!started) return;
     if (plocked()) { mouseDX += e.movementX || 0; mouseDY += e.movementY || 0; return; }
+    curX = e.clientX; curY = e.clientY;
     if (dragging) {
       var dx = e.clientX - lastMX, dy = e.clientY - lastMY;
       mouseDX += dx; mouseDY += dy; mdMoved += Math.abs(dx) + Math.abs(dy);
@@ -2592,7 +2593,11 @@
   // Left click = act. Left drag = casual edge-bounded look (fallback, also mobile).
   function plocked() { return document.pointerLockElement === canvas; }
   var rmbRelease = false;   // our own unlock (right-button up) must NOT yank focus to the console
+  var lockAllowed = false;  // pointer lock is OPT-IN (type 'lock'). By default NO code path can capture the cursor.
+  var curX = -1, curY = -1; // last seen cursor position (drives edge-turn)
+  var EDGE_TURN = 1100;     // px/sec fed into look at full edge depth
   function lockPointer() {
+    if (!lockAllowed) return;               // fused: cannot fire unless the player armed it
     if (!canvas.requestPointerLock) return;
     try {
       var p = canvas.requestPointerLock({ unadjustedMovement: true });
@@ -2604,9 +2609,12 @@
     anyEdge = true;
     if (paused) { setPaused(false); return; }
     if (touch.active) return;
-    if (e.button === 2) {                       // HOLD right button = mouse-look (borrowed)
+    if (e.button === 2) {                       // HOLD right button = look
       if (consoleOpen) hud.input.blur();
-      lockPointer();
+      if (lockAllowed) { lockPointer(); return; }
+      mdWasTyping = true; mdMoved = 999;        // a right-drag must never fire on release
+      dragging = true; lastMX = e.clientX; lastMY = e.clientY;
+      mdX = e.clientX; mdY = e.clientY; mdT = performance.now();
       return;
     }
     if (consoleOpen) { hud.input.blur(); return; }          // first left click: to walk, cursor stays
@@ -2703,6 +2711,18 @@
     setTimeout(function () { routeLine(v); }, 0);
   }
   function routeLine(v) {
+    var lv = v.trim().toLowerCase();
+    if (lv === 'lock' || lv === 'pointer lock') {
+      lockAllowed = true;
+      say('pointer lock ARMED \u2014 hold right-click for true FPS look; Esc releases. type \u201cunlock\u201d to disarm.', true);
+      return;
+    }
+    if (lv === 'unlock') {
+      lockAllowed = false;
+      if (document.pointerLockElement) { try { document.exitPointerLock(); } catch (e) {} }
+      say('pointer lock disarmed \u2014 nothing can capture the cursor now.', true);
+      return;
+    }
     var pp = C.parse(v);
     if (pp.type !== 'unknown') { game.request(v); return; }
     var lex = C.intent.lexicalGuess(v);
@@ -3032,6 +3052,13 @@
       var ops = C.render(game, W, H, game.time);
       paint(ops);
     }
+    // edge-turn: park the cursor near the left/right screen edge to keep turning.
+    // Unbounded look with ZERO capture - the cursor never disappears.
+    if (started && !paused && !consoleOpen && !plocked() && !dragging && !touch.active && !game.bike && game.state === 'play' && curX >= 0 && curY < window.innerHeight * 0.72) {
+      var ebw = window.innerWidth * 0.12;
+      if (curX < ebw) mouseDX -= ((ebw - curX) / ebw) * EDGE_TURN * dt;
+      else if (curX > window.innerWidth - ebw) mouseDX += ((curX - (window.innerWidth - ebw)) / ebw) * EDGE_TURN * dt;
+    }
     tickTeletype(dt);
     updateHUD();
     if (!throttled) adapt(performance.now() - t0);
@@ -3324,7 +3351,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
-    hud.hint.textContent = 'HOLD right-click = look \u00b7 click = act \u00b7 Esc = type';
+    hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 
     var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['\ud83d\udd0a deeper voice', '__deepvoice__'], ['clear', 'clear']];
