@@ -1117,7 +1117,7 @@ section('deterministic rails around the tiny model (rescue + regex + temp)');
   ok(msgs.some(m => m.role === 'user' && m.content === 'motor'), 'few-shot includes the single-word elliptical example');
   const fs9 = require('fs');
   const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/temperature: 0\.4/.test(app9) && /rescueWord\(text\)/.test(app9), 'temperature cooled to 0.4 and rescue reads the USER text only');
+  ok(/rescueWord\(text\)/.test(app9), 'rescue reads the USER text only');
 }
 
 
@@ -1132,7 +1132,7 @@ section('lexical rescue: partial words map deterministically, before the model')
   const fs9 = require('fs');
   const app9 = fs9.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/lexicalGuess\(v\)/.test(app9) && /deterministic rescue/.test(app9), 'route order: regex -> lexical -> model');
-  ok(/temperature: 0\.4/.test(app9) && !/temperature: 0\.8/.test(app9), 'sampling calmed to 0.4 - less tiny-model drift');
+  ok(/temperature: 0.7, top_p: 0.8, top_k: 20/.test(app9), 'sampling = official Qwen3 non-thinking recipe (accuracy guarded by the deterministic rails)');
   const msgs = I.buildChatPrompt();
   ok(msgs.some((m,i)=>m.role==='user'&&m.content==='motor'&&msgs[i+1]&&/WORD:\s*motorcycle/i.test(msgs[i+1].content)), 'few-shot teaches partial words too');
 }
@@ -1236,6 +1236,16 @@ section("greeting typo regression: 'helo' must never load a scene");
   ok(r2.word === null && /dojo/.test(r2.say), 'a reply that merely mentions designated words displays but dispatches NOTHING');
   const r3 = I3.parseReply('');
   ok(/library is silent/.test(r3.say), 'the canned line survives only as the empty-reply fallback');
+}
+
+
+section('Qwen3 thinking is dead at the template level');
+{
+  const fsI = require('fs');
+  const appI = fsI.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/apply_chat_template/.test(appI) && /enable_thinking: false/.test(appI), 'the worker renders the template itself with enable_thinking:false (pre-filled empty think block)');
+  ok(/return_full_text: false/.test(appI) && /temperature: 0\.7, top_p: 0\.8, top_k: 20/.test(appI), "official non-thinking sampling recipe (T0.7/P0.8/K20), completion-only output");
+  ok(/sayDbg\('raw \\u00ab'/.test(appI), 'the raw model output is observable on the debug channel');
 }
 
 // ---------------------------------------------------------------- summary

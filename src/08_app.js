@@ -601,7 +601,10 @@
     "  if (m.type === 'warmup' && gen) { try { await gen([{ role: 'user', content: 'hi' }], { max_new_tokens: 1 }); } catch (e) {} postMessage({ type: 'warm' }); return; }",
     "  if (m.type === 'chat') {",
     "    try {",
-    "      const out = await gen(m.messages, { max_new_tokens: 64, do_sample: true, temperature: 0.4, top_p: 0.9 });",
+    "      // Template-level thinking kill: enable_thinking:false makes the template",
+    "      // pre-insert an empty <think></think>, so the model must answer directly.",
+    "      const prompt = gen.tokenizer.apply_chat_template(m.messages, { tokenize: false, add_generation_prompt: true, enable_thinking: false });",
+    "      const out = await gen(prompt, { max_new_tokens: 64, do_sample: true, temperature: 0.7, top_p: 0.8, top_k: 20, return_full_text: false });",
     "      let g = (out && out[0] && out[0].generated_text != null) ? out[0].generated_text : (out && out.generated_text != null) ? out.generated_text : out;",
     "      let reply = '';",
     "      if (Array.isArray(g)) { const last = g[g.length - 1]; reply = (last && last.content) || ''; } else if (typeof g === 'string') reply = g;",
@@ -766,6 +769,7 @@
         return;
       }
       if (m.type === 'warm') { sayDbg('warmup done \u2014 shaders compiled'); return; }
+      if (m.type === 'reply') sayDbg('raw \u00ab' + String(m.reply || '').replace(/\s+/g, ' ').slice(0, 90) + '\u00bb');
       if (m.type === 'reply' || m.type === 'replyerr') {
         var cb = neural.pending[m.id];
         if (cb) { delete neural.pending[m.id]; cb(m); }
