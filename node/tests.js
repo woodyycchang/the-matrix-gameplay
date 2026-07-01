@@ -1319,6 +1319,17 @@ section('tree_guard: the eval run is ENFORCED, not requested');
   ok(tree.nodes.filter(n => n.status === 'USER').length >= 4, 'the emergent leaves (ear, feel, reply-quality, onboarding) are contractually reserved for the human');
 }
 
+
+section('runtime smoke: init-critical identifiers exist (lesson from the beheaded chip row)');
+{
+  const fsP = require('fs');
+  const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/var defs = \[\['weapons'/.test(appP) && /defs\.length; i\+\+\) hud\.chips\.appendChild/.test(appP), 'the chip row definition exists right where the loop consumes it');
+  ok(!/__deepvoice__/.test(appP) && /'__neural__'/.test(appP), 'voice chip stays gone; the other nine chips stand');
+  const used = (appP.match(/\bdefs\b/g) || []).length;
+  ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs) - a lone reference means a beheaded declaration');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
