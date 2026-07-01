@@ -69,6 +69,9 @@
 
 <div id="scene">THE CONSTRUCT</div>
 <div id="aim"></div>
+<div id="stale" style="display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:40;
+  background:#b3261e;color:#fff;font:600 11px/1.5 ui-monospace,monospace;letter-spacing:.08em;
+  padding:6px 14px;border-radius:3px;pointer-events:none"></div>
 <div id="lookhint">EDGES = TURN · HOLD RIGHT-DRAG = LOOK · CLICK = ACT · ESC = TYPE</div>
 <div id="console">
   <div id="log"></div>
@@ -84,7 +87,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2030</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0701-2036</span></div>
 </div>
 
 <script>
@@ -3229,6 +3232,33 @@
     if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
   };
 
+
+  // The cache detective, automated: ask GitHub when main was last pushed; if this
+  // copy was built meaningfully earlier, it is a stale cached build - confess loudly.
+  function checkStale(buildStr) {
+    if (!buildStr || !window.fetch) return;
+    try {
+      fetch('https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main', { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var iso = j && j.commit && ((j.commit.committer && j.commit.committer.date) || (j.commit.author && j.commit.author.date));
+          var m = buildStr.match(/(\d{2})(\d{2})-(\d{2})(\d{2})/);
+          if (!iso || !m) return;
+          var nowY = new Date().getUTCFullYear();
+          var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
+          if (Date.parse(iso) - bts > 3 * 60 * 1000) {
+            var el = document.getElementById('stale');
+            if (el) {
+              el.textContent = 'OLD CACHED BUILD ' + buildStr + ' \u2014 LATEST PUSH ' + iso.slice(5, 16).replace('T', ' ') + ' UTC \u2014 HARD-REFRESH (Cmd/Ctrl+Shift+R)';
+              el.style.display = 'block';
+            }
+            say('warning: this is an OLD cached build (' + buildStr + '). hard-refresh to get the current one.', true);
+          }
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
@@ -3310,6 +3340,7 @@
     A.setAmbience('void');
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
     say('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'), true);
+    checkStale(bt ? bt[1] : '');
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }

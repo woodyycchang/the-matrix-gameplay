@@ -689,6 +689,33 @@
     if (vox.state === 'on') vox.worker.postMessage({ type: 'speak', text: String(text), voice: A.voiceChoice });
   };
 
+
+  // The cache detective, automated: ask GitHub when main was last pushed; if this
+  // copy was built meaningfully earlier, it is a stale cached build - confess loudly.
+  function checkStale(buildStr) {
+    if (!buildStr || !window.fetch) return;
+    try {
+      fetch('https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main', { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var iso = j && j.commit && ((j.commit.committer && j.commit.committer.date) || (j.commit.author && j.commit.author.date));
+          var m = buildStr.match(/(\d{2})(\d{2})-(\d{2})(\d{2})/);
+          if (!iso || !m) return;
+          var nowY = new Date().getUTCFullYear();
+          var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
+          if (Date.parse(iso) - bts > 3 * 60 * 1000) {
+            var el = document.getElementById('stale');
+            if (el) {
+              el.textContent = 'OLD CACHED BUILD ' + buildStr + ' \u2014 LATEST PUSH ' + iso.slice(5, 16).replace('T', ' ') + ' UTC \u2014 HARD-REFRESH (Cmd/Ctrl+Shift+R)';
+              el.style.display = 'block';
+            }
+            say('warning: this is an OLD cached build (' + buildStr + '). hard-refresh to get the current one.', true);
+          }
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
@@ -770,6 +797,7 @@
     A.setAmbience('void');
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
     say('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'), true);
+    checkStale(bt ? bt[1] : '');
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
     if (window.speechSynthesis) try { window.speechSynthesis.getVoices(); } catch (e) {}
   }

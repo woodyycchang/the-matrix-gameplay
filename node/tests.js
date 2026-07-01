@@ -1180,6 +1180,17 @@ section('the cursor can NEVER be captured by default (lock is opt-in)');
   ok(/mdMoved = 999/.test(appD), 'right-drag look never fires a click on release');
 }
 
+
+section('stale cached builds confess by themselves');
+{
+  const fsE = require('fs');
+  const appE = fsE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  const tplE = fsE.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/id="stale"/.test(tplE), 'template carries the red stale banner');
+  ok(/api\.github\.com\/repos\/woodyycchang\/the-matrix-gameplay\/commits\/main/.test(appE), 'the game asks GitHub when main was last pushed');
+  ok(/checkStale\(bt \? bt\[1\] : ''\)/.test(appE) && /OLD cached build/.test(appE), 'boot compares its own build stamp and warns loudly when stale');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
