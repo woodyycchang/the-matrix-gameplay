@@ -1480,6 +1480,7 @@ section('self-healing update loop');
   const fsAE = require('fs');
   const appAE = fsAE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/\?live=' \+ Date\.now\(\), \{ cache: 'no-store' \}/.test(appAE), 'ground truth: the page reads the BUILD the CDN is actually serving');
+  ok(/auto-swap within ~10 min \(edge cache\)/.test(appAE) && /check #' \+ pn/.test(appAE), 'the amber state names its physics bound and beats a visible pulse - never looks hung');
 }
 
 

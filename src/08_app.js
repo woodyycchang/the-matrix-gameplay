@@ -757,14 +757,22 @@
             var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
             if (Date.parse(iso) - bts > 3 * 60 * 1000) {
               var el = document.getElementById('stale');
-              if (el) {
-                el.textContent = 'NEW BUILD DEPLOYING \u2014 this page will refresh itself when it goes live';
-                el.style.background = '#8a6d1a';
-                el.style.display = 'block';
+              var pn = 0;
+              function amber() {
+                if (el) {
+                  el.textContent = 'NEW BUILD DEPLOYING \u2014 auto-swap within ~10 min (edge cache)' + (pn ? ' \u00b7 check #' + pn : '');
+                  el.style.background = '#8a6d1a';
+                  el.style.display = 'block';
+                }
               }
-              sayDbg('deploy in flight: repo head newer than the served build');
+              amber();
+              sayDbg('deploy in flight: repo head newer than the served build; poll is edge-TTL-bound');
               var poll = setInterval(function () {
-                servedStamp().then(function (s2) { if (s2 && s2 !== buildStr) { clearInterval(poll); goTo(s2); } });
+                pn++;
+                servedStamp().then(function (s2) {
+                  if (s2 && s2 !== buildStr) { clearInterval(poll); goTo(s2); }
+                  else amber();
+                });
               }, 30000);
             }
           })
