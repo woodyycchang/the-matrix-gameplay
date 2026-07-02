@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0047</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0050</span></div>
 </div>
 
 <script>
@@ -2420,8 +2420,20 @@
   }, 60); }
   function musLoad() { if (!musEl) return; musEl.src = MUSBASE + MUSLIST[musIdx]; try { musEl.load(); } catch (e) {} }
   function musNext() { musIdx = (musIdx + 1) % MUSLIST.length; musLoad(); if (musEl) { try { musEl.play().catch(function () {}); } catch (e) {} } }
+  var musIntroDone = false;
   function musMake() {
     musEl = new Audio(); musEl.preload = 'auto'; musEl.volume = 0; musEl.loop = false;
+    // NEEDLE-DROP (user call): the opening track's dynamics are extreme -
+    // near-silent intro, loudest in the MIDDLE. The session's FIRST track
+    // starts at ~45% of its length so entry lands just before the swell.
+    // Later tracks and full-album wraps play whole - the work stays untouched,
+    // we only choose where the needle first lands.
+    musEl.addEventListener('loadedmetadata', function () {
+      if (!musIntroDone && musIdx === 0 && isFinite(musEl.duration) && musEl.duration > 0) {
+        try { musEl.currentTime = musEl.duration * 0.45; } catch (e) {}
+        musIntroDone = true;
+      }
+    });
     musEl.addEventListener('ended', musNext);
     musEl.addEventListener('playing', function () { musErr = 0; genBedStop(); });   // stream landed: dissolve the overture
     musEl.addEventListener('error', function () {

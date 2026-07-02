@@ -1454,6 +1454,15 @@ section('tab-aware: nothing plays behind your back');
   ok(/ctx\.state === 'running'\) ctx\.suspend\(\)/.test(audAB) && /ctx\.state === 'suspended'\) ctx\.resume\(\)/.test(audAB), 'the WebAudio context suspends too - ambience, SFX and the generative bed all go quiet with the tab');
 }
 
+
+section('needle-drop: the first track opens at its swell');
+{
+  const fsAC = require('fs');
+  const audAC = fsAC.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/loadedmetadata/.test(audAC) && /musEl\.duration \* 0\.45/.test(audAC), "the session's first track starts ~45% in, just before the loud middle");
+  ok(/var musIntroDone = false;/.test(audAC) && /musIntroDone = true;/.test(audAC) && /!musIntroDone && musIdx === 0/.test(audAC), 'one-shot and first-track-only: later tracks and album wraps play whole');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
