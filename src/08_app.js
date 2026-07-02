@@ -886,13 +886,7 @@
     b.className = 'chip'; b.type = 'button'; b.textContent = label;
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      say('you: ' + (req === '__neural__' ? label : (req || label)), true);
-      if (req === '__neural__') {
-        if (neural.state === 'on') say('operator is already online.', true);
-        else if (neural.state === 'loading') { neural.quiet = false; say('operator is waking\u2026 he will answer the moment he is up.', true); }
-        else loadNeural();
-        return;
-      }
+      say('you: ' + (req || label), true);
       game.request(req || label);
       A.handle('chirp');
     });
@@ -918,7 +912,7 @@
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['\ud83e\udde0 neural', '__neural__'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {

@@ -1325,7 +1325,7 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
   const fsP = require('fs');
   const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/var defs = \[\['weapons'/.test(appP) && /defs\.length; i\+\+\) hud\.chips\.appendChild/.test(appP), 'the chip row definition exists right where the loop consumes it');
-  ok(!/__deepvoice__/.test(appP) && /'__neural__'/.test(appP), 'voice chip stays gone; the other nine chips stand');
+  ok(!/__deepvoice__/.test(appP) && !/__neural__/.test(appP), 'both utility chips are gone - only world-request chips remain');
   const used = (appP.match(/\bdefs\b/g) || []).length;
   ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs) - a lone reference means a beheaded declaration');
 }
@@ -1484,12 +1484,11 @@ section('self-healing update loop');
 }
 
 
-section('the neural chip always answers');
+section('the neural chip is gone - typing is the entrance');
 {
   const fsAF = require('fs');
   const appAF = fsAF.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/operator is already online\./.test(appAF) && /neural\.state === 'loading'\) \{ neural\.quiet = false;/.test(appAF), 'already-online and still-loading both get a spoken receipt - no silent no-op');
-  ok(/req === '__neural__' \? label :/.test(appAF), 'the echo shows the human label, not the internal token');
+  ok(!/__neural__/.test(appAF), 'the vestigial chip is CUT: auto-preload + first-sentence wake cover every path');
 }
 
 // ---------------------------------------------------------------- summary
