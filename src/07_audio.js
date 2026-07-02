@@ -117,40 +117,37 @@
   // per-scene from the Internet Archive item (license on the item page:
   // Attribution 3.0). The generative engine above survives ONLY as an
   // automatic fallback when the stream cannot load. Credit shown on boot.
+  // ---------- UNIVERSAL copied bed: Stellardrone, "Light Years" (CC BY) ----------
+  // One continuous album playlist from the moment you hit ENTER, everywhere -
+  // INCLUDING the void: the user's directive supersedes the scene-silence
+  // ruling for MUSIC (SFX silence in the void is unchanged). Ten tracks in
+  // sequence, wrapping - ~50 minutes before anything repeats. Stream errors
+  // skip to the next track; three straight failures fall back to the
+  // generative engine above. Attribution shown on the boot screen.
   var MUSBASE = 'https://archive.org/download/Stellardrone-LightYears/Stellardrone%20-%20Light%20Years%20-%20';
-  var MUSTRK = {
-    'neon':    { f: '06%20Cepheid.mp3',                    vol: 0.16 },
-    'city':    { f: '04%20Light%20Years.mp3',              vol: 0.14 },
-    'rooftop': { f: '02%20Airglow.mp3',                    vol: 0.15 },
-    'dojo':    { f: '03%20Eternity.mp3',                   vol: 0.12 },
-    'armory':  { f: '09%20Eternity%20%28Reprise%29.mp3',   vol: 0.12 }
-    // 'void' / 'construct' are ABSENT: the film-silence ruling holds.
-  };
-  var musEl = null, musWant = 0, musOn = true, musFadeT = null, musKey = '';
+  var MUSLIST = ['01%20Red%20Giant.mp3','02%20Airglow.mp3','03%20Eternity.mp3','04%20Light%20Years.mp3','05%20In%20Time.mp3','06%20Cepheid.mp3','07%20Ultra%20Deep%20Field.mp3','08%20Nightscape.mp3','09%20Eternity%20%28Reprise%29.mp3','10%20A%20Moment%20Of%20Stillness.mp3'];
+  var MUSVOL = 0.14;
+  var musEl = null, musIdx = 0, musErr = 0, musWant = 0, musOn = true, musFadeT = null;
   function musTarget() { return (musOn && !A.muted) ? musWant : 0; }
   function musFadeStart() { if (!musFadeT) musFadeT = setInterval(function () {
     if (!musEl) { clearInterval(musFadeT); musFadeT = null; return; }
     var t = musTarget(), v = musEl.volume, d = t - v;
-    if (Math.abs(d) < 0.004) {
-      musEl.volume = t;
-      if (t === 0 && musWant === 0) { try { musEl.pause(); } catch (e) {} }
-      clearInterval(musFadeT); musFadeT = null; return;
-    }
-    musEl.volume = v + d * 0.12;   // ~2 s ease
+    if (Math.abs(d) < 0.004) { musEl.volume = t; clearInterval(musFadeT); musFadeT = null; return; }
+    musEl.volume = v + d * 0.12;
   }, 60); }
-  A.music = function (name) {
-    musKey = name;
-    var p = MUSTRK[name];
-    if (!p) { musWant = 0; if (musEl) musFadeStart(); genBed(name); return; }   // silence keys stay silent on BOTH layers
-    genBedStop();
-    if (!musEl) {
-      musEl = new Audio(); musEl.loop = true; musEl.preload = 'auto'; musEl.volume = 0;
-      musEl.addEventListener('error', function () { musEl = null; genBed(musKey); });   // stream lost -> generative fallback
-    }
-    var url = MUSBASE + p.f;
-    if (musEl.src !== url) { musEl.src = url; try { musEl.play().catch(function () {}); } catch (e) {} }
-    else if (musEl.paused) { try { musEl.play().catch(function () {}); } catch (e) {} }
-    musWant = p.vol; musFadeStart();
+  function musLoad() { if (!musEl) return; musEl.src = MUSBASE + MUSLIST[musIdx]; try { musEl.play().catch(function () {}); } catch (e) {} }
+  function musNext() { musIdx = (musIdx + 1) % MUSLIST.length; musLoad(); }
+  A.music = function () {
+    if (musEl) { if (musEl.paused) { try { musEl.play().catch(function () {}); } catch (e) {} } musFadeStart(); return; }
+    musEl = new Audio(); musEl.preload = 'auto'; musEl.volume = 0; musEl.loop = false;
+    musEl.addEventListener('ended', musNext);
+    musEl.addEventListener('playing', function () { musErr = 0; });
+    musEl.addEventListener('error', function () {
+      musErr++;
+      if (musErr >= 3) { try { musEl.pause(); } catch (e) {} musEl = null; genBed('city'); return; }
+      musNext();
+    });
+    musIdx = 0; musErr = 0; musWant = MUSVOL; musLoad(); musFadeStart();
   };
   A.musicToggle = function () {
     musOn = !musOn;

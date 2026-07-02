@@ -1399,10 +1399,19 @@ section('the copied bed: Stellardrone, licensed and wired properly');
   const audW = fsW.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   const tplW = fsW.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/archive\.org\/download\/Stellardrone-LightYears/.test(audW), 'streams the CC BY album from the Internet Archive item');
-  ok(/'neon':/.test(audW) && /Cepheid/.test(audW) && /Airglow/.test(audW) && /Eternity/.test(audW), 'per-scene tracks mapped');
-  ok(!/'void':\s*\{ f:/.test(audW) && !/'construct':\s*\{ f:/.test(audW), 'no track for the void under either name - the silence ruling holds on the copy layer too');
-  ok(/addEventListener\('error', function \(\) \{ musEl = null; genBed\(musKey\)/.test(audW), 'stream failure falls back to the generative bed automatically');
+  ok(/MUSLIST = \['01%20Red%20Giant/.test(audW) && (audW.match(/%20/g) || []).length > 20 && /musIdx \+ 1\) % MUSLIST\.length/.test(audW), 'a ten-track album playlist cruises in sequence and wraps');
+  ok(/INCLUDING the void/.test(audW) && !/MUSTRK/.test(audW), 'UNIVERSAL: one continuous bed everywhere from ENTER - the user directive supersedes scene silence for music');
+  ok(/musErr >= 3/.test(audW) && /genBed\('city'\)/.test(audW) && /addEventListener\('ended', musNext\)/.test(audW), 'errors skip tracks; three straight failures fall back to the generative engine');
   ok(/Stellardrone \u201cLight Years\u201d \(CC BY\)/.test(tplW) || /Stellardrone “Light Years” \(CC BY\)/.test(tplW), 'CC BY attribution is shown on the boot screen - the license is honored');
+}
+
+
+section('the bed begins at ENTER');
+{
+  const fsX = require('fs');
+  const appX = fsX.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/A\.init\(\);\n    A\.music\(\);/.test(appX), 'A.music() fires right after audio init on the ENTER gesture');
+  ok(!/lastBed/.test(appX), 'the per-scene bed hook is gone - the music is one universe, not room lights');
 }
 
 // ---------------------------------------------------------------- summary

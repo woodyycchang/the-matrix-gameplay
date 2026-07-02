@@ -397,7 +397,7 @@
   }
 
   // ---------- HUD ----------
-  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1, lastBed = '';
+  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
   function updateHUD() {
     var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     if (game.scene && game.scene.infinite) {
@@ -407,7 +407,6 @@
     }
     if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
     if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
-    if (game.sceneName !== lastBed) { lastBed = game.sceneName; A.music(String(game.sceneName || '').toLowerCase().split(' ')[0]); }
     var a = game.aim, label = '';
     if (game.bike) {
       if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
@@ -830,6 +829,7 @@
     hud.boot.classList.add('gone');
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
     A.init();
+    A.music();   // the universal bed begins the moment you enter
     A.setAmbience('void');
     var bt = document.body.innerHTML.match(/BUILD (\d{4}-\d{4})/);
     sayDbg('construct online \u00b7 build ' + (bt ? bt[1] : 'dev'));
