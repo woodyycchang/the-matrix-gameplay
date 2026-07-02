@@ -1190,7 +1190,7 @@ section('stale cached builds confess by themselves');
   const tplE = fsE.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/id="stale"/.test(tplE), 'template carries the red stale banner');
   ok(/api\.github\.com\/repos\/woodyycchang\/the-matrix-gameplay\/commits\/main/.test(appE), 'the game asks GitHub when main was last pushed');
-  ok(/checkStale\(bt \? bt\[1\] : ''\)/.test(appE) && /OLD cached build/.test(appE), 'boot compares its own build stamp and warns loudly when stale');
+  ok(/function checkStale/.test(appE) && /servedStamp\(\)/.test(appE) && /self-heal/.test(appE), 'boot checks the SERVED build and heals itself - warning humans to refresh is retired');
 }
 
 
@@ -1328,7 +1328,7 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
   const fsP = require('fs');
   const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/var defs = \[\['weapons'/.test(appP) && /defs\.length; i\+\+\) hud\.chips\.appendChild/.test(appP), 'the chip row definition exists right where the loop consumes it');
-  ok(!/__deepvoice__/.test(appP) && /'__neural__'/.test(appP), 'voice chip stays gone; the other nine chips stand');
+  ok(!/__deepvoice__/.test(appP) && !/__neural__/.test(appP), 'both utility chips are gone - only world-request chips remain');
   const used = (appP.match(/\bdefs\b/g) || []).length;
   ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs) - a lone reference means a beheaded declaration');
 }
@@ -1474,7 +1474,34 @@ section('rooftop speaks safety; the script sheds its corn');
   ok(/You cannot be hurt here/.test(gm) && /run, jump, fly/.test(gm) && !/wide as your doubt/.test(gm), 'rooftop invites flight - explicit safety, no dare-framing');
   ok(/landing is guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
   ok(/you are fine/.test(gm) && !/Pain here is just information/.test(gm), 'falls are met with reassurance, not pain philosophy');
-  ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm), 'corn purged');
+  ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm) && !/White suits you/.test(gm), 'corn purged - including the white-suits-you wink');
+}
+
+
+section('self-healing update loop');
+{
+  const fsAE = require('fs');
+  const appAE = fsAE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/\?live=' \+ Date\.now\(\), \{ cache: 'no-store' \}/.test(appAE), 'ground truth: the page reads the BUILD the CDN is actually serving');
+  ok(/auto-swap within ~10 min \(edge cache\)/.test(appAE) && /check #' \+ pn/.test(appAE), 'the amber state names its physics bound and beats a visible pulse - never looks hung');
+}
+
+
+section('the neural chip is gone - typing is the entrance');
+{
+  const fsAF = require('fs');
+  const appAF = fsAF.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(!/__neural__/.test(appAF), 'the vestigial chip is CUT: auto-preload + first-sentence wake cover every path');
+}
+
+
+section('the parrot is dead: examples teach format, not sentences');
+{
+  const fsAG = require('fs');
+  const inG = fsAG.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
+  ok(/never repeat any example sentence word-for-word/.test(inG), 'the system law forbids verbatim example repetition');
+  ok(!/I hear you\. Name a program or an object and I will load it\./.test(inG), 'the old single attractor sentence is gone');
+  ok(/Line is open/.test(inG) && /Name a program, I will load it/.test(inG), 'two differently-worded greeting exemplars force interpolation');
 }
 
 // ---------------------------------------------------------------- déjà vu hallway

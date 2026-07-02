@@ -11,7 +11,7 @@
     dojo: 'Sparring program loaded. The dummy forgives. Eventually.',
     rooftop: 'Jump program. You cannot be hurt here \u2014 run, jump, fly.',
     city: 'Crowd simulation, lunch hour. Eyes forward — stay with me.',
-    clear: 'Wiping the room. White suits you.',
+    clear: 'Wiping the room.',
     codeOn: 'Dropping the render layer. This is what it really looks like.',
     codeOff: 'Restoring the skin.',
     fall1: 'Breathe \u2014 you are fine. The street is code; nothing here can hurt you.',
