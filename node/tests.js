@@ -1491,6 +1491,16 @@ section('the neural chip is gone - typing is the entrance');
   ok(!/__neural__/.test(appAF), 'the vestigial chip is CUT: auto-preload + first-sentence wake cover every path');
 }
 
+
+section('the parrot is dead: examples teach format, not sentences');
+{
+  const fsAG = require('fs');
+  const inG = fsAG.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
+  ok(/never repeat any example sentence word-for-word/.test(inG), 'the system law forbids verbatim example repetition');
+  ok(!/I hear you\. Name a program or an object and I will load it\./.test(inG), 'the old single attractor sentence is gone');
+  ok(/Line is open/.test(inG) && /Name a program, I will load it/.test(inG), 'two differently-worded greeting exemplars force interpolation');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
