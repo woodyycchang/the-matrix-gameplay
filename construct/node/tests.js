@@ -503,6 +503,7 @@ section('soak (4500 frames)');
     [30, null, 'three chairs and a tv'], [300, {}],
     [30, null, 'a hallway'], [700, {}], [10, null, 'code'], [260, { fwd: 1 }],
     [10, null, 'code'], [700, {}], [200, { fwd: 1, sprint: true }], [120, {}],
+    [500, { fwd: 1, sprint: true }], [80, {}],
   ];
   let frames = 0, nanFrames = 0;
   for (const [n, inp, req] of script) {
@@ -1675,6 +1676,74 @@ section('déjà vu: determinism');
   eq(runs[0].rec, runs[1].rec, 'identical scripts record identical walks');
   eq(runs[0].pick, runs[1].pick, 'identical scripts pick the same fixture');
   ok(['brick', 'bars', 'dead'].includes(runs[0].pick), 'the pick is a real fixture, wearing its new name');
+}
+
+// the corridor with no end: shut before the seal, endless after it
+section('déjà vu: infinite hallway');
+{
+  const gPre = new C.Game();
+  gPre.request('a hallway');
+  step(gPre, null, 1.0);   // settle: door still shut
+  gPre.player.pos = [-7, 0, 0]; gPre.player.vel = [0, 0, 0]; gPre.player.yaw = -Math.PI / 2;
+  step(gPre, { fwd: 1, sprint: true }, 2.0);
+  ok(gPre.player.pos[0] > -HALL.HL - 0.1, 'before the seal the far door holds (' + gPre.player.pos[0].toFixed(2) + ')');
+
+  const g = new C.Game();
+  g.request('a hallway');
+  ok(runTo(g, 'after', 60), 'arc completes');
+  const dv = g.scene.dv;
+  const fe = g.scene.insts.find(i => i.kind === 'farend');
+  eq(fe.state, 'open', 'the door that never opens has opened');
+  eq(fe.label, 'corridor', 'up close its code now spells where it leads');
+  ok(fe.glyphEpoch === 1, 'and its code re-seeded');
+  const segs = g.scene.insts.filter(i => i.kind === 'segment');
+  eq(segs.length, 6, 'three corridor segments and three lamps laid down');
+  const segMeshes = segs.filter(i => i.label === 'corridor');
+  ok(segMeshes.length === 3 && segMeshes[0].mesh === segMeshes[1].mesh && segMeshes[1].mesh === segMeshes[2].mesh, 'segments share one mesh: the repeat is literal');
+  ok(!!dv.loop && dv.loop.laps === 0, 'the loop is armed, untriggered');
+
+  // proof 1 the door lifted: the same sprint that was blocked now leaves the corridor
+  g.player.pos = [-8, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = -Math.PI / 2;
+  step(g, { fwd: 1, sprint: true }, 2.0);
+  ok(g.player.pos[0] < -HALL.HL - 2, 'after the seal the same sprint passes through');
+
+  // proof 2 the loop is a pure translation: every discontinuity in the track equals one period
+  const lapsStart = dv.loop.laps;
+  const track = [g.player.pos[0]];
+  for (let i = 0; i < 60 * 6; i++) { g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain(); track.push(g.player.pos[0]); }
+  const jumps = [];
+  for (let i = 1; i < track.length; i++) if (Math.abs(track[i] - track[i - 1]) > 1) jumps.push(track[i] - track[i - 1]);
+  const lapsRun = dv.loop.laps - lapsStart;
+  ok(lapsRun >= 4, 'six seconds of running: ' + lapsRun + ' laps');
+  eq(jumps.length, lapsRun, 'every lap is one discontinuity, nothing else moved the player');
+  ok(jumps.every(j => Math.abs(j - HALL.SEGP) < 0.25), 'each wrap is one period, give or take a tick of motion');
+  ok(g.player.pos[0] > dv.loop.at - 0.7 && g.player.pos[0] < dv.loop.at + HALL.SEGP + 0.7, 'the runner never actually gets anywhere');
+  ok(finiteDeep(g.player.pos) && finiteDeep(g.player.vel), 'player state stays finite through the wraps');
+
+  // the endless stretch renders clean in both sights
+  step(g, null, 0.1);
+  for (const md of ['normal', 'code']) {
+    const m0 = g.mode; g.mode = md;
+    const ops = C.render(g, 400, 225, g.time);
+    const bad = ops.filter(o => o.t === 'poly' && !o.p.every(Number.isFinite)).length;
+    ok(bad === 0 && ops.length > 40, 'loop zone renders (' + md + '): ' + ops.length + ' ops, no NaN');
+    g.mode = m0;
+  }
+
+  // the seam is hidden behind your back: facing the phone, no wrap fires
+  g.player.pos = [dv.loop.at + 0.05, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = Math.PI / 2;
+  const lapsBefore = dv.loop.laps;
+  step(g, { fwd: -1 }, 0.7);
+  ok(dv.loop.laps === lapsBefore && g.player.pos[0] < dv.loop.at, 'facing back, the wrap line lets you cross');
+  step(g, { fwd: -1 }, 4.0);
+  ok(dv.loop.laps > lapsBefore, 'but the corridor still refuses to end (hard wrap)');
+
+  // and the way to the phone is always finite (stop at the doorway; walking into the booth would answer it)
+  g.player.pos = [dv.loop.at + 1, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = Math.PI / 2;
+  let homeTicks = 0;
+  while (g.player.pos[0] <= -HALL.HL + 0.05 && homeTicks++ < 60 * 6) { g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain(); }
+  ok(g.player.pos[0] > -HALL.HL, 'turning around, the doorway home is a real distance away (' + (homeTicks / 60).toFixed(1) + 's)');
+  ok(g.sceneName === 'hallway', 'and the corridor is still the corridor');
 }
 
 // ---------------------------------------------------------------- summary

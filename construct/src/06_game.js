@@ -31,6 +31,7 @@
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     hallway: 'Loading a corridor. Third floor of nowhere. Watch the doorway.',
     dejavu: 'You saw that twice because it ran twice. Same recording. While it played, something in this corridor got swapped.',
+    loop: 'Run as far as you like. It is the same corridor. The phone is still behind you.',
     wayback: 'And the way you came in is a wall now. The exit moved to the far end \u2014 listen for it.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 a hallway \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };

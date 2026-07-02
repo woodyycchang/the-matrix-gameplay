@@ -356,6 +356,10 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   step(g, null, 1.4);
   at(g, 6.6, 0, 0); look(g, Math.PI / 2, 0.0);
   shoot(g, '39_hall_wayback_bricked', g.time);
+  // ---- 40 the corridor with no end ----
+  step(g, null, 1.6);   // segments finish materializing
+  at(g, dv.loop.at + 2.6, 0, 0); look(g, -Math.PI / 2, -0.01);
+  shoot(g, '40_hall_infinite', g.time);
 }
 
 console.log('done');
