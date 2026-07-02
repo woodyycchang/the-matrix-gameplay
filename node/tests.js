@@ -1380,6 +1380,18 @@ section('full screen, dynamically adjusted');
   ok(/F fullscreen/.test(tplU), 'the boot keys teach it');
 }
 
+
+section('generative sci-fi bed: evolving forever, silent in the void');
+{
+  const fsV = require('fs');
+  const audV = fsV.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  const appV = fsV.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/l1\.frequency\.value = 0\.07/.test(audV) && /l2\.frequency\.value = 0\.11/.test(audV), 'two UNSYNCED slow LFOs (0.07/0.11 Hz) - cycles never align, the bed never repeats');
+  ok(/'void':   \{ g: 0,/.test(audV), 'the void stays SILENT - the film ruling holds even with music in the game');
+  ok(!/g: 0\.0[6-9]/.test(audV) && !/g: 0\.[1-9]/.test(audV), 'bed gain caps at 0.05 - an atmosphere, never a soundtrack fighting the SFX');
+  ok(/lv === 'music'/.test(appV) && /A\.musicToggle/.test(appV), "typing 'music' toggles the bed with a slow fade");
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

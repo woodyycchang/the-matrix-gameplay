@@ -183,6 +183,10 @@
       say('pointer lock ARMED \u2014 hold right-click for true FPS look; Esc releases. type \u201cunlock\u201d to disarm.', true);
       return;
     }
+    if (lv === 'music') {
+      say('music ' + (A.musicToggle() ? 'on \u2014 a generative bed, never the same twice' : 'off'), true);
+      return;
+    }
     if (lv === 'voice') {
       say('human voice is disabled \u2014 every line is text. the world still sounds.', true);
       return;
@@ -393,7 +397,7 @@
   }
 
   // ---------- HUD ----------
-  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
+  var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1, lastBed = '';
   function updateHUD() {
     var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
     if (game.scene && game.scene.infinite) {
@@ -403,6 +407,7 @@
     }
     if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
     if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
+    if (game.sceneName !== lastBed) { lastBed = game.sceneName; A.music(String(game.sceneName || '').toLowerCase().split(' ')[0]); }
     var a = game.aim, label = '';
     if (game.bike) {
       if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
@@ -516,6 +521,7 @@
       if (e.name === 'say') { say(e.v); A.speak(e.v); if (!voiceTold && A.voiceName) { voiceTold = true; sayDbg('voice: ' + A.voiceName); } }
       else if (e.name === 'ambience') A.setAmbience(e.v);
       else if (e.name === 'engine') A.engine(e.v.speed, e.v.throttle);
+      else if (e.name === 'scenebed') A.music(e.v);   // per-scene generative bed (void stays silent)
       else A.handle(e.name);
     }
     // While a generation is in flight the worker owns a whole core; yield ours.

@@ -64,6 +64,56 @@
   function engineStart() { if (engGain && ctx) { engOn = true; engGain.gain.setTargetAtTime(A.muted ? 0 : 0.0015, ctx.currentTime, 0.08); } }
   function engineStop() { if (engGain && ctx) { engOn = false; engGain.gain.setTargetAtTime(0, ctx.currentTime, 0.18); } }
 
+  // ---------- generative sci-fi bed (research-grounded) ----------
+  // Detuned saw pad + sub + faint fifth through a lowpass; TWO unsynced
+  // slow LFOs (0.07 Hz filter / 0.11 Hz detune drift) whose cycles never
+  // align, so the bed evolves forever without repeating. No melody, no
+  // rhythm - dark/space ambient by the book. The VOID stays SILENT.
+  var mus = null, musOn = true, musSceneGain = 0;
+  var MUS = {
+    'void':   { g: 0,     root: 55, cut: 300 },
+    'neon':   { g: 0.05,  root: 55, cut: 430 },
+    'city':   { g: 0.045, root: 49, cut: 320 },
+    'dojo':   { g: 0.03,  root: 41, cut: 250 },
+    'armory': { g: 0.03,  root: 41, cut: 240 },
+    'rooftop':{ g: 0.04,  root: 65, cut: 380 }
+  };
+  function musicInit() {
+    if (mus || !ctx) return;
+    var g = ctx.createGain(); g.gain.value = 0; g.connect(master);
+    var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 340; lp.Q.value = 0.7; lp.connect(g);
+    var o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
+    var o2 = ctx.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 55.7;   // beating detune
+    var sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 27.5;
+    var fif = ctx.createOscillator(); fif.type = 'triangle'; fif.frequency.value = 82.4;
+    var fg = ctx.createGain(); fg.gain.value = 0.22; fif.connect(fg); fg.connect(lp);
+    o1.connect(lp); o2.connect(lp); sub.connect(lp);
+    var l1 = ctx.createOscillator(); l1.frequency.value = 0.07;                         // unsynced LFO #1 -> filter
+    var l1g = ctx.createGain(); l1g.gain.value = 90; l1.connect(l1g); l1g.connect(lp.frequency);
+    var l2 = ctx.createOscillator(); l2.frequency.value = 0.11;                         // unsynced LFO #2 -> detune drift
+    var l2g = ctx.createGain(); l2g.gain.value = 1.2; l2.connect(l2g); l2g.connect(o2.frequency);
+    o1.start(); o2.start(); sub.start(); fif.start(); l1.start(); l2.start();
+    mus = { g: g, lp: lp, o1: o1, o2: o2, sub: sub, fif: fif };
+  }
+  A.music = function (name) {
+    if (!ctx) return;
+    musicInit();
+    var p = MUS[name] || { g: 0.035, root: 49, cut: 300 };
+    musSceneGain = p.g;
+    var t = ctx.currentTime;
+    mus.o1.frequency.setTargetAtTime(p.root, t, 2.5);
+    mus.o2.frequency.setTargetAtTime(p.root + 0.7, t, 2.5);
+    mus.sub.frequency.setTargetAtTime(p.root / 2, t, 2.5);
+    mus.fif.frequency.setTargetAtTime(p.root * 1.498, t, 2.5);
+    mus.lp.frequency.setTargetAtTime(p.cut, t, 2.0);
+    mus.g.gain.setTargetAtTime((musOn && !A.muted) ? p.g : 0, t, 2.2);   // slow swell, never a cut
+  };
+  A.musicToggle = function () {
+    musOn = !musOn;
+    if (mus && ctx) mus.g.gain.setTargetAtTime((musOn && !A.muted) ? musSceneGain : 0, ctx.currentTime, 1.2);
+    return musOn;
+  };
+
   function env(g, t0, a, peak, d, sustain) {
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.linearRampToValueAtTime(peak, t0 + a);
