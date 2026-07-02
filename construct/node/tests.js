@@ -1602,7 +1602,7 @@ section('déjà vu: true replay');
   step(g, null, 6.0);   // the ring is held back until the operator's line lands
   const booth = g.scene.insts.find(i => i.kind === 'booth');
   ok(!!booth, 'a booth rang in at the far end');
-  g.player.pos = [booth.pos[0] + 1.6, 0, booth.pos[2]]; g.player.vel = [0, 0, 0];
+  g.player.pos = [booth.pos[0], 0, 0.3]; g.player.vel = [0, 0, 0];
   g.player.yaw = Math.atan2(booth.pos[0] - g.player.pos[0], -(booth.pos[2] - g.player.pos[2]));
   step(g, { fwd: 1 }, 1.6);
   step(g, null, 1.0);
@@ -1683,10 +1683,13 @@ section('déjà vu: infinite hallway');
 {
   const gPre = new C.Game();
   gPre.request('a hallway');
-  step(gPre, null, 1.0);   // settle: door still shut
+  step(gPre, null, 1.0);   // settle: the cat has not even entered yet
   gPre.player.pos = [-7, 0, 0]; gPre.player.vel = [0, 0, 0]; gPre.player.yaw = -Math.PI / 2;
   step(gPre, { fwd: 1, sprint: true }, 2.0);
-  ok(gPre.player.pos[0] > -HALL.HL - 0.1, 'before the seal the far door holds (' + gPre.player.pos[0].toFixed(2) + ')');
+  ok(gPre.player.pos[0] < -HALL.HL - 2, 'the far door opens for you from the very first minute (' + gPre.player.pos[0].toFixed(2) + ')');
+  ok(gPre.scene.dv.doors[0].a > 0.4 || gPre.scene.dv.doorA > 0.4, 'its leaves really swung');
+  step(gPre, { fwd: 1, sprint: true }, 4.0);
+  ok(gPre.scene.dv.loop.laps >= 2, 'the loop runs before the déjà vu is even over');
 
   const g = new C.Game();
   g.request('a hallway');

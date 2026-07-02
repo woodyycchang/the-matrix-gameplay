@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1945</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1955</span></div>
 </div>
 
 <script>
@@ -1352,7 +1352,7 @@
     var cat = inst(P2.cat(), [HALL.CAT_X0, 0, HALL.CAT_Z], Math.PI / 2, { label: 'cat', kind: 'cat', shadow: true });
     cat.pose = [0, 0, 0, 0, 0, 0];
     var farEnd = inst(mkFarEnd(), [-HL, 0, 0], 0, { label: 'far door', kind: 'farend' });
-    farEnd.state = 'shut';
+    farEnd.state = 'armed';
     var feLeaves = leafPair(-HL, null);
     s.insts.push(doorB, winI, lampI, lampA, lampB, way, cat, farEnd, feLeaves[0], feLeaves[1]);
 
@@ -1369,11 +1369,37 @@
       s.colliders.push(box2([bx - 0.35, 0, HW - 0.24], [bx + 0.35, H, HW]));
     });
     s.colliders.push(box2([-2.95, 0, HW - 0.42], [-2.05, 1.9, HW]));                // the ajar leaf
-    var farCol = box2([-HL - 0.6, 0, -HW], [-HL + 0.12, H, HW]);                    // far end (lifted at the seal)
-    s.colliders.push(farCol);
+    s.colliders.push(box2([-HL - 0.3, 0, -HW], [-HL + 0.12, H, -0.85]));            // far-door jambs
+    s.colliders.push(box2([-HL - 0.3, 0, 0.85], [-HL + 0.12, H, HW]));
     s.colliders.push(box2([HL, 0, -HW - 0.6], [HL + 2.2, H, -HW + 0.12]));          // landing sides
     s.colliders.push(box2([HL, 0, HW - 0.12], [HL + 2.2, H, HW + 0.6]));
     s.colliders.push(box2([HL + 2.02, 0, -HW], [HL + 2.25, H, HW]));                // landing back
+
+    // the corridor with no end is there from the first frame: doors that open for whoever
+    // comes near, one per period, and a wrap that keeps the far stretch the far stretch
+    var dvDoors = [];
+    function hangDoor(dx, leaves) {
+      if (s.insts.indexOf(leaves[0]) < 0) s.insts.push(leaves[0], leaves[1]);
+      var dcol = box2([dx - 0.14, 0, -0.85], [dx + 0.14, 2.05, 0.85]);
+      s.colliders.push(dcol);
+      dvDoors.push({ x: dx, leaves: leaves, col: dcol, blocked: true, a: 0, tgt: 0 });
+    }
+    hangDoor(-HL, feLeaves);
+    var segMesh = mkSegMesh();
+    for (var sk = 0; sk < 3; sk++) {
+      var scx = -HL - SEGP / 2 - sk * SEGP;
+      var seg = inst(segMesh, [scx, 0, 0], 0, { shadow: false, kind: 'segment', label: 'corridor' });
+      s.insts.push(seg);
+      var sl = inst(C.props.ceilLamp(false), [scx, H, 0], 0, { label: 'lamp', kind: 'segment', shadow: false });
+      sl.state = 'lit';
+      s.insts.push(sl);
+      s.colliders.push(box2([scx - 0.35, 0, -HW], [scx + 0.35, H, -HW + 0.24]));
+      s.colliders.push(box2([scx - 0.35, 0, HW - 0.24], [scx + 0.35, H, HW]));
+      hangDoor(scx, leafPair(scx, null));
+    }
+    s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, HW - 0.15], [-HL, H, HW + 0.6]));
+    s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, -HW - 0.6], [-HL, H, -HW + 0.15]));
+    s.colliders.push(box2([-HL - 3 * SEGP - 0.5, 0, -HW], [-HL - 3 * SEGP - 0.26, H, HW]));
 
     // ---- the déjà vu controller ----
     // Runs on its own fixed tick so the record is a per-tick array regardless of
@@ -1382,7 +1408,9 @@
     var dv = s.dv = {
       phase: 'settle', t: 0, p: 0, g: 0, acc: 0,
       rec: [], cat: cat, way: way,
-      cands: [doorB, winI, lampI], chosen: null, sealed: false, tap: null
+      cands: [doorB, winI, lampI], chosen: null, sealed: false, tap: null,
+      doors: dvDoors, doorA: 0,
+      loop: { at: -HL - 2 * SEGP - 0.01, hard: -HL - 2.75 * SEGP, laps: 0 }
     };
     s.update = function (game, dt) {
       dv.acc += dt;
@@ -1438,38 +1466,9 @@
           game.say(C.LINES.dejavu, 0.5);
           game.say(C.LINES.wayback, 3.0);
           dv.boothT = dv.t + 330;   // let “listen for it” land, then the phone rings
-          // ...and the far door — the one that never opens — is armed: walk up and it opens for you
-          farEnd.state = 'armed'; farEnd.label = 'corridor';
+          // the far door's code re-seeds: in code vision it now spells where it leads
+          farEnd.label = 'corridor';
           farEnd.glyphEpoch = (farEnd.glyphEpoch | 0) + 1; farEnd.reResolve = 1;
-          var fi = s.colliders.indexOf(farCol);
-          if (fi >= 0) s.colliders.splice(fi, 1);
-          s.colliders.push(box2([-HL - 0.3, 0, -HW], [-HL + 0.12, H, -0.85]));   // door jambs
-          s.colliders.push(box2([-HL - 0.3, 0, 0.85], [-HL + 0.12, H, HW]));
-          dv.doors = []; dv.doorA = 0;
-          function hangDoor(dx, leaves) {
-            if (s.insts.indexOf(leaves[0]) < 0) s.insts.push(leaves[0], leaves[1]);
-            var dcol = box2([dx - 0.14, 0, -0.85], [dx + 0.14, 2.05, 0.85]);
-            s.colliders.push(dcol);
-            dv.doors.push({ x: dx, leaves: leaves, col: dcol, blocked: true, a: 0, tgt: 0 });
-          }
-          hangDoor(-HL, feLeaves);
-          var segMesh = mkSegMesh();
-          for (var sk = 0; sk < 3; sk++) {
-            var scx = -HL - SEGP / 2 - sk * SEGP;
-            var seg = inst(segMesh, [scx, 0, 0], 0, { shadow: false, kind: 'segment', label: 'corridor' });
-            seg.loadT = 0; seg.loadDir = 1; seg._delay = 0.3 + sk * 0.12;
-            s.insts.push(seg);
-            var sl = inst(C.props.ceilLamp(false), [scx, H, 0], 0, { label: 'lamp', kind: 'segment', shadow: false });
-            sl.state = 'lit'; sl.loadT = 0; sl.loadDir = 1; sl._delay = 0.35 + sk * 0.12;
-            s.insts.push(sl);
-            s.colliders.push(box2([scx - 0.35, 0, -HW], [scx + 0.35, H, -HW + 0.24]));
-            s.colliders.push(box2([scx - 0.35, 0, HW - 0.24], [scx + 0.35, H, HW]));
-            hangDoor(scx, leafPair(scx, 0.35 + sk * 0.12));
-          }
-          s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, HW - 0.15], [-HL, H, HW + 0.6]));
-          s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, -HW - 0.6], [-HL, H, -HW + 0.15]));
-          s.colliders.push(box2([-HL - 3 * SEGP - 0.5, 0, -HW], [-HL - 3 * SEGP - 0.26, H, HW]));
-          dv.loop = { at: -HL - 2 * SEGP - 0.01, hard: -HL - 2.75 * SEGP, laps: 0 };
           dv.phase = 'after';
         }
       }
@@ -1505,8 +1504,10 @@
       if (dv.phase === 'after') {
         if (dv.boothT && dv.t >= dv.boothT) {
           dv.boothT = 0;
-          game.addProp('booth', [-8.3, 0, 0], Math.PI / 2, null, 0.3);
+          game.addProp('booth', [1.0, 0, -1.62], Math.PI, null, 0.3);
         }
+      }
+      {
         if (dv.loop) {
           var ppx = game.player.pos[0];
           var facingAway = Math.sin(game.player.yaw) < -0.35;   // wraps hide behind your back
@@ -1521,7 +1522,7 @@
               ring[ri].a = src ? src.a : 0;
               ring[ri].tgt = src ? src.tgt : 0;
             }
-            if (dv.loop.laps === 2) game.say(C.LINES.loop, 0.2);
+            if (dv.sealed && !dv.loopSaid) { dv.loopSaid = true; game.say(C.LINES.loop, 0.2); }
           }
         }
       }
