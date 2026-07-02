@@ -85,7 +85,7 @@ canvas#c{display:block;width:100vw;height:100vh}
    Three.js r128, procedural geometry, DataTexture only (headless-safe)
    ===================================================================== */
 const CFG = {
-  bg:0x02030a, fogColor:0x070b16, fogDensity:0.026,
+  bg:0x02030a, fogColor:0x070b16, fogDensity:0.023,
   eye:1.62, pr:0.34, ph:1.78,
   walk:3.6, run:6.4, gravity:14.5, jumpV:5.3, stepUp:0.46,
   sunPeriod:240
@@ -119,6 +119,10 @@ T.panel=makeTex(128,128,(x,y)=>{
   const tile=hash2(Math.floor(x/32),Math.floor(y/32));v+=(tile-0.5)*14;
   if(x%32<1.5||y%32<1.5)v=20;
   const rx=x%32,ry=y%32;if((rx===5||rx===26)&&(ry===5||ry===26))v=78;
+  if(ry>25)v*=0.76+0.24*(31-ry)/6;
+  if((rx===5||rx===26)&&ry>6&&ry<26&&hash2(Math.floor(x/32)*3.1,Math.floor(y/32)*7.7)>0.55)v*=0.82;
+  const rust=hash2(Math.floor(x/32)*13.7,Math.floor(y/32)*5.3);
+  if(rust>0.8&&rx>3&&rx<29){return [v*1.02,v*0.86,v*0.9]}
   return [v*.92,v*1.0,v*1.28];
 });
 T.panelDark=makeTex(128,128,(x,y)=>{
@@ -129,7 +133,9 @@ T.panelDark=makeTex(128,128,(x,y)=>{
 T.floor=makeTex(128,128,(x,y)=>{
   let v=32+vnoise(x*.07,y*.07)*9+vnoise(x*.3,y*.3)*5;
   if(x%64<2||y%64<2)v=16;
+  const fx=x%64,fy=y%64;if(fx<6||fy<6||fx>58||fy>58)v*=0.88;
   if(vnoise(x*.05+9,y*.05+3)>0.72)v*=0.72; // scuffs
+  if(vnoise(x*.02+40,y*.02+11)>0.8)v*=0.8;  // big stains
   return [v*.9,v,v*1.25];
 });
 T.hazard=makeTex(64,64,(x,y)=>(((x+y)%32)<15)?[176,122,52]:[24,25,30]);
@@ -200,6 +206,13 @@ M.planet=new THREE.MeshBasicMaterial({map:T.planet,fog:false});
 M.ring=new THREE.MeshBasicMaterial({map:T.ring,transparent:true,side:THREE.DoubleSide,depthWrite:false,fog:false});
 function glowMat(color,intensity){return new THREE.MeshStandardMaterial({color:0x0a0d14,emissive:color,emissiveIntensity:intensity,roughness:.5,metalness:.1})}
 function basicGlow(color,opacity){return new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:opacity,blending:THREE.AdditiveBlending,depthWrite:false})}
+function lightCone(x,y,z,rTop,rBot,h,color,op,speed){
+  const m=basicGlow(color,op);
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(rTop,rBot,h,18,1,true),m);
+  c.position.set(x,y,z);world.add(c);
+  ANIM.push((t)=>{m.opacity=op*(0.75+0.25*fnoise(t*(speed||1.3)+x+z))});
+  return c;
+}
 /* ---------------- scene / registries ---------------- */
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(CFG.bg);
@@ -369,6 +382,7 @@ function buildDock(){
   const nose=new THREE.Mesh(new THREE.ConeGeometry(1.1,1.8,14),M.steelDark);
   nose.rotation.z=-Math.PI/2;nose.position.set(-1.6,1.5,34);world.add(nose);
   box(-5.5,0.35,32.6,4.4,0.7,0.5,M.steelDark);box(-5.5,0.35,35.4,4.4,0.7,0.5,M.steelDark); // skids
+  for(const[sx,sz]of[[-4.2,32.2],[-6.8,35.8],[-3.1,35.1]])slab(sx-0.7,sx+0.7,0.004,0.012,sz-0.4,sz+0.4,new THREE.MeshStandardMaterial({color:0x0b0e14,roughness:1}),{collide:false});
   box(-6.2,2.1,34,1.6,0.5,4.6,M.steelDark,{collide:false});                                // wing
   box(-8.2,2.7,34,0.4,1.4,1.2,M.steelDark,{collide:false});                                // tail
   slab(-3.4,-2.9,1.2,1.9,33.4,34.6,M.glass,{collide:false});                               // canopy
@@ -378,6 +392,14 @@ function buildDock(){
   const cr=[[7,0.5,37,1.6,1,1.6],[8.8,0.6,38.5,1.9,1.2,1.4],[7.6,1.6,37.4,1.2,0.8,1.2],
             [10.5,0.5,31,1.5,1,2.2],[9.2,0.45,29.6,1.3,0.9,1.3],[-9.5,0.6,39.5,2,1.2,1.7],[5.4,0.4,40.6,1.1,0.8,1.1]];
   for(let i=0;i<cr.length;i++)box(cr[i][0],cr[i][1],cr[i][2],cr[i][3],cr[i][4],cr[i][5],i%3?M.steelDark:M.hazard,{ry:rr(-0.3,0.3)});
+  // fuel hose from west wall to shuttle
+  pipeRun('y',0.5,3.1,-12.75,0,31,0.1);
+  pipeRun('x',-12.75,-8.6,0,0.5,31,0.1);
+  box(-8.5,0.5,31.4,0.4,0.5,1.1,M.steelDark,{collide:false});
+  box(-12.75,3.2,31,0.45,0.6,0.45,M.steelDark,{collide:false});
+  box(-9.5,0.6,28.6,1.6,1.2,1.3,M.steelDark,{ry:0.4});box(-8.1,0.45,29.3,1.1,0.9,1.1,M.hazard,{ry:-0.2});
+  lightCone(-4,5.4,31,0.5,2.6,3.1,0xffcf9a,0.05,1.1);
+  lightCone(5,5.6,38.5,0.5,2.6,3.3,0xffcf9a,0.045,1.7);
   // gantry crane
   box(-11.5,3.3,28.5,0.5,6.6,0.5,M.trim);box(11.5,3.3,28.5,0.5,6.6,0.5,M.trim);
   box(0,6.8,28.5,23.5,0.5,0.7,M.trim,{collide:false});
@@ -417,6 +439,9 @@ function buildCorridors(){
   const cs=strip(-1.6,1.6,3.32,3.4,18.4,18.9,COLR.red,1.5);
   flick('flicker',mkLight(0,2.9,19,COLR.red,0.8,11),[cs],1.6);
   const cs2=strip(-1.6,1.6,3.32,3.4,14.2,14.7,COLR.cyan,1.0);flick('steady',null,[cs2]);
+  const fgA=strip(-1.78,-1.62,0.004,0.03,13.4,24.6,COLR.cyan,0.5);
+  const fgB=strip(1.62,1.78,0.004,0.03,13.4,24.6,COLR.cyan,0.5);
+  flick('steady',null,[fgA,fgB]);
   doorFrame('z',2,16,20,0,2.6);
   // branch corridor -> crew quarters
   slab(2,14,-0.4,0,16,20,M.floor);slab(2,14,3,3.3,16,20,M.steelDark);
@@ -438,6 +463,9 @@ function buildCorridors(){
   wallZ(-2,-25,-13,0,3.4,0.3,M.steel);wallZ(2,-25,-13,0,3.4,0.3,M.steel);
   corridorRibs('z',-24.5,-13,-2,2,-2,2,3.4);
   pipeRun('z',-24.5,-13.5,1.75,2.9,0,0.09);
+  const fgC=strip(-1.78,-1.62,0.004,0.03,-24.6,-13.4,COLR.cyan,0.5);
+  const fgD=strip(1.62,1.78,0.004,0.03,-24.6,-13.4,COLR.cyan,0.5);
+  flick('steady',null,[fgC,fgD]);
   const ns=strip(-1.6,1.6,3.32,3.4,-19.5,-19,COLR.red,1.4);
   flick('flicker',mkLight(0,2.9,-19,COLR.red,0.75,11),[ns],1.3);
   // elevated corridor -> data archive (balcony level)
@@ -473,6 +501,12 @@ function buildRotunda(){
     if(ry)slab(sx-0.06,sx+0.06,6,7.4,sz-0.5,sz+0.5,sm,{collide:false});
     else slab(sx-0.5,sx+0.5,6,7.4,sz-0.06,sz+0.06,sm,{collide:false});
   }
+  // radial ceiling spokes
+  for(let k=0;k<8;k++){
+    const a=k*Math.PI/4+Math.PI/8;
+    box(Math.cos(a)*6.9,11.78,Math.sin(a)*6.9,11.6,0.24,0.2,M.trim,{ry:-a,collide:false});
+  }
+  lightCone(0,8.3,1.5,1.4,3.4,8.2,0x8fd8ff,0.045,0.9);
   // wall data screens + upper ring light
   screenPanel(6.5,1.9,-12.8,1.5,0.9,0);screenPanel(-6.5,1.9,-12.8,1.5,0.9,0);
   screenPanel(-12.8,1.9,6.5,1.5,0.9,Math.PI/2);screenPanel(12.8,1.9,-6.5,1.5,0.9,-Math.PI/2);
@@ -504,8 +538,15 @@ function buildRotunda(){
     ANIM.push((t)=>{ring.rotation.z=t*(0.3+k*0.17);ring.position.y=2.5+k*3.2+Math.sin(t*0.8+k*2.1)*0.35});
   }
   ANIM.push((t)=>{T.holo.offset.y=-t*0.12});
+  const pulse=new THREE.Mesh(new THREE.TorusGeometry(1.3,0.05,6,36),basicGlow(COLR.cyan,0.5));
+  pulse.rotation.x=Math.PI/2;world.add(pulse);
+  ANIM.push((t)=>{const k=(t%2.6)/2.6;pulse.position.y=0.7+k*10.6;const sc=1+k*0.9;pulse.scale.set(sc,sc,1);pulse.material.opacity=0.5*(1-k)});
   const inlay=new THREE.Mesh(new THREE.RingGeometry(2.6,3.1,32),basicGlow(COLR.cyan,0.35));
   inlay.rotation.x=-Math.PI/2;inlay.position.y=0.012;world.add(inlay);
+  slab(-3.4,3.4,0.004,0.02,-3.4,-2.2,M.grate,{collide:false});
+  slab(-3.4,3.4,0.004,0.02,2.2,3.4,M.grate,{collide:false});
+  slab(-3.4,-2.2,0.004,0.02,-2.2,2.2,M.grate,{collide:false});
+  slab(2.2,3.4,0.004,0.02,-2.2,2.2,M.grate,{collide:false});
   // balcony ring y4.6
   slab(-13,13,4.3,4.6,-13,-10,M.floor);          // north
   slab(-13,13,4.3,4.6,10,13,M.floor);            // south
@@ -588,6 +629,7 @@ function buildDome(){
   box(-6,12.95,6.5,1.5,0.7,1.5,M.steelDark);
   const tube=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.4,2.8,12),M.steel);
   tube.position.set(-6,14.3,6.3);tube.rotation.x=-0.65;world.add(tube);
+  pipeRun('y',12.62,13.3,-6.55,0,7.1,0.045);
   const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.33,0.33,0.06,12),glowMat(COLR.cyan,1.3));
   lens.position.set(-6,15.45,5.34);lens.rotation.x=-0.65;world.add(lens);
   // star chart table
@@ -647,6 +689,9 @@ function buildHydro(){
     dummy.scale.set(1,rr(0.6,2.2),1);dummy.updateMatrix();vines.setMatrixAt(v,dummy.matrix);
   }
   world.add(vines);
+  for(const z2 of[-6,-2,2,6])for(const lx of[-35,-30,-25])box(lx,3.12,z2,0.6,0.16,0.9,M.steelDark,{collide:false});
+  const leafFlat=new THREE.MeshStandardMaterial({color:0x2a6b42,roughness:1});
+  for(let i2=0;i2<14;i2++)box(rr(-38,-22),0.015,rr(-7.6,7.6),rr(0.12,0.3),0.02,rr(0.1,0.24),leafFlat,{ry:rr(0,6.3),collide:false});
   // water tank + tipped planter
   const tank=new THREE.Mesh(new THREE.CylinderGeometry(1.9,1.9,3.8,18),M.glass);
   tank.position.set(-37.5,1.9,6.8);world.add(tank);addCol(-39.4,0,4.9,-35.6,3.8,8.7);
@@ -685,6 +730,13 @@ function buildMed(){
   box(34.5,1.9,-3,0.5,1.05,0.85,M.steelDark,{collide:false});
   GH.cabinet=new THREE.Group();GH.cabinet.position.set(34.22,1.9,-3.41);world.add(GH.cabinet);
   const cd=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.95,0.78),M.steel);cd.position.z=0.39;GH.cabinet.add(cd);
+  // IV stand + biohazard bin
+  box(24.6,1.05,-4.9,0.08,2.1,0.08,M.trim,{collide:false});
+  box(24.6,2.05,-4.6,0.08,0.06,0.55,M.trim,{collide:false});
+  const bag=box(24.6,1.78,-4.35,0.22,0.4,0.08,new THREE.MeshStandardMaterial({color:0x9fd8c8,transparent:true,opacity:0.75,roughness:.6}),{collide:false});
+  ANIM.push((t)=>{bag.rotation.z=Math.sin(t*0.9)*0.06});
+  box(33.9,0.45,5.9,0.7,0.9,0.7,new THREE.MeshStandardMaterial({color:0x7a2f1e,roughness:.8}));
+  lightCone(26,2.6,-4,0.55,1.7,1.6,0xeaf6ff,0.06,2.1);
   // surgical light
   box(26,4.1,-4,0.25,0.8,0.25,M.trim,{collide:false});
   const shead=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.65,0.3,12),M.steelDark);
@@ -740,6 +792,13 @@ function buildBridge(){
   const mini=new THREE.Mesh(new THREE.SphereGeometry(0.55,18,12),new THREE.MeshBasicMaterial({map:T.planet,transparent:true,opacity:.9}));
   mini.position.set(0,2.6,-31);world.add(mini);
   ANIM.push((t,dt)=>{mini.rotation.y+=dt*0.4;beam.material.opacity=0.12+0.06*Math.sin(t*3)});
+  const lw1=strip(-5.3,-3.7,0.004,0.02,-32,-30,COLR.cyan,0.4);
+  const lw2=strip(3.7,5.3,0.004,0.02,-32,-30,COLR.cyan,0.4);
+  flick('steady',null,[lw1,lw2]);
+  const cmdr=new THREE.Mesh(new THREE.TorusGeometry(2.0,0.09,8,40),M.trim);
+  cmdr.rotation.x=Math.PI/2;cmdr.position.set(0,4.55,-31);world.add(cmdr);
+  const cmdg=new THREE.Mesh(new THREE.TorusGeometry(2.0,0.03,6,40),basicGlow(COLR.cyan,0.4));
+  cmdg.rotation.x=Math.PI/2;cmdg.position.set(0,4.49,-31);world.add(cmdg);
   // rotating alert beacon
   const bec=glowMat(COLR.red,1.4);
   const bm=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,0.26,10),bec);bm.position.set(0,5.15,-31);world.add(bm);
@@ -788,6 +847,13 @@ function buildQuarters(){
   flick('strobe',mkLight(27.5,2.7,19.5,0xdfeeff,0.5,6),[bay3],0.55);
   const qs=strip(16,22,3.12,3.2,12.5,12.9,COLR.amber,1.0);flick('steady',null,[qs]);
   flick('steady',mkLight(19,2.6,18,COLR.amber,0.8,14),[]);
+  const cloth=new THREE.MeshStandardMaterial({color:0x3a4250,roughness:1});
+  for(const[cx2,cz2]of[[27.4,12.2],[28.8,16.4],[26.6,20.2],[27.8,24.6],[24.2,22.8]])
+    box(cx2,0.03,cz2,rr(0.5,0.8),0.05,rr(0.35,0.6),cloth,{ry:rr(0,6.3),collide:false});
+  box(21.4,0.24,14.6,0.42,0.48,0.42,M.trim,{ry:0.7,rz:1.45});
+  const post=glowMat(0x88b8d8,0.22);
+  slab(25.63,25.67,1.1,1.9,14.4,15.1,post,{collide:false});
+  slab(25.63,25.67,1.0,1.8,18.5,19.2,post,{collide:false});
   // mess nook
   box(18.5,0.4,13,2.1,0.8,1.15,M.steelDark);
   box(17.3,0.26,13,0.45,0.52,0.45,M.trim);box(19.7,0.26,13,0.45,0.52,0.45,M.trim);
@@ -816,6 +882,9 @@ function buildArchive(){
       GH.leds.setColorAt(n,c.setHex(GH.ledPal[ri(0,4)]));n++;
     }
   world.add(GH.leds);
+  for(let k=0;k<5;k++){pipeRun('y',7.05,9.2,19.5+k*2.4,0,-13.5,0.06);pipeRun('y',7.05,9.2,19.5+k*2.4,0,-18.5,0.06);}
+  {const cD=new THREE.Color(0x0a0e14);for(let i2=72;i2<96;i2++)GH.leds.setColorAt(i2,cD);
+   GH.leds.setColorAt(84,new THREE.Color(0xff4038));GH.leds.instanceColor.needsUpdate=true;}
   const aisle=strip(18,30,4.6,4.62,-16.3,-15.7,COLR.cyan,0.5);flick('steady',null,[aisle]);
   // data spine
   const spg=new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.8,4.2,16,1,true),M.glass);
@@ -853,6 +922,12 @@ function buildReactor(){
   const cool1=strip(0,26,-7.95,-7.8,16.1,17.9,COLR.cyan,2.4);
   const cool2=strip(0,26,-7.95,-7.8,26.1,27.9,COLR.cyan,2.4);
   slab(0,26,-7.06,-7,16,18,M.grate);slab(0,26,-7.06,-7,26,28,M.grate);
+  const tz1=strip(0,26,-6.99,-6.95,15.72,15.95,COLR.amber,0.45);
+  const tz2=strip(0,26,-6.99,-6.95,18.05,18.28,COLR.amber,0.45);
+  const tz3=strip(0,26,-6.99,-6.95,25.72,25.95,COLR.amber,0.45);
+  const tz4=strip(0,26,-6.99,-6.95,28.05,28.28,COLR.amber,0.45);
+  flick('steady',null,[tz1,tz2,tz3,tz4]);
+  for(const[px,pz]of[[0.6,17],[0.6,27],[25.4,17],[25.4,27]])pipeRun('y',-7.6,-0.7,px,0,pz,0.14);
   for(const tz of[16,18,26,28])slab(0,26,-7.8,-7.06,tz-0.04,tz+0.04,M.steelDark,{collide:false});
   slab(-1,27,-0.6,-0.3,12,34,M.steelDark);
   wallZ(-1,12,34,-7,-0.6,0.3,M.steelDark,[{u0:12,u1:15.5,y0:-7,y1:-4.6}]);
@@ -875,6 +950,11 @@ function buildReactor(){
   ANIM.push((t)=>{shell.material.opacity=0.07+0.05*Math.sin(t*2.1)});
   const cring=new THREE.Mesh(new THREE.TorusGeometry(4.0,0.17,8,36),M.trim);
   cring.rotation.x=Math.PI/2;cring.position.set(16,-4,22);world.add(cring);
+  const gant=new THREE.Mesh(new THREE.TorusGeometry(5.2,0.13,8,40),M.trim);
+  gant.rotation.x=Math.PI/2;gant.position.set(16,-1.6,22);world.add(gant);
+  for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;
+    box(16+Math.cos(a)*5.2,-3.9,22+Math.sin(a)*5.2,0.14,4.6,0.14,M.trim,{collide:false});}
+  lightCone(16,-2.2,22,3.5,3.0,2.6,0xff8a3a,0.05,0.7);
   pipeRun('x',18.5,27,0,-5.6,22,0.24);pipeRun('x',-1,13.5,0,-5.6,22,0.24);
   pipeRun('z',24.5,34,16,-5.6,0,0.24);pipeRun('z',12,19.5,16,-5.6,0,0.24);
   const capRing=new THREE.Mesh(new THREE.TorusGeometry(2.75,0.1,8,32),glowMat(COLR.orange,1.8));
@@ -995,6 +1075,8 @@ function buildParticles(){
   makeParticles({size:0.4,color:0x9fb8c8,opacity:0.22,drift:0.05,regions:[
     {x0:4,x1:6,y0:-6.8,y1:-4.4,z0:30.9,z1:32.1,count:70,vy0:0.4,vy1:0.9},
     {x0:20,x1:22,y0:-6.8,y1:-4.4,z0:30.9,z1:32.1,count:55,vy0:0.4,vy1:0.9}]});
+  makeParticles({size:0.1,color:0xffc060,opacity:0.55,drift:0.12,regions:[
+    {x0:24.25,x1:24.75,y0:-4.6,y1:-2.3,z0:13.75,z1:14.25,count:26,vy0:-2.6,vy1:-1.1}]});
 }
 function particlesUpdate(t,dt){
   for(const P2 of PARTS){
