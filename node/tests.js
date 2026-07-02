@@ -1471,7 +1471,7 @@ section('rooftop speaks safety; the script sheds its corn');
   ok(/You cannot be hurt here/.test(gm) && /run, jump, fly/.test(gm) && !/wide as your doubt/.test(gm), 'rooftop invites flight - explicit safety, no dare-framing');
   ok(/landing is guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
   ok(/you are fine/.test(gm) && !/Pain here is just information/.test(gm), 'falls are met with reassurance, not pain philosophy');
-  ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm), 'corn purged');
+  ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm) && !/White suits you/.test(gm), 'corn purged - including the white-suits-you wink');
 }
 
 
