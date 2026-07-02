@@ -726,6 +726,10 @@
     // 2) if served == running but the repo HEAD is newer -> a deploy is in
     //    flight: say so, poll every 30 s, swap the moment the CDN flips.
     // 3) otherwise: current, silent. The hard-refresh instruction is retired.
+    // MEASURED DOCTRINE (2026-07-02 14:44 UTC, four-layer probe): the ONLY
+    // bottleneck is the Fastly edge's fixed max-age=600; and ?v= query-busting
+    // NEVER pierced the edge on this path (its cache key ignores queries) -
+    // it only busts the BROWSER layer. Convergence = edge TTL, automated here.
     if (!buildStr || !window.fetch) return;
     var base = window.location.origin + window.location.pathname;
     function servedStamp() {
