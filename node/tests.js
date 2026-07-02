@@ -1414,6 +1414,16 @@ section('the bed begins at ENTER');
   ok(!/lastBed/.test(appX), 'the per-scene bed hook is gone - the music is one universe, not room lights');
 }
 
+
+section('no blank start: warmed at boot, bridged instantly');
+{
+  const fsY = require('fs');
+  const audY = fsY.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/_mc\.saveData/.test(audY) && /\{ musMake\(\); musLoad\(\); \}/.test(audY), 'the first track buffers DURING the boot screen (no play, gesture-legal; data-saver skips)');
+  ok(/genBed\('city'\);   \/\/ INSTANT overture/.test(audY), 'ENTER always sounds at second zero: the zero-latency generative overture covers any buffer gap');
+  ok(/'playing', function \(\) \{ musErr = 0; genBedStop\(\); \}/.test(audY), 'the moment the stream lands, the overture dissolves into Stellardrone');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

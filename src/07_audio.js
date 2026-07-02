@@ -135,19 +135,31 @@
     if (Math.abs(d) < 0.004) { musEl.volume = t; clearInterval(musFadeT); musFadeT = null; return; }
     musEl.volume = v + d * 0.12;
   }, 60); }
-  function musLoad() { if (!musEl) return; musEl.src = MUSBASE + MUSLIST[musIdx]; try { musEl.play().catch(function () {}); } catch (e) {} }
-  function musNext() { musIdx = (musIdx + 1) % MUSLIST.length; musLoad(); }
-  A.music = function () {
-    if (musEl) { if (musEl.paused) { try { musEl.play().catch(function () {}); } catch (e) {} } musFadeStart(); return; }
+  function musLoad() { if (!musEl) return; musEl.src = MUSBASE + MUSLIST[musIdx]; try { musEl.load(); } catch (e) {} }
+  function musNext() { musIdx = (musIdx + 1) % MUSLIST.length; musLoad(); if (musEl) { try { musEl.play().catch(function () {}); } catch (e) {} } }
+  function musMake() {
     musEl = new Audio(); musEl.preload = 'auto'; musEl.volume = 0; musEl.loop = false;
     musEl.addEventListener('ended', musNext);
-    musEl.addEventListener('playing', function () { musErr = 0; });
+    musEl.addEventListener('playing', function () { musErr = 0; genBedStop(); });   // stream landed: dissolve the overture
     musEl.addEventListener('error', function () {
       musErr++;
       if (musErr >= 3) { try { musEl.pause(); } catch (e) {} musEl = null; genBed('city'); return; }
       musNext();
     });
-    musIdx = 0; musErr = 0; musWant = MUSVOL; musLoad(); musFadeStart();
+  }
+  // Warm the first track DURING THE BOOT SCREEN: buffering without play() is
+  // allowed before any gesture, so by the time ENTER is pressed the stream is
+  // usually ready to sound at once. Data-saver / 2g connections skip this.
+  try {
+    var _mc = navigator.connection || {};
+    if (!(_mc.saveData || /(^|-)2g/.test(String(_mc.effectiveType || '')))) { musMake(); musLoad(); }
+  } catch (e) {}
+  A.music = function () {
+    if (!musEl) { musMake(); musLoad(); }
+    musWant = MUSVOL;
+    genBed('city');   // INSTANT overture: zero-latency WebAudio covers any buffer gap, dissolving on 'playing'
+    try { musEl.play().catch(function () {}); } catch (e) {}
+    musFadeStart();
   };
   A.musicToggle = function () {
     musOn = !musOn;
