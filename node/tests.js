@@ -1463,6 +1463,17 @@ section('needle-drop: the first track opens at its swell');
   ok(/var musIntroDone = false;/.test(audAC) && /musIntroDone = true;/.test(audAC) && /!musIntroDone && musIdx === 0/.test(audAC), 'one-shot and first-track-only: later tracks and album wraps play whole');
 }
 
+
+section('rooftop speaks safety; the script sheds its corn');
+{
+  const fsAD = require('fs');
+  const gm = fsAD.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  ok(/You cannot be hurt here/.test(gm) && /run, jump, fly/.test(gm) && !/wide as your doubt/.test(gm), 'rooftop invites flight - explicit safety, no dare-framing');
+  ok(/landing is guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
+  ok(/you are fine/.test(gm) && !/Pain here is just information/.test(gm), 'falls are met with reassurance, not pain philosophy');
+  ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm), 'corn purged');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
