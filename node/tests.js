@@ -1444,6 +1444,16 @@ section('golden ratio mix law');
   ok(!/\? 0 : 0\.22/.test(audAA) && !/linearRampToValueAtTime\(0\.3,/.test(audAA), 'no stray hardcoded background levels remain outside the law');
 }
 
+
+section('tab-aware: nothing plays behind your back');
+{
+  const fsAB = require('fs');
+  const audAB = fsAB.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/typeof document !== 'undefined' && document\.addEventListener/.test(audAB) && /visibilitychange/.test(audAB), 'the Page Visibility listener exists (and stays inert in Node)');
+  ok(/musPlayingOnHide = !!\(musEl && !musEl\.paused\)/.test(audAB) && /if \(musPlayingOnHide && musEl\)/.test(audAB), "MDN's playingOnHide guard: returning resumes ONLY what was playing when you left");
+  ok(/ctx\.state === 'running'\) ctx\.suspend\(\)/.test(audAB) && /ctx\.state === 'suspended'\) ctx\.resume\(\)/.test(audAB), 'the WebAudio context suspends too - ambience, SFX and the generative bed all go quiet with the tab');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

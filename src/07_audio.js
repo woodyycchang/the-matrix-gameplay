@@ -184,6 +184,33 @@
     var _mc = navigator.connection || {};
     if (!(_mc.saveData || /(^|-)2g/.test(String(_mc.effectiveType || '')))) musKick();
   } catch (e) {}
+
+  // TAB-AWARE (the industry-standard Page Visibility pattern, per MDN and
+  // web.dev's game guidance): switching tabs or minimizing pauses BOTH layers
+  // - the music element AND the WebAudio context (ambience, SFX, generative
+  // bed). Returning resumes ONLY what was playing on hide, softly - a page
+  // never surprises you with sound it wasn't making before.
+  try {
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      var musPlayingOnHide = false;
+      document.addEventListener('visibilitychange', function () {
+        try {
+          if (document.hidden) {
+            musPlayingOnHide = !!(musEl && !musEl.paused);
+            if (musEl) { try { musEl.pause(); } catch (e) {} }
+            if (ctx && ctx.state === 'running') ctx.suspend();
+          } else {
+            if (ctx && ctx.state === 'suspended') ctx.resume();
+            if (musPlayingOnHide && musEl) {
+              musEl.volume = 0;                       // re-enter softly, fade back to the law level
+              try { musEl.play().catch(function () {}); } catch (e) {}
+              musFadeStart();
+            }
+          }
+        } catch (e) {}
+      });
+    }
+  } catch (e) {}
   A.music = function () {
     if (musEl && !musEl.paused) { musWant = MUSVOL; musFadeStart(); return; }   // already cruising: autoplay landed at load
     if (!musEl) { musMake(); musLoad(); }
