@@ -147,14 +147,38 @@
       musNext();
     });
   }
-  // Warm the first track DURING THE BOOT SCREEN: buffering without play() is
-  // allowed before any gesture, so by the time ENTER is pressed the stream is
-  // usually ready to sound at once. Data-saver / 2g connections skip this.
+  // AUTOPLAY AT LOAD, to the letter of the law: the moment the page loads we
+  // buffer the first track AND attempt play(). Browsers reject audible
+  // autoplay before any gesture (NotAllowedError - their policy, not ours);
+  // where the browser permits it (it LEARNS per user per site - the Media
+  // Engagement Index), music starts with ZERO interaction. Where it refuses,
+  // the FIRST key, click or touch anywhere starts it instantly - and regular
+  // play teaches Chrome to grant true autoplay here. Data-saver skips to ENTER.
+  function musArm() {
+    function once() {
+      document.removeEventListener('pointerdown', once, true);
+      document.removeEventListener('keydown', once, true);
+      document.removeEventListener('touchstart', once, true);
+      musKick();
+    }
+    document.addEventListener('pointerdown', once, true);
+    document.addEventListener('keydown', once, true);
+    document.addEventListener('touchstart', once, true);
+  }
+  function musKick() {
+    if (!musEl) { musMake(); musLoad(); }
+    musWant = MUSVOL;
+    var p = null;
+    try { p = musEl.play(); } catch (e) {}
+    if (p && p.then) p.then(function () { musFadeStart(); }, function () { musArm(); });
+    else musFadeStart();
+  }
   try {
     var _mc = navigator.connection || {};
-    if (!(_mc.saveData || /(^|-)2g/.test(String(_mc.effectiveType || '')))) { musMake(); musLoad(); }
+    if (!(_mc.saveData || /(^|-)2g/.test(String(_mc.effectiveType || '')))) musKick();
   } catch (e) {}
   A.music = function () {
+    if (musEl && !musEl.paused) { musWant = MUSVOL; musFadeStart(); return; }   // already cruising: autoplay landed at load
     if (!musEl) { musMake(); musLoad(); }
     musWant = MUSVOL;
     genBed('city');   // INSTANT overture: zero-latency WebAudio covers any buffer gap, dissolving on 'playing'

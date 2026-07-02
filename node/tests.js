@@ -1419,9 +1419,19 @@ section('no blank start: warmed at boot, bridged instantly');
 {
   const fsY = require('fs');
   const audY = fsY.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
-  ok(/_mc\.saveData/.test(audY) && /\{ musMake\(\); musLoad\(\); \}/.test(audY), 'the first track buffers DURING the boot screen (no play, gesture-legal; data-saver skips)');
+  ok(/\)\)\) musKick\(\);/.test(audY) && /musEl\.play\(\)/.test(audY), 'the page ATTEMPTS play() the moment the URL loads (zero-click where the browser permits)');
   ok(/genBed\('city'\);   \/\/ INSTANT overture/.test(audY), 'ENTER always sounds at second zero: the zero-latency generative overture covers any buffer gap');
   ok(/'playing', function \(\) \{ musErr = 0; genBedStop\(\); \}/.test(audY), 'the moment the stream lands, the overture dissolves into Stellardrone');
+}
+
+
+section('autoplay to the letter of the law');
+{
+  const fsZ = require('fs');
+  const audZ = fsZ.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/p\.then\(function \(\) \{ musFadeStart\(\); \}, function \(\) \{ musArm\(\); \}\)/.test(audZ), 'a NotAllowedError arms the fallback instead of failing silently');
+  ok(/addEventListener\('pointerdown', once, true\)/.test(audZ) && /addEventListener\('keydown', once, true\)/.test(audZ) && /addEventListener\('touchstart', once, true\)/.test(audZ), 'ANY first key, click or touch anywhere starts the music - not just ENTER');
+  ok(/already cruising: autoplay landed at load/.test(audZ), 'the ENTER path detects an already-playing bed and never layers a second overture');
 }
 
 // ---------------------------------------------------------------- summary
