@@ -1693,9 +1693,30 @@ section('déjà vu: infinite hallway');
   ok(runTo(g, 'after', 60), 'arc completes');
   const dv = g.scene.dv;
   const fe = g.scene.insts.find(i => i.kind === 'farend');
-  eq(fe.state, 'open', 'the door that never opens has opened');
+  eq(fe.state, 'armed', 'the door that never opens is armed: it opens when you come to it');
   eq(fe.label, 'corridor', 'up close its code now spells where it leads');
   ok(fe.glyphEpoch === 1, 'and its code re-seeded');
+  eq(dv.doors.length, 4, 'four doors hang in the loop: the far door and one per period');
+  ok(dv.doors.every(d => d.a === 0 && d.blocked), 'all shut and solid before anyone walks up');
+  ok(dv.doors.every(d => g.scene.colliders.includes(d.col)), 'every shut door blocks');
+  eq(g.scene.insts.filter(i => i.kind === 'leaf').length, 8, 'eight leaves, two per door');
+
+  // a door opens for you, only for you, and creaks once
+  g.player.pos = [-19.0, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = -Math.PI / 2;
+  let creaks = 0;
+  for (let i = 0; i < 48; i++) { g.update({}, 1 / 60); for (const e of g.drain()) if (e.name === 'creak') creaks++; }
+  const dNear = dv.doors.find(d => Math.abs(d.x + 20.3) < 0.01);
+  const dFar2 = dv.doors.find(d => Math.abs(d.x + 13.1) < 0.01);
+  ok(dNear.a > 1.5 && !dNear.blocked, 'the near door swings open and lets you pass');
+  ok(!g.scene.colliders.includes(dNear.col), 'its collider lifted');
+  ok(dFar2.a === 0 && dFar2.blocked, 'the next door down stays shut: it opens for proximity, not for the scene');
+  eq(creaks, 1, 'one creak per opening');
+  near(dNear.leaves[0].pose[5], -dNear.leaves[1].pose[5], 1e-9, 'the leaves mirror each other');
+
+  // walk away and it shuts behind you
+  g.player.pos = [-17.0, 0, 0]; g.player.vel = [0, 0, 0];
+  for (let i = 0; i < 80; i++) { g.update({}, 1 / 60); g.drain(); }
+  ok(dv.doors.every(d => d.a < 0.05 && d.blocked), 'left alone, every door eases shut and blocks again');
   const segs = g.scene.insts.filter(i => i.kind === 'segment');
   eq(segs.length, 6, 'three corridor segments and three lamps laid down');
   const segMeshes = segs.filter(i => i.label === 'corridor');
@@ -1710,7 +1731,18 @@ section('déjà vu: infinite hallway');
   // proof 2 the loop is a pure translation: every discontinuity in the track equals one period
   const lapsStart = dv.loop.laps;
   const track = [g.player.pos[0]];
-  for (let i = 0; i < 60 * 6; i++) { g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain(); track.push(g.player.pos[0]); }
+  let seamShutAhead = 0, seamCarriedBehind = 0;
+  for (let i = 0; i < 60 * 6; i++) {
+    g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain();
+    const x = g.player.pos[0];
+    if (x - track[track.length - 1] > 1) {   // a wrap landed this tick
+      const ahead = dv.doors.filter(d => d.x < x).sort((a, b) => b.x - a.x)[0];
+      const behind = dv.doors.filter(d => d.x > x && d.x < -HALL.HL).sort((a, b) => a.x - b.x)[0];
+      if (ahead && ahead.a < 0.1) seamShutAhead++;
+      if (behind && behind.a > 0.9) seamCarriedBehind++;
+    }
+    track.push(x);
+  }
   const jumps = [];
   for (let i = 1; i < track.length; i++) if (Math.abs(track[i] - track[i - 1]) > 1) jumps.push(track[i] - track[i - 1]);
   const lapsRun = dv.loop.laps - lapsStart;
@@ -1718,6 +1750,8 @@ section('déjà vu: infinite hallway');
   eq(jumps.length, lapsRun, 'every lap is one discontinuity, nothing else moved the player');
   ok(jumps.every(j => Math.abs(j - HALL.SEGP) < 0.25), 'each wrap is one period, give or take a tick of motion');
   ok(g.player.pos[0] > dv.loop.at - 0.7 && g.player.pos[0] < dv.loop.at + HALL.SEGP + 0.7, 'the runner never actually gets anywhere');
+  eq(seamShutAhead, lapsRun, 'at every seam the door ahead reads shut');
+  eq(seamCarriedBehind, lapsRun, 'and the one easing shut behind you crossed the seam with you');
   ok(finiteDeep(g.player.pos) && finiteDeep(g.player.vel), 'player state stays finite through the wraps');
 
   // the endless stretch renders clean in both sights

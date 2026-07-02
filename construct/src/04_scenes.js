@@ -435,23 +435,25 @@
     C.anchorize(m, 0.9, 74, 12); C.meshBounds(m);
     s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'room', label: 'hallway' }));
 
-    function mkFarEnd(open) {
+    function mkFarEnd() {
       var fm = C.newMesh();
-      // full-height wall around a 1.7 m doorway; closed adds the leaves, open leaves the reveal dark
+      // full-height wall around a 1.7 m doorway; the leaves are separate hinged instances
       C.addQuadX(fm, -HW, 0, -0.85, H, 0.02, '#544a3e', true);
       C.addQuadX(fm, 0.85, 0, HW, H, 0.02, '#544a3e', true);
       C.addQuadX(fm, -0.85, 2.05, 0.85, H, 0.02, '#544a3e', true);
       C.addBox(fm, -0.89, 0, 0, 0.1, 2.1, 0.14, '#2c221a');
       C.addBox(fm, 0.89, 0, 0, 0.1, 2.1, 0.14, '#2c221a');
       C.addBox(fm, 0, 2.05, 0, 1.88, 0.09, 0.14, '#2c221a');
-      if (open) {
-        C.addQuadX(fm, -0.83, 0.02, 0.83, 2.04, -0.06, '#0a0806', true);   // the dark past the frame
-      } else {
-        C.addQuadX(fm, -0.85, 0.03, 0.85, 2.05, 0.04, '#241c15', true);
-        C.addQuadX(fm, -0.05, 0.03, 0.05, 2.05, 0.05, '#3a2d20', true);
-      }
+      C.addQuadX(fm, -0.83, 0.02, 0.83, 2.04, -0.09, '#0a0806', true);   // the dark past the frame
       C.anchorize(fm, 0.8, 57, 8); C.meshBounds(fm);
       return fm;
+    }
+    function leafPair(x, delay) {
+      var L2 = inst(C.props.doorLeaf(false), [x, 0, -0.85], 0, { label: 'door', kind: 'leaf', shadow: false });
+      var R2 = inst(C.props.doorLeaf(true), [x, 0, 0.85], 0, { label: 'door', kind: 'leaf', shadow: false });
+      L2.pose = [0, 0, 0, 0, 0, 0]; R2.pose = [0, 0, 0, 0, 0, 0];
+      if (delay != null) { L2.loadT = 0; L2.loadDir = 1; L2._delay = delay; R2.loadT = 0; R2.loadDir = 1; R2._delay = delay; }
+      return [L2, R2];
     }
     var SEGP = HALL.SEGP;
     function mkSegMesh() {
@@ -478,6 +480,11 @@
         C.addQuadZ(sm, dd[0] - 0.45, 0.02, dd[0] + 0.45, 2.02, zq, '#241c15', dd[1] < 0);
         C.addQuadZ(sm, dd[0] - 0.52, 2.02, dd[0] + 0.52, 2.12, zq, '#2c221a', dd[1] < 0);
       });
+      C.addBox(sm, 0, 0, -0.89, 0.14, 2.1, 0.1, '#2c221a');   // doorframe: jambs + lintel + header
+      C.addBox(sm, 0, 0, 0.89, 0.14, 2.1, 0.1, '#2c221a');
+      C.addBox(sm, 0, 2.05, 0, 0.14, 0.09, 1.88, '#2c221a');
+      C.addQuadX(sm, -HW, 2.14, HW, H, 0.03, '#544a3e', true);
+      C.addQuadX(sm, -HW, 2.14, HW, H, -0.03, '#544a3e', false);
       var cb = sm.v.length;
       sm.v.push([-hp, H, -HW], [hp, H, -HW], [hp, H, HW], [-hp, H, HW]);
       C.addFace(sm, [cb, cb + 1, cb + 2, cb + 3], '#4c4238');
@@ -502,9 +509,10 @@
     way.state = 'open';
     var cat = inst(P2.cat(), [HALL.CAT_X0, 0, HALL.CAT_Z], Math.PI / 2, { label: 'cat', kind: 'cat', shadow: true });
     cat.pose = [0, 0, 0, 0, 0, 0];
-    var farEnd = inst(mkFarEnd(false), [-HL, 0, 0], 0, { label: 'far door', kind: 'farend' });
+    var farEnd = inst(mkFarEnd(), [-HL, 0, 0], 0, { label: 'far door', kind: 'farend' });
     farEnd.state = 'shut';
-    s.insts.push(doorB, winI, lampI, lampA, lampB, way, cat, farEnd);
+    var feLeaves = leafPair(-HL, null);
+    s.insts.push(doorB, winI, lampI, lampA, lampB, way, cat, farEnd, feLeaves[0], feLeaves[1]);
 
     // colliders
     function box2(min, max) { return { min: min, max: max }; }
@@ -588,14 +596,21 @@
           game.say(C.LINES.dejavu, 0.5);
           game.say(C.LINES.wayback, 3.0);
           dv.boothT = dv.t + 330;   // let “listen for it” land, then the phone rings
-          // ...and the far door — the one that never opens — opens onto a corridor with no end
-          farEnd.mesh = mkFarEnd(true); farEnd.state = 'open'; farEnd.label = 'corridor';
-          farEnd._wv = null; farEnd.glyphEpoch = (farEnd.glyphEpoch | 0) + 1;
-          farEnd.reResolve = 1; farEnd.loadT = 0; farEnd.loadDir = 1; farEnd._delay = 0.25;
+          // ...and the far door — the one that never opens — is armed: walk up and it opens for you
+          farEnd.state = 'armed'; farEnd.label = 'corridor';
+          farEnd.glyphEpoch = (farEnd.glyphEpoch | 0) + 1; farEnd.reResolve = 1;
           var fi = s.colliders.indexOf(farCol);
           if (fi >= 0) s.colliders.splice(fi, 1);
           s.colliders.push(box2([-HL - 0.3, 0, -HW], [-HL + 0.12, H, -0.85]));   // door jambs
           s.colliders.push(box2([-HL - 0.3, 0, 0.85], [-HL + 0.12, H, HW]));
+          dv.doors = []; dv.doorA = 0;
+          function hangDoor(dx, leaves) {
+            if (s.insts.indexOf(leaves[0]) < 0) s.insts.push(leaves[0], leaves[1]);
+            var dcol = box2([dx - 0.14, 0, -0.85], [dx + 0.14, 2.05, 0.85]);
+            s.colliders.push(dcol);
+            dv.doors.push({ x: dx, leaves: leaves, col: dcol, blocked: true, a: 0, tgt: 0 });
+          }
+          hangDoor(-HL, feLeaves);
           var segMesh = mkSegMesh();
           for (var sk = 0; sk < 3; sk++) {
             var scx = -HL - SEGP / 2 - sk * SEGP;
@@ -607,6 +622,7 @@
             s.insts.push(sl);
             s.colliders.push(box2([scx - 0.35, 0, -HW], [scx + 0.35, H, -HW + 0.24]));
             s.colliders.push(box2([scx - 0.35, 0, HW - 0.24], [scx + 0.35, H, HW]));
+            hangDoor(scx, leafPair(scx, 0.35 + sk * 0.12));
           }
           s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, HW - 0.15], [-HL, H, HW + 0.6]));
           s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, -HW - 0.6], [-HL, H, -HW + 0.15]));
@@ -614,7 +630,37 @@
           dv.loop = { at: -HL - 2 * SEGP - 0.01, hard: -HL - 2.75 * SEGP, laps: 0 };
           dv.phase = 'after';
         }
-      } else if (dv.phase === 'after') {
+      }
+      if (dv.doors) {
+        // each door minds its own distance: near it, it opens for you; leave it, it shuts behind you.
+        // TRIG/RELEASE both sit under the half-period, so at the wrap line every door reads shut
+        // from both sides — the seam stays invisible.
+        var TRIG = 2.6, RELEASE = 3.1, LEAF_MAX = 1.86, LEAF_SPD = 3.4;
+        var pxd = game.player.pos[0], maxA = 0;
+        for (var dj = 0; dj < dv.doors.length; dj++) {
+          var D = dv.doors[dj];
+          var nd = Math.abs(pxd - D.x);
+          var tgt = nd < TRIG ? LEAF_MAX : (nd > RELEASE ? 0 : D.tgt);
+          if (tgt > 0 && D.tgt === 0) game.emit('creak');
+          D.tgt = tgt;
+          if (D.a < tgt) D.a = Math.min(tgt, D.a + LEAF_SPD * HALL.TICK);
+          else if (D.a > tgt) D.a = Math.max(tgt, D.a - LEAF_SPD * HALL.TICK);
+          D.leaves[0].pose[5] = D.a;
+          D.leaves[1].pose[5] = -D.a;
+          if (D.a > maxA) maxA = D.a;
+          var passable = D.a > 0.5;
+          if (passable && D.blocked) {
+            var ci = s.colliders.indexOf(D.col);
+            if (ci >= 0) s.colliders.splice(ci, 1);
+            D.blocked = false;
+          } else if (!passable && !D.blocked) {
+            s.colliders.push(D.col);
+            D.blocked = true;
+          }
+        }
+        dv.doorA = maxA;
+      }
+      if (dv.phase === 'after') {
         if (dv.boothT && dv.t >= dv.boothT) {
           dv.boothT = 0;
           game.addProp('booth', [-8.3, 0, 0], Math.PI / 2, null, 0.3);
@@ -625,6 +671,14 @@
           if ((ppx < dv.loop.at && facingAway) || ppx < dv.loop.hard) {
             game.player.pos[0] += SEGP;
             dv.loop.laps++;
+            // the doors' memory travels with you: shift each periodic door's swing one period along,
+            // so the one you just passed is still easing shut behind you and the one ahead reads shut
+            var ring = dv.doors.filter(function (d) { return d.x < -HL; }).sort(function (a, b) { return b.x - a.x; });
+            for (var ri = 0; ri < ring.length; ri++) {
+              var src = ring[ri + 1];
+              ring[ri].a = src ? src.a : 0;
+              ring[ri].tgt = src ? src.tgt : 0;
+            }
             if (dv.loop.laps === 2) game.say(C.LINES.loop, 0.2);
           }
         }

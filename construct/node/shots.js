@@ -360,6 +360,11 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   step(g, null, 1.6);   // segments finish materializing
   at(g, dv.loop.at + 2.6, 0, 0); look(g, -Math.PI / 2, -0.01);
   shoot(g, '40_hall_infinite', g.time);
+  // ---- 41 a door opening for you ----
+  at(g, -10.65, 0, 0); look(g, -Math.PI / 2, -0.02);
+  let dg = 0;
+  while (dg++ < 90) { g.update({}, 1 / 60); g.drain(); const dn = g.scene.dv.doors.find(d => Math.abs(d.x + 13.1) < 0.01); if (dn && dn.a > 0.95) break; }
+  shoot(g, '41_hall_door_opening', g.time);
 }
 
 console.log('done');

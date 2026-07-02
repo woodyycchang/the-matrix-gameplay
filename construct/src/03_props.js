@@ -337,6 +337,20 @@
   // ---------- the déjà vu hallway family ----------
   // Articulated black cat. Local +z is the nose. Same part machinery as P.human:
   // 0 body+head, 1 FL leg, 2 FR, 3 BL, 4 BR, 5 tail (pid 5 swings about Y = swish).
+  P.doorLeaf = function (mir) {
+    var m = C.newMesh();
+    m.vp = []; m.pivots = [];
+    var zd = mir ? -1 : 1;
+    var v0 = m.v.length;
+    C.addBox(m, 0, 0.02, zd * 0.415, 0.06, 2.02, 0.79, '#241c15');
+    C.addQuadX(m, zd * 0.06, 0.14, zd * 0.70, 1.92, mir ? -0.034 : 0.034, '#2c2118', !mir);
+    C.addBox(m, 0.055, 0.98, zd * 0.70, 0.05, 0.09, 0.05, '#8a6b2f');   // knob
+    for (var i = v0; i < m.v.length; i++) m.vp[i] = 5;
+    m.pivots[5] = [0, 1.0, 0];
+    C.anchorize(m, 0.9, mir ? 411 : 410, 4); C.meshBounds(m);
+    return m;
+  };
+
   P.cat = function () {
     var m = C.newMesh();
     m.vp = []; m.pivots = [];
