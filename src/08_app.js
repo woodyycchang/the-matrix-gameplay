@@ -878,8 +878,13 @@
     b.className = 'chip'; b.type = 'button'; b.textContent = label;
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      say('you: ' + (req || label), true);
-      if (req === '__neural__') { loadNeural(); return; }
+      say('you: ' + (req === '__neural__' ? label : (req || label)), true);
+      if (req === '__neural__') {
+        if (neural.state === 'on') say('operator is already online.', true);
+        else if (neural.state === 'loading') { neural.quiet = false; say('operator is waking\u2026 he will answer the moment he is up.', true); }
+        else loadNeural();
+        return;
+      }
       game.request(req || label);
       A.handle('chirp');
     });

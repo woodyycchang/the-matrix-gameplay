@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1449</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1453</span></div>
 </div>
 
 <script>
@@ -3576,8 +3576,13 @@
     b.className = 'chip'; b.type = 'button'; b.textContent = label;
     b.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      say('you: ' + (req || label), true);
-      if (req === '__neural__') { loadNeural(); return; }
+      say('you: ' + (req === '__neural__' ? label : (req || label)), true);
+      if (req === '__neural__') {
+        if (neural.state === 'on') say('operator is already online.', true);
+        else if (neural.state === 'loading') { neural.quiet = false; say('operator is waking\u2026 he will answer the moment he is up.', true); }
+        else loadNeural();
+        return;
+      }
       game.request(req || label);
       A.handle('chirp');
     });

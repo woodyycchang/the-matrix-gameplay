@@ -1482,6 +1482,15 @@ section('self-healing update loop');
   ok(/\?live=' \+ Date\.now\(\), \{ cache: 'no-store' \}/.test(appAE), 'ground truth: the page reads the BUILD the CDN is actually serving');
 }
 
+
+section('the neural chip always answers');
+{
+  const fsAF = require('fs');
+  const appAF = fsAF.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/operator is already online\./.test(appAF) && /neural\.state === 'loading'\) \{ neural\.quiet = false;/.test(appAF), 'already-online and still-loading both get a spoken receipt - no silent no-op');
+  ok(/req === '__neural__' \? label :/.test(appAF), 'the echo shows the human label, not the internal token');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
