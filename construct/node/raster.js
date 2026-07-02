@@ -107,6 +107,7 @@ function paint(frame, ops, gameMode) {
           if (op.mode === 'neon') frame.vgrad([[0, '#04040a'], [hor, '#0c0a18'], [1, op.fogCol]]);
           else if (op.mode === 'city') frame.vgrad([[0, '#9fb2bf'], [hor, '#cfd6da'], [1, op.fogCol]]);
           else if (op.mode === 'day') frame.vgrad([[0, '#aebfc8'], [hor, '#d6dadc'], [1, op.fogCol]]);
+          else if (op.mode === 'hall') frame.vgrad([[0, '#0f0c0a'], [1, op.fogCol]]);
           else frame.vgrad([[0, '#c9bda3'], [1, op.fogCol]]);
         }
         break;

@@ -14,6 +14,7 @@
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
+    { word: 'hallway', anchors: ['a narrow apartment corridor', 'the hallway with the black cat', 'deja vu program', 'that corridor again'] },
     { word: 'neon', anchors: ['ride a motorcycle down a neon street', 'cyberpunk highway at night', 'an endless glowing road to speed on', 'night ride through neon city'] },
     { word: 'clear', anchors: ['remove everything', 'empty the room', 'reset the world', 'wipe it all away'] },
     { word: 'code', anchors: ['see the world as code', 'matrix vision of falling glyphs', 'show me the digital rain', 'reveal the simulation'] },

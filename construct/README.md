@@ -2,7 +2,7 @@
 
 A browser-playable homage to the endless white loading space from *The Matrix* (1999), built as **one self-contained HTML file** — no dependencies, no network, no build step required to play.
 
-**▶ Play:** open [`index.html`](index.html) in any modern browser, or enable GitHub Pages on this repo (Settings → Pages → Deploy from branch → `main` / root) and play at `https://<user>.github.io/the-matrix-gameplay/`.
+**▶ Play:** open [`index.html`](index.html) in any modern browser, or enable GitHub Pages on this repo (Settings → Pages → Deploy from branch → `main` / root) and play at `https://<user>.github.io/the-matrix-gameplay/construct/`.
 
 ![the armory aisle](shots/05_armory_aisle.png)
 
@@ -14,6 +14,7 @@ You stand in a white void and ask the operator for things — by voice (hold **V
 - **"dojo"** — a sparring room with a wing-chun dummy you can actually strike.
 - **"the jump program"** — two rooftops, a 7.6 m gap, and an honest physics envelope: a full sprint clears it with a little margin; anything less does not. The **first** fall hurts — slow motion as the street rises, cracked vision, a red vignette, tinnitus, a long stagger back to your feet. Every fall after that is a white glitch and *"Again."*
 - **"crowded street, lunch hour"** — ~40 suited pedestrians. There's a woman in a red dress. Staring is a lesson (once).
+- **"a hallway"** (or **"deja vu"**) — a narrow apartment corridor. A black cat crosses a lit doorway; seconds later the same walk plays again, frame for frame, off a recording. Between the passes exactly one fixture — picked from the scene graph at that moment — genuinely changes state, and in code vision its glyphs re-resolve so you can verify. When the replay ends, the way you came in is bricked up. The phone rings at the far end.
 - **~15 props on demand** — "three chairs and a table", "a tv", "12 crates", "a phone booth" (it rings; walking in hangs you up back to white). Unknown words ("a flamingo") compile a pedestal with the letters orbiting it.
 - **C** toggles **code vision**: the same scene re-rendered as falling glyphs, readable up close as the objects they encode.
 
@@ -34,6 +35,7 @@ Zero dependencies. Everything is hand-rolled:
 - **Procedural meshes** (`src/02_mesh.js`, `src/03_props.js`): box-people with per-vertex part IDs and pivots for a poor-man's skeletal animation (sine-driven walk cycles), props, and scenes.
 - **Code vision** (`src/01_glyph.js` + engine): every mesh face is sampled into surface anchors; in code mode they render as depth-graded katakana with LOD, and within ~7 m the glyphs cycle the object's own label characters.
 - **Game logic** (`src/06_game.js`): free-form request parser, per-axis AABB capsule collision, the jump envelope, the first-fall hurt sequence, the crowd + red-dress freeze lesson.
+- **The déjà vu** (`src/04_scenes.js`): the cat's walk is a pure function of a fixed 60 Hz tick, recorded on pass one and replayed verbatim on pass two — the tests assert the two passes are equal at the state level and at the draw-list level, and that exactly one scene-graph object differs between them.
 - **Audio** (`src/07_audio.js`): WebAudio synthesis (no samples) and a speechSynthesis operator voice.
 
 ## Build & test

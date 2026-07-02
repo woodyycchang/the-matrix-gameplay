@@ -342,6 +342,8 @@
       case 'scene': hiss(0.8, 0.35, 160, 1800, 1); break;
       case 'codeOn': hiss(0.45, 0.26, 300, 3200, 2); blip(180, 0.18, 0.12, 'sine'); blip(360, 0.22, 0.1, 'sine', 0.06); break;
       case 'codeOff': hiss(0.4, 0.24, 3200, 300, 2); blip(360, 0.16, 0.08, 'sine'); break;
+      case 'dejavu': hiss(0.5, 0.2, 2600, 240, 1.6); blip(660, 0.09, 0.08, 'sine'); blip(440, 0.14, 0.08, 'sine', 0.09); break;
+      case 'seal': thump(70, 0.3, 0.4); hiss(0.35, 0.18, 500, 120, 1.2, 0.05); break;
       case 'jump': break;   // CUT: the jump is visible; LAND carries the physics
       case 'land': thump(150, 0.12, 0.22); break;
       case 'step':

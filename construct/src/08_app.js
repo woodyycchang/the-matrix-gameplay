@@ -270,6 +270,9 @@
               g.addColorStop(0, '#aebfc8');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#d6dadc');
               g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'hall') {
+              g.addColorStop(0, '#0f0c0a');
+              g.addColorStop(1, op.fogCol);
             } else { // dojo
               g.addColorStop(0, '#c9bda3');
               g.addColorStop(1, op.fogCol);

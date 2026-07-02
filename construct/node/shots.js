@@ -316,4 +316,46 @@ function at(g, x, y, z) { g.player.pos = [x, y, z]; step(g, null, 0.03); }
   shoot(g, '34_city_infinite_far', g.time);
 }
 
+// ---- 35–39 the déjà vu hallway ----
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('a hallway');
+  // run to pass 1, then to the moment the cat fronts the lit alcove (x ≈ 1.0)
+  let guard = 0;
+  while (!(g.scene.dv && g.scene.dv.phase === 'pass1') && guard++ < 60 * 20) { g.update({}, 1 / 60); g.drain(); }
+  const dv = g.scene.dv;
+  while (dv.phase === 'pass1' && dv.cat.pos[0] < 1.0 && guard++ < 60 * 40) { g.update({}, 1 / 60); g.drain(); }
+  at(g, 8.2, 0, 0); look(g, -Math.PI / 2, -0.03);
+  shoot(g, '35_hall_cat_doorway', g.time);
+  // ---- 36 code vision, crouched near the cat: the code spells CAT ----
+  at(g, dv.cat.pos[0] + 2.4, 0, -0.3);
+  const ex = g.cam.pos, cdx = dv.cat.pos[0] - ex[0], cdy = 0.25 - ex[1], cdz = dv.cat.pos[2] - ex[2];
+  g.player.yaw = Math.atan2(cdx, -cdz); g.player.pitch = Math.asin(cdy / Math.hypot(cdx, cdy, cdz));
+  step(g, null, 0.02);
+  g.mode = 'code';
+  shoot(g, '36_hall_cat_code', g.time);
+  g.mode = 'normal';
+  // ---- 37 the glitch, in code vision, mid-churn on the chosen fixture ----
+  while (!(dv.phase === 'glitch' && dv.chosen) && guard++ < 60 * 40) { g.update({}, 1 / 60); g.drain(); }
+  step(g, null, 0.25);
+  const ch = dv.chosen;
+  at(g, ch.pos[0] + (ch.pos[2] === 0 ? 0 : 0.2), 0, C.clamp(ch.pos[2] === 0 ? 1.0 : ch.pos[2] * -0.1, -0.9, 0.9));
+  const ey = g.cam.pos, mdx = ch.pos[0] - ey[0], mdy = (ch.pos[1] > 1 ? ch.pos[1] - 0.4 : 1.35) - ey[1], mdz = ch.pos[2] - ey[2];
+  g.player.yaw = Math.atan2(mdx, -mdz); g.player.pitch = C.clamp(Math.asin(mdy / Math.hypot(mdx, mdy, mdz)), -1.3, 1.3);
+  step(g, null, 0.02);
+  g.mode = 'code';
+  shoot(g, '37_hall_glitch_code', g.time);
+  g.mode = 'normal';
+  // ---- 38 the second pass, same walk, one thing changed ----
+  while (!(dv.phase === 'pass2' && dv.cat.pos[0] > -0.5) && guard++ < 60 * 40) { g.update({}, 1 / 60); g.drain(); }
+  at(g, 8.2, 0, 0); look(g, -Math.PI / 2, -0.03);
+  shoot(g, '38_hall_pass2_changed', g.time);
+  // ---- 39 the way back, bricked ----
+  while (!(dv.phase === 'after') && guard++ < 60 * 60) { g.update({}, 1 / 60); g.drain(); }
+  step(g, null, 1.4);
+  at(g, 6.6, 0, 0); look(g, Math.PI / 2, 0.0);
+  shoot(g, '39_hall_wayback_bricked', g.time);
+}
+
 console.log('done');

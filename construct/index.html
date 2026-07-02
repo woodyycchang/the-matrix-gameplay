@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1430</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1500</span></div>
 </div>
 
 <script>
@@ -700,6 +700,131 @@
   P.redDress = function () {
     return P.human({ tier: 'custom', dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
   };
+
+  // ---------- the déjà vu hallway family ----------
+  // Articulated black cat. Local +z is the nose. Same part machinery as P.human:
+  // 0 body+head, 1 FL leg, 2 FR, 3 BL, 4 BR, 5 tail (pid 5 swings about Y = swish).
+  P.cat = function () {
+    var m = C.newMesh();
+    m.vp = []; m.pivots = [];
+    function part(pid, pivot, fn) {
+      var v0 = m.v.length;
+      fn();
+      for (var i = v0; i < m.v.length; i++) m.vp[i] = pid;
+      m.pivots[pid] = pivot;
+    }
+    var fur = '#17171a', furD = '#101013';
+    part(0, [0, 0, 0], function () {
+      C.addBox(m, 0, 0.17, 0.02, 0.16, 0.17, 0.42, fur);              // trunk
+      C.addBox(m, 0, 0.16, -0.17, 0.18, 0.19, 0.14, furD);            // haunches
+      C.addBox(m, 0, 0.26, 0.24, 0.13, 0.12, 0.13, fur);              // head
+      C.addBox(m, -0.045, 0.375, 0.22, 0.035, 0.05, 0.02, furD);      // ear L
+      C.addBox(m, 0.045, 0.375, 0.22, 0.035, 0.05, 0.02, furD);       // ear R
+      C.addQuadZ(m, -0.052, 0.29, -0.018, 0.315, 0.307, '#7ddc8a', true);  // eye L
+      C.addQuadZ(m, 0.018, 0.29, 0.052, 0.315, 0.307, '#7ddc8a', true);   // eye R
+    });
+    part(1, [-0.055, 0.14, 0.15], function () { C.addBox(m, -0.055, 0.0, 0.15, 0.045, 0.14, 0.05, furD); });
+    part(2, [0.055, 0.14, 0.15], function () { C.addBox(m, 0.055, 0.0, 0.15, 0.045, 0.14, 0.05, furD); });
+    part(3, [-0.06, 0.14, -0.16], function () { C.addBox(m, -0.06, 0.0, -0.16, 0.05, 0.14, 0.055, furD); });
+    part(4, [0.06, 0.14, -0.16], function () { C.addBox(m, 0.06, 0.0, -0.16, 0.05, 0.14, 0.055, furD); });
+    part(5, [0, 0.24, -0.24], function () {
+      C.addBox(m, 0, 0.235, -0.33, 0.035, 0.045, 0.2, fur);           // tail base
+      C.addBox(m, 0, 0.27, -0.43, 0.03, 0.11, 0.035, furD);           // tail tip, hooked up
+    });
+    return fin(m, 14, 313, 5);
+  };
+
+  // Apartment door in its frame, facing +z. Open = leaf ajar into the corridor
+  // over a dark gap. Bricked = the same frame packed with staggered courses.
+  P.hallDoor = function (bricked) {
+    var m = C.newMesh();
+    var W = 0.95, H = 2.05, wood = '#3a2d20', frame = '#2c221a';
+    C.addBox(m, -W / 2 - 0.05, 0, 0, 0.1, H + 0.06, 0.13, frame);      // jamb L
+    C.addBox(m, W / 2 + 0.05, 0, 0, 0.1, H + 0.06, 0.13, frame);       // jamb R
+    C.addBox(m, 0, H + 0.02, 0, W + 0.2, 0.09, 0.13, frame);           // lintel
+    C.addBox(m, 0, 0, 0, W + 0.2, 0.03, 0.13, '#241c15');              // threshold
+    if (!bricked) {
+      C.addQuadZ(m, -W / 2, 0.02, W / 2, H, -0.02, '#080706', true);   // the dark behind
+      var leaf = C.newMesh();
+      C.addBox(leaf, W / 2 - 0.02, 0.03, 0, W - 0.04, H - 0.05, 0.045, wood);
+      C.addBox(leaf, W - 0.12, 1.02, 0.035, 0.03, 0.03, 0.05, '#8a7a4c'); // knob
+      C.mergeMesh(m, leaf, [-W / 2, 0, 0.03], -0.62);                  // hinged at the left jamb, ajar
+    } else {
+      C.addQuadZ(m, -W / 2, 0.02, W / 2, H, -0.01, '#3a322c', true);   // mortar bed
+      var r = C.rng(88);
+      for (var row = 0; row * 0.235 < H - 0.2; row++) {
+        var y = 0.05 + row * 0.235;
+        var off = (row % 2) * 0.16;
+        for (var x = -W / 2 + 0.02 + off - 0.16; x < W / 2 - 0.05; x += 0.325) {
+          var bw = Math.min(0.30, W / 2 - 0.03 - x);
+          if (bw < 0.08) continue;
+          C.addBox(m, Math.max(-W / 2 + 0.17, x + bw / 2), y, 0.015, bw, 0.21, 0.06,
+            C.mixHex('#5d3a2e', '#4a2f26', r()));
+        }
+      }
+    }
+    return fin(m, 6, bricked ? 92 : 91, 6);
+  };
+
+  // Corridor window, facing +z. Clear = night glass behind muntins.
+  // Barred = the same window with five verticals bolted over it.
+  P.hallWindow = function (barred) {
+    var m = C.newMesh();
+    var W = 1.1, Y0 = 1.05, Y1 = 2.15, frame = '#2e2721';
+    C.addBox(m, 0, Y0 - 0.07, 0, W + 0.24, 0.09, 0.16, frame);          // sill
+    C.addBox(m, 0, Y1, 0, W + 0.24, 0.08, 0.12, frame);                 // head
+    C.addBox(m, -W / 2 - 0.05, Y0, 0, 0.1, Y1 - Y0, 0.12, frame);
+    C.addBox(m, W / 2 + 0.05, Y0, 0, 0.1, Y1 - Y0, 0.12, frame);
+    C.addQuadZ(m, -W / 2, Y0, W / 2, Y1, 0.0, '#0b1220', true);         // night
+    C.addQuadZ(m, -W / 2 + 0.12, Y0 + 0.55, W / 2 - 0.55, Y1 - 0.18, 0.005, '#1d2a44', true); // moon wash
+    C.addBox(m, 0, Y0, 0.02, 0.05, Y1 - Y0, 0.05, frame);               // muntin |
+    C.addBox(m, 0, (Y0 + Y1) / 2, 0.02, W, 0.05, 0.05, frame);          // muntin —
+    if (barred) {
+      for (var i = 0; i < 5; i++) {
+        var x = -W / 2 + 0.09 + i * ((W - 0.18) / 4);
+        C.addBox(m, x, Y0 - 0.02, 0.085, 0.035, Y1 - Y0 + 0.08, 0.035, '#101114');
+      }
+      C.addBox(m, 0, Y0 + 0.16, 0.085, W + 0.1, 0.045, 0.045, '#141518'); // cross strap
+      C.addBox(m, 0, Y1 - 0.22, 0.085, W + 0.1, 0.045, 0.045, '#141518');
+    }
+    return fin(m, 7, barred ? 94 : 93, 6);
+  };
+
+  // Ceiling lamp, built hanging below y=0 (mount at the ceiling plane).
+  // Lit = warm globe + spill. Dead = cold shade, nothing else.
+  P.ceilLamp = function (dead) {
+    var m = C.newMesh();
+    C.addBox(m, 0, -0.12, 0, 0.05, 0.12, 0.05, '#2a2620');              // stem
+    C.addCyl(m, 0, -0.26, 0, 0.17, 0.13, dead ? '#26241f' : '#4a4437', 8, { noBottom: false });
+    if (!dead) C.addBox(m, 0, -0.315, 0, 0.19, 0.05, 0.19, '#e8c477', { flat: true }); // glow globe
+    return fin(m, dead ? 10 : 12, dead ? 96 : 95, 5);
+  };
+
+  // The way back: an open portal the width of the corridor, facing +z.
+  // Open = pure frame, you can walk through it. Bricked = a wall where a door was.
+  P.archway = function (bricked) {
+    var m = C.newMesh();
+    var W = 2.0, H = 2.35, stone = '#3f382f';
+    C.addBox(m, -W / 2 - 0.08, 0, 0, 0.16, H + 0.1, 0.2, stone);
+    C.addBox(m, W / 2 + 0.08, 0, 0, 0.16, H + 0.1, 0.2, stone);
+    C.addBox(m, 0, H + 0.04, 0, W + 0.32, 0.13, 0.2, stone);
+    if (bricked) {
+      C.addQuadZ(m, -W / 2, 0.0, W / 2, H, 0.055, '#38302a', true);
+      C.addQuadZ(m, -W / 2, 0.0, W / 2, H, -0.055, '#332c26', false);
+      var r = C.rng(97);
+      for (var row = 0; row * 0.235 < H - 0.12; row++) {
+        var y = 0.03 + row * 0.235;
+        var off = (row % 2) * 0.17;
+        for (var x = -W / 2 + 0.02 + off - 0.17; x < W / 2 - 0.06; x += 0.345) {
+          var bw = Math.min(0.32, W / 2 - 0.04 - x);
+          if (bw < 0.08) continue;
+          C.addBox(m, Math.max(-W / 2 + 0.18, x + bw / 2), y, 0, bw, 0.21, 0.11,
+            C.mixHex('#5d3a2e', '#472e25', r()));
+        }
+      }
+    }
+    return fin(m, 5, bricked ? 99 : 98, 6);
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 /* THE CONSTRUCT — 04_scenes.js — scene programs (pure) */
 (function (G) {
@@ -1024,6 +1149,234 @@
     return s;
   }
 
+  // ---------------- HALLWAY (the déjà vu program) ----------------
+  // A narrow apartment corridor. A black cat crosses in front of a lit doorway;
+  // its walk is RECORDED per fixed tick, then played back frame for frame. Between
+  // the passes exactly one fixture, picked from the scene graph at glitch time,
+  // changes state. When the replay ends, the way back is bricked up.
+  var HALL = C.HALL = {
+    HL: 9.5, HW: 1.25, H: 2.7,
+    TICK: 1 / 60, SETTLE: 150, N: 420, GLITCH: 52, GLITCH_AT: 20, SEAL_AT: 30,
+    CAT_X0: -3.72, CAT_X1: 3.72, CAT_Z: -1.08
+  };
+  // The cat's whole walk as a pure function of the tick index. Nothing else may
+  // move the cat: pass 1 records what this returns, pass 2 replays the record.
+  C.catPose = function (p) {
+    var u = p / (HALL.N - 1);
+    var ph = p * 0.145, s = Math.sin(ph);
+    return [
+      HALL.CAT_X0 + (HALL.CAT_X1 - HALL.CAT_X0) * u,   // x
+      Math.abs(Math.cos(ph)) * 0.018,                   // y bob
+      HALL.CAT_Z,                                       // z, hugging the north wall
+      Math.PI / 2,                                      // yaw: nose toward +x
+      s * 0.6, -s * 0.6, -s * 0.6, s * 0.6,             // diagonal leg pairs
+      Math.sin(ph * 0.42) * 0.4                         // tail swish
+    ];
+  };
+  function applyCat(it, st) {
+    it.pos[0] = st[0]; it.pos[1] = st[1]; it.pos[2] = st[2];
+    it.yaw = st[3];
+    it.pose[1] = st[4]; it.pose[2] = st[5]; it.pose[3] = st[6]; it.pose[4] = st[7]; it.pose[5] = st[8];
+  }
+  function mutateFixture(it) {
+    it.mesh = it.mut.make();
+    it.state = it.mut.alt;
+    if (it.mut.label) it.label = it.mut.label;
+    it._wv = null;
+    it.glyphEpoch = (it.glyphEpoch | 0) + 1;
+    it.reResolve = 1;
+    it.loadT = 0; it.loadDir = 1; it._delay = 0.1;
+  }
+  function sceneHallway() {
+    var HL = HALL.HL, HW = HALL.HW, H = HALL.H;
+    var s = {
+      name: 'hallway', sky: 'hall', fog: { near: 8, far: 34, col: '#14100d' },
+      groundY: 0, ambience: 'hall', colliders: [], insts: [],
+      spawn: { pos: [8.2, 0, 0], yaw: -Math.PI / 2 },
+      update: null
+    };
+    var m = C.newMesh();
+    function ceilQuad(x0, z0, x1, z1, y, col) {
+      var b = m.v.length;
+      m.v.push([x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]);
+      return C.addFace(m, [b, b + 1, b + 2, b + 3], col);
+    }
+    // floor: old planks + a runner
+    for (var px = -HL; px < HL + 2.1; px += 0.55) {
+      var tone = ((Math.round(px / 0.55) % 2) === 0) ? '#3b2f22' : '#342a1e';
+      if (px >= HL) tone = ((Math.round(px / 0.55) % 2) === 0) ? '#4a4a46' : '#444440';
+      C.addQuadY(m, px, -HW, Math.min(px + 0.53, HL + 2.1), HW, 0.001, tone, 'floor');
+    }
+    C.addQuadY(m, -HL + 0.3, -0.52, HL - 0.3, 0.52, 0.006, '#571f1f', 'floor');   // runner
+    C.addQuadY(m, -HL + 0.3, -0.52, HL - 0.3, -0.46, 0.008, '#7a5a2b', 'floor');
+    C.addQuadY(m, -HL + 0.3, 0.46, HL - 0.3, 0.52, 0.008, '#7a5a2b', 'floor');
+    // walls: wainscot below, plaster field above; the north wall skips the lit alcove
+    var WAIN = '#403428', FIELD = '#6a6156', SKIRT = '#241d16', RAIL = '#4a3e31';
+    function wallN(x0, x1) {   // faces +z
+      C.addQuadZ(m, x0, 0, x1, 0.14, -HW + 0.02, SKIRT, true);
+      C.addQuadZ(m, x0, 0.14, x1, 0.95, -HW + 0.02, WAIN, true);
+      C.addQuadZ(m, x0, 0.95, x1, H, -HW + 0.02, FIELD, true);
+      C.addQuadZ(m, x0, 2.22, x1, 2.28, -HW + 0.025, RAIL, true);
+    }
+    function wallS(x0, x1) {   // faces -z
+      C.addQuadZ(m, x0, 0, x1, 0.14, HW - 0.02, SKIRT, false);
+      C.addQuadZ(m, x0, 0.14, x1, 0.95, HW - 0.02, WAIN, false);
+      C.addQuadZ(m, x0, 0.95, x1, H, HW - 0.02, FIELD, false);
+      C.addQuadZ(m, x0, 2.22, x1, 2.28, HW - 0.025, RAIL, false);
+    }
+    wallN(-HL, 0.55); wallN(1.45, HL);
+    wallS(-HL, HL);
+    // chimney breasts give the corridor rhythm and hide the cat's entry and exit
+    [-3.8, 3.8].forEach(function (bx) {
+      C.addBox(m, bx, 0, -HW + 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+      C.addBox(m, bx, 0, HW - 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+    });
+    // decorative closed doors (painted shut, part of the wall)
+    [[-6.6, -1], [-4.9, 1], [6.4, 1], [-7.6, 1]].forEach(function (dd) {
+      var dx = dd[0], side = dd[1];
+      var zq = side < 0 ? -HW + 0.03 : HW - 0.03;
+      C.addQuadZ(m, dx - 0.45, 0.02, dx + 0.45, 2.02, zq, '#241c15', side < 0);
+      C.addQuadZ(m, dx - 0.52, 2.02, dx + 0.52, 2.12, zq, '#2c221a', side < 0);
+    });
+    // the lit alcove the cat crosses: recess, warm back wall, light spilling out
+    C.addQuadX(m, -HW - 0.86, 0, -HW, 2.06, 0.56, '#4a3c2c', false);
+    C.addQuadX(m, -HW - 0.86, 0, -HW, 2.06, 1.44, '#4a3c2c', true);
+    C.addQuadZ(m, 0.56, 0, 1.44, 2.06, -HW - 0.84, '#8a7452', true);
+    C.addQuadZ(m, 0.60, 0.15, 1.40, 1.85, -HW - 0.835, '#c9a765', true);
+    C.addQuadY(m, 0.55, -HW - 0.84, 1.45, -HW, 0.004, '#6e5636', 'floor');
+    ceilQuad(0.55, -HW - 0.84, 1.45, -HW, 2.06, '#5a4830');
+    C.addQuadY(m, 0.45, -HW, 1.55, -HW + 0.85, 0.01, '#caa25f', 'floor');   // spill, bright
+    C.addQuadY(m, 0.35, -HW + 0.85, 1.65, -HW + 1.7, 0.012, '#8a6b3f', 'floor'); // spill, dim
+    C.addBox(m, 0.52, 0, -HW + 0.02, 0.08, 2.1, 0.1, '#2c221a');   // alcove jambs
+    C.addBox(m, 1.48, 0, -HW + 0.02, 0.08, 2.1, 0.1, '#2c221a');
+    C.addBox(m, 1.0, 2.06, -HW + 0.02, 1.06, 0.09, 0.1, '#2c221a');
+    // far end: a double door that never opens
+    C.addQuadX(m, -HW, 0, HW, H, -HL + 0.02, '#544a3e', true);
+    C.addQuadX(m, -0.85, 0.03, 0.85, 2.05, -HL + 0.04, '#241c15', true);
+    C.addQuadX(m, -0.05, 0.03, 0.05, 2.05, -HL + 0.05, '#3a2d20', true);
+    // ceiling with beams
+    ceilQuad(-HL, -HW, HL + 2.1, HW, H, '#4c4238');
+    for (var bz = -HL + 1.4; bz < HL; bz += 2.4) C.addBox(m, bz, H - 0.1, 0, 0.2, 0.1, 2 * HW, '#2e2620');
+    // the landing beyond the archway (the way you came in)
+    C.addQuadZ(m, HL, 0, HL + 2.1, H, -HW + 0.02, '#565048', true);
+    C.addQuadZ(m, HL, 0, HL + 2.1, H, HW - 0.02, '#565048', false);
+    C.addQuadX(m, -HW, 0, HW, H, HL + 2.08, '#7e8a86', false);
+    C.addQuadX(m, -0.6, 0.1, 0.6, 2.0, HL + 2.06, '#9fb0aa', false);   // stairwell glow
+    C.addQuadY(m, HL + 0.1, -0.8, HL + 1.9, 0.8, 0.01, '#5f6a66', 'floor');
+    C.anchorize(m, 0.9, 74, 12); C.meshBounds(m);
+    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'room', label: 'hallway' }));
+
+    // fixtures: candidates carry a `mut` descriptor; the glitch picks ONE at runtime
+    var P2 = C.props;
+    var doorB = inst(P2.hallDoor(false), [-2.5, 0, HW], Math.PI, { label: 'door', kind: 'fixture' });
+    doorB.state = 'open'; doorB.mut = { alt: 'bricked', label: 'brick', make: function () { return P2.hallDoor(true); } };
+    var winI = inst(P2.hallWindow(false), [5.5, 0, -HW], 0, { label: 'window', kind: 'fixture' });
+    winI.state = 'clear'; winI.mut = { alt: 'barred', label: 'bars', make: function () { return P2.hallWindow(true); } };
+    var lampI = inst(P2.ceilLamp(false), [0, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampI.state = 'lit'; lampI.mut = { alt: 'dead', label: 'dead', make: function () { return P2.ceilLamp(true); } };
+    var lampA = inst(P2.ceilLamp(false), [-5.6, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampA.state = 'lit';
+    var lampB = inst(P2.ceilLamp(false), [5.6, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampB.state = 'lit';
+    var way = inst(P2.archway(false), [HL, 0, 0], -Math.PI / 2, { label: 'the way back', kind: 'wayback' });
+    way.state = 'open';
+    var cat = inst(P2.cat(), [HALL.CAT_X0, 0, HALL.CAT_Z], Math.PI / 2, { label: 'cat', kind: 'cat', shadow: true });
+    cat.pose = [0, 0, 0, 0, 0, 0];
+    s.insts.push(doorB, winI, lampI, lampA, lampB, way, cat);
+
+    // colliders
+    function box2(min, max) { return { min: min, max: max }; }
+    s.colliders.push(box2([-HL, 0, HW - 0.15], [HL, H, HW + 0.6]));                 // south wall
+    s.colliders.push(box2([-HL, 0, -HW - 0.6], [0.55, H, -HW + 0.15]));             // north, left of alcove
+    s.colliders.push(box2([1.45, 0, -HW - 0.6], [HL, H, -HW + 0.15]));              // north, right of alcove
+    s.colliders.push(box2([0.43, 0, -HW - 0.9], [0.57, H, -HW + 0.02]));            // alcove jamb walls
+    s.colliders.push(box2([1.43, 0, -HW - 0.9], [1.57, H, -HW + 0.02]));
+    s.colliders.push(box2([0.43, 0, -HW - 1.02], [1.57, H, -HW - 0.82]));           // alcove back
+    [-3.8, 3.8].forEach(function (bx) {
+      s.colliders.push(box2([bx - 0.35, 0, -HW], [bx + 0.35, H, -HW + 0.24]));
+      s.colliders.push(box2([bx - 0.35, 0, HW - 0.24], [bx + 0.35, H, HW]));
+    });
+    s.colliders.push(box2([-2.95, 0, HW - 0.42], [-2.05, 1.9, HW]));                // the ajar leaf
+    s.colliders.push(box2([-HL - 0.6, 0, -HW], [-HL + 0.12, H, HW]));               // far end
+    s.colliders.push(box2([HL, 0, -HW - 0.6], [HL + 2.2, H, -HW + 0.12]));          // landing sides
+    s.colliders.push(box2([HL, 0, HW - 0.12], [HL + 2.2, H, HW + 0.6]));
+    s.colliders.push(box2([HL + 2.02, 0, -HW], [HL + 2.25, H, HW]));                // landing back
+
+    // ---- the déjà vu controller ----
+    // Runs on its own fixed tick so the record is a per-tick array regardless of
+    // how the host schedules dt. Phases: settle -> pass1 (record) -> glitch
+    // (mutate ONE fixture) -> pass2 (replay the record) -> seal -> after.
+    var dv = s.dv = {
+      phase: 'settle', t: 0, p: 0, g: 0, acc: 0,
+      rec: [], cat: cat, way: way,
+      cands: [doorB, winI, lampI], chosen: null, sealed: false, tap: null
+    };
+    s.update = function (game, dt) {
+      dv.acc += dt;
+      while (dv.acc >= HALL.TICK - 1e-9) {
+        dv.acc -= HALL.TICK;
+        dvTick(game);
+      }
+    };
+    function dvTick(game) {
+      dv.t++;
+      if (dv.phase === 'settle') {
+        cat.loadT = 0; cat.loadDir = 0; cat._delay = 0;
+        if (dv.t >= HALL.SETTLE) { dv.phase = 'pass1'; dv.p = 0; cat.loadT = 1; }
+      } else if (dv.phase === 'pass1') {
+        if (dv.p < HALL.N) {
+          var st = C.catPose(dv.p);
+          applyCat(cat, st);
+          dv.rec.push(st);
+          if (dv.tap) dv.tap('pass1', dv.p, cat);
+          dv.p++;
+        } else {
+          dv.phase = 'glitch'; dv.g = 0; cat.loadT = 0;
+        }
+      } else if (dv.phase === 'glitch') {
+        dv.g++;
+        if (dv.g === HALL.GLITCH_AT) {
+          var r = C.rng(((game.time * 997) | 0) ^ 0x2a17)();
+          dv.chosen = dv.cands[Math.min(dv.cands.length - 1, (r * dv.cands.length) | 0)];
+          mutateFixture(dv.chosen);
+          game.fx.codeFlash = Math.max(game.fx.codeFlash, 0.55);
+          game.emit('dejavu');
+        }
+        if (dv.g >= HALL.GLITCH) { dv.phase = 'pass2'; dv.p = 0; cat.loadT = 1; }
+      } else if (dv.phase === 'pass2') {
+        if (dv.p < HALL.N) {
+          applyCat(cat, dv.rec[dv.p]);            // replay: the record IS the walk
+          if (dv.tap) dv.tap('pass2', dv.p, cat);
+          dv.p++;
+        } else {
+          dv.phase = 'seal'; dv.g = 0; cat.loadT = 0;
+        }
+      } else if (dv.phase === 'seal') {
+        dv.g++;
+        if (dv.g >= HALL.SEAL_AT) {
+          way.mesh = C.props.archway(true);
+          way.state = 'bricked'; way.label = 'wall'; way._wv = null;
+          way.glyphEpoch = (way.glyphEpoch | 0) + 1; way.reResolve = 1;
+          way.loadT = 0; way.loadDir = 1; way._delay = 0;
+          s.colliders.push(box2([HL - 0.12, 0, -HW], [HL + 0.14, HALL.H, HW]));
+          if (game.player.pos[0] > HL - 0.55) { game.player.pos[0] = HL - 0.6; game.player.vel[0] = 0; }
+          dv.sealed = true;
+          game.emit('seal');
+          game.say(C.LINES.dejavu, 0.5);
+          game.say(C.LINES.wayback, 3.0);
+          dv.boothT = dv.t + 330;   // let “listen for it” land, then the phone rings
+          dv.phase = 'after';
+        }
+      } else if (dv.phase === 'after') {
+        if (dv.boothT && dv.t >= dv.boothT) {
+          dv.boothT = 0;
+          game.addProp('booth', [-8.3, 0, 0], Math.PI / 2, null, 0.3);
+        }
+      }
+    }
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -1031,6 +1384,7 @@
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
       case 'neon': return sceneNeon();
+      case 'hallway': return sceneHallway();
       default: return sceneVoid();
     }
   };
@@ -1208,6 +1562,9 @@
         var ga = mode === 'code' ? 1 : C.clamp(1 - polyA, 0, 1);
         if (inst.kind === 'beacon' && mode !== 'code') ga = 0.85;
         var label = inst.label;
+        var ep = (inst.glyphEpoch | 0);
+        var rr = inst.reResolve || 0;
+        var tg = rr > 0 ? t * (1 + 22 * rr) : t;   // churn fast while re-resolving, then settle
         var lod = 1;
         if (oc.d > 16) lod = 2; if (oc.d > 30) lod = 3; if (oc.d > 48) lod = 5;
         var close = oc.d < 7;
@@ -1224,12 +1581,13 @@
           if (apr.x < -20 || apr.x > w + 20 || apr.y < -20 || apr.y > h + 20) continue;
           var br = 1 - C.clamp((ac.d - 1.5) / (fog.far * 0.75), 0, 1);
           var isHead = close && ((an.s + ((t * 2) | 0)) % 7 === 0);
-          var ch = C.glyphFor(an.s, t, label, close, ai);
+          var gseed = ep ? ((an.s ^ (ep * 2654435761)) >>> 0) : an.s;
+          var ch = C.glyphFor(gseed, tg, rr > 0.03 ? null : label, close, ai);
           var gc = mode === 'code'
-            ? (isHead ? '#d8ffe8' : C.mixHex('#0b4423', '#46ff7a', br))
+            ? (rr > 0.05 ? C.mixHex('#46ff7a', '#eaffe9', rr) : (isHead ? '#d8ffe8' : C.mixHex('#0b4423', '#46ff7a', br)))
             : '#2f9e57';
           var gs = C.clamp(170 / ac.d, 7, 24);
-          sceneOps.push({ t: 'g', x: apr.x, y: apr.y, s: gs, ch: ch, c: gc, a: ga * (0.35 + 0.65 * br), d: ac.d });
+          sceneOps.push({ t: 'g', x: apr.x, y: apr.y, s: gs, ch: ch, c: gc, a: ga * (0.35 + 0.65 * br), d: ac.d, id: inst.id });
         }
       }
 
@@ -1344,7 +1702,10 @@
     bike: 'Two wheels. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    hallway: 'Loading a corridor. Third floor of nowhere. Watch the doorway.',
+    dejavu: 'You saw that twice because it ran twice. Same recording. While it played, something in this corridor got swapped.',
+    wayback: 'And the way you came in is a wall now. The exit moved to the far end \u2014 listen for it.',
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 a hallway \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -1369,6 +1730,7 @@
   };
   var SCENEKEYS = [
     [/\b(clear|dismiss|empty|reset|nothing|wipe)\b/, 'clear'],
+    [/\b(hallway|corridor|dejavu|deja|vu)\b/, 'hallway'],
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
@@ -1477,7 +1839,7 @@
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway }[a.scene];
       this.transition(a.scene, line);
       return a;
     }
@@ -2132,6 +2494,7 @@
         it.loadT -= dtReal / 0.5;
         if (it.loadT <= 0) insts.splice(i, 1);
       }
+      if (it.reResolve) it.reResolve = Math.max(0, it.reResolve - dtReal * 1.4);
       if (it._wob != null && it._wob > 0.01) {
         it._wob *= Math.max(0, 1 - 4.5 * dtReal);
         it.yaw = it._baseYaw + Math.sin(this.time * 24) * 0.16 * it._wob;
@@ -2618,6 +2981,8 @@
       case 'scene': hiss(0.8, 0.35, 160, 1800, 1); break;
       case 'codeOn': hiss(0.45, 0.26, 300, 3200, 2); blip(180, 0.18, 0.12, 'sine'); blip(360, 0.22, 0.1, 'sine', 0.06); break;
       case 'codeOff': hiss(0.4, 0.24, 3200, 300, 2); blip(360, 0.16, 0.08, 'sine'); break;
+      case 'dejavu': hiss(0.5, 0.2, 2600, 240, 1.6); blip(660, 0.09, 0.08, 'sine'); blip(440, 0.14, 0.08, 'sine', 0.09); break;
+      case 'seal': thump(70, 0.3, 0.4); hiss(0.35, 0.18, 500, 120, 1.2, 0.05); break;
       case 'jump': break;   // CUT: the jump is visible; LAND carries the physics
       case 'land': thump(150, 0.12, 0.22); break;
       case 'step':
@@ -2967,6 +3332,9 @@
             } else if (op.mode === 'day') {
               g.addColorStop(0, '#aebfc8');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#d6dadc');
+              g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'hall') {
+              g.addColorStop(0, '#0f0c0a');
               g.addColorStop(1, op.fogCol);
             } else { // dojo
               g.addColorStop(0, '#c9bda3');
@@ -3658,6 +4026,7 @@
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
+    { word: 'hallway', anchors: ['a narrow apartment corridor', 'the hallway with the black cat', 'deja vu program', 'that corridor again'] },
     { word: 'neon', anchors: ['ride a motorcycle down a neon street', 'cyberpunk highway at night', 'an endless glowing road to speed on', 'night ride through neon city'] },
     { word: 'clear', anchors: ['remove everything', 'empty the room', 'reset the world', 'wipe it all away'] },
     { word: 'code', anchors: ['see the world as code', 'matrix vision of falling glyphs', 'show me the digital rain', 'reveal the simulation'] },

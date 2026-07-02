@@ -171,6 +171,9 @@
         var ga = mode === 'code' ? 1 : C.clamp(1 - polyA, 0, 1);
         if (inst.kind === 'beacon' && mode !== 'code') ga = 0.85;
         var label = inst.label;
+        var ep = (inst.glyphEpoch | 0);
+        var rr = inst.reResolve || 0;
+        var tg = rr > 0 ? t * (1 + 22 * rr) : t;   // churn fast while re-resolving, then settle
         var lod = 1;
         if (oc.d > 16) lod = 2; if (oc.d > 30) lod = 3; if (oc.d > 48) lod = 5;
         var close = oc.d < 7;
@@ -187,12 +190,13 @@
           if (apr.x < -20 || apr.x > w + 20 || apr.y < -20 || apr.y > h + 20) continue;
           var br = 1 - C.clamp((ac.d - 1.5) / (fog.far * 0.75), 0, 1);
           var isHead = close && ((an.s + ((t * 2) | 0)) % 7 === 0);
-          var ch = C.glyphFor(an.s, t, label, close, ai);
+          var gseed = ep ? ((an.s ^ (ep * 2654435761)) >>> 0) : an.s;
+          var ch = C.glyphFor(gseed, tg, rr > 0.03 ? null : label, close, ai);
           var gc = mode === 'code'
-            ? (isHead ? '#d8ffe8' : C.mixHex('#0b4423', '#46ff7a', br))
+            ? (rr > 0.05 ? C.mixHex('#46ff7a', '#eaffe9', rr) : (isHead ? '#d8ffe8' : C.mixHex('#0b4423', '#46ff7a', br)))
             : '#2f9e57';
           var gs = C.clamp(170 / ac.d, 7, 24);
-          sceneOps.push({ t: 'g', x: apr.x, y: apr.y, s: gs, ch: ch, c: gc, a: ga * (0.35 + 0.65 * br), d: ac.d });
+          sceneOps.push({ t: 'g', x: apr.x, y: apr.y, s: gs, ch: ch, c: gc, a: ga * (0.35 + 0.65 * br), d: ac.d, id: inst.id });
         }
       }
 

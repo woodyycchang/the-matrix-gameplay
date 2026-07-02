@@ -29,7 +29,10 @@
     bike: 'Two wheels. The walls have opinions \u2014 respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    hallway: 'Loading a corridor. Third floor of nowhere. Watch the doorway.',
+    dejavu: 'You saw that twice because it ran twice. Same recording. While it played, something in this corridor got swapped.',
+    wayback: 'And the way you came in is a wall now. The exit moved to the far end \u2014 listen for it.',
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 a hallway \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -54,6 +57,7 @@
   };
   var SCENEKEYS = [
     [/\b(clear|dismiss|empty|reset|nothing|wipe)\b/, 'clear'],
+    [/\b(hallway|corridor|dejavu|deja|vu)\b/, 'hallway'],
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
@@ -162,7 +166,7 @@
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway }[a.scene];
       this.transition(a.scene, line);
       return a;
     }
@@ -817,6 +821,7 @@
         it.loadT -= dtReal / 0.5;
         if (it.loadT <= 0) insts.splice(i, 1);
       }
+      if (it.reResolve) it.reResolve = Math.max(0, it.reResolve - dtReal * 1.4);
       if (it._wob != null && it._wob > 0.01) {
         it._wob *= Math.max(0, 1 - 4.5 * dtReal);
         it.yaw = it._baseYaw + Math.sin(this.time * 24) * 0.16 * it._wob;
