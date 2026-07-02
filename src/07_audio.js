@@ -72,6 +72,7 @@
   var mus = null, musOn = true, musSceneGain = 0;
   var MUS = {
     'void':   { g: 0,     root: 55, cut: 300 },
+    'construct': { g: 0,  root: 55, cut: 300 },   // the void's real sceneName - SILENCE holds
     'neon':   { g: 0.05,  root: 55, cut: 430 },
     'city':   { g: 0.045, root: 49, cut: 320 },
     'dojo':   { g: 0.03,  root: 41, cut: 250 },

@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0010</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0011</span></div>
 </div>
 
 <script>
@@ -2348,6 +2348,7 @@
   var mus = null, musOn = true, musSceneGain = 0;
   var MUS = {
     'void':   { g: 0,     root: 55, cut: 300 },
+    'construct': { g: 0,  root: 55, cut: 300 },   // the void's real sceneName - SILENCE holds
     'neon':   { g: 0.05,  root: 55, cut: 430 },
     'city':   { g: 0.045, root: 49, cut: 320 },
     'dojo':   { g: 0.03,  root: 41, cut: 250 },
