@@ -309,7 +309,7 @@
    "type": "UNIT",
    "why": "单一生成引擎(垫+双LFO),一次接线覆盖",
    "status": "FIXED",
-   "evidence": "本提交: 研究配方(双不同步LFO 0.07/0.11Hz)落地; 逐场景音色表; void保持死寂; 'music'可关"
+   "evidence": "本提交: 正主=Stellardrone《Light Years》CC BY(条目页官方标注), archive.org逐场景直链流播, boot署名合规; 生成引擎降级为断流自动兜底; 虚空双名死寂不变"
   }
  ]
 }

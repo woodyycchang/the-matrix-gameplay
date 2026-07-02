@@ -1392,6 +1392,19 @@ section('generative sci-fi bed: evolving forever, silent in the void');
   ok(/lv === 'music'/.test(appV) && /A\.musicToggle/.test(appV), "typing 'music' toggles the bed with a slow fade");
 }
 
+
+section('the copied bed: Stellardrone, licensed and wired properly');
+{
+  const fsW = require('fs');
+  const audW = fsW.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  const tplW = fsW.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/archive\.org\/download\/Stellardrone-LightYears/.test(audW), 'streams the CC BY album from the Internet Archive item');
+  ok(/'neon':/.test(audW) && /Cepheid/.test(audW) && /Airglow/.test(audW) && /Eternity/.test(audW), 'per-scene tracks mapped');
+  ok(!/'void':\s*\{ f:/.test(audW) && !/'construct':\s*\{ f:/.test(audW), 'no track for the void under either name - the silence ruling holds on the copy layer too');
+  ok(/addEventListener\('error', function \(\) \{ musEl = null; genBed\(musKey\)/.test(audW), 'stream failure falls back to the generative bed automatically');
+  ok(/Stellardrone \u201cLight Years\u201d \(CC BY\)/.test(tplW) || /Stellardrone “Light Years” \(CC BY\)/.test(tplW), 'CC BY attribution is shown on the boot screen - the license is honored');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

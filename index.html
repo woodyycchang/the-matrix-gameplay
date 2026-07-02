@@ -87,8 +87,8 @@
   <div class="s">loading program · an original homage</div>
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
-  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0011</span></div>
+  E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-0020</span></div>
 </div>
 
 <script>
@@ -2321,6 +2321,7 @@
   A.toggleMute = function () {
     A.muted = !A.muted;
     if (master) master.gain.value = A.muted ? 0 : 0.6;
+    try { musFadeStart(); } catch (e) {}   // the copied bed follows the mute too
     return A.muted;
   };
 
@@ -2345,7 +2346,7 @@
   // slow LFOs (0.07 Hz filter / 0.11 Hz detune drift) whose cycles never
   // align, so the bed evolves forever without repeating. No melody, no
   // rhythm - dark/space ambient by the book. The VOID stays SILENT.
-  var mus = null, musOn = true, musSceneGain = 0;
+  var gen = null, genSceneGain = 0;
   var MUS = {
     'void':   { g: 0,     root: 55, cut: 300 },
     'construct': { g: 0,  root: 55, cut: 300 },   // the void's real sceneName - SILENCE holds
@@ -2355,8 +2356,8 @@
     'armory': { g: 0.03,  root: 41, cut: 240 },
     'rooftop':{ g: 0.04,  root: 65, cut: 380 }
   };
-  function musicInit() {
-    if (mus || !ctx) return;
+  function genInit() {
+    if (gen || !ctx) return;
     var g = ctx.createGain(); g.gain.value = 0; g.connect(master);
     var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 340; lp.Q.value = 0.7; lp.connect(g);
     var o1 = ctx.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 55;
@@ -2370,24 +2371,67 @@
     var l2 = ctx.createOscillator(); l2.frequency.value = 0.11;                         // unsynced LFO #2 -> detune drift
     var l2g = ctx.createGain(); l2g.gain.value = 1.2; l2.connect(l2g); l2g.connect(o2.frequency);
     o1.start(); o2.start(); sub.start(); fif.start(); l1.start(); l2.start();
-    mus = { g: g, lp: lp, o1: o1, o2: o2, sub: sub, fif: fif };
+    gen = { g: g, lp: lp, o1: o1, o2: o2, sub: sub, fif: fif };
   }
-  A.music = function (name) {
+  function genBed(name) {
     if (!ctx) return;
-    musicInit();
+    genInit();
     var p = MUS[name] || { g: 0.035, root: 49, cut: 300 };
-    musSceneGain = p.g;
+    genSceneGain = p.g;
     var t = ctx.currentTime;
-    mus.o1.frequency.setTargetAtTime(p.root, t, 2.5);
-    mus.o2.frequency.setTargetAtTime(p.root + 0.7, t, 2.5);
-    mus.sub.frequency.setTargetAtTime(p.root / 2, t, 2.5);
-    mus.fif.frequency.setTargetAtTime(p.root * 1.498, t, 2.5);
-    mus.lp.frequency.setTargetAtTime(p.cut, t, 2.0);
-    mus.g.gain.setTargetAtTime((musOn && !A.muted) ? p.g : 0, t, 2.2);   // slow swell, never a cut
+    gen.o1.frequency.setTargetAtTime(p.root, t, 2.5);
+    gen.o2.frequency.setTargetAtTime(p.root + 0.7, t, 2.5);
+    gen.sub.frequency.setTargetAtTime(p.root / 2, t, 2.5);
+    gen.fif.frequency.setTargetAtTime(p.root * 1.498, t, 2.5);
+    gen.lp.frequency.setTargetAtTime(p.cut, t, 2.0);
+    gen.g.gain.setTargetAtTime((musOn && !A.muted) ? p.g : 0, t, 2.2);   // slow swell, never a cut
+  };
+  function genBedStop() { if (gen && ctx) gen.g.gain.setTargetAtTime(0, ctx.currentTime, 0.8); }
+
+  // ---------- COPIED sci-fi bed: Stellardrone, "Light Years" (CC BY) ----------
+  // The user's ruling: immersion comes from a properly COPIED work. Streams
+  // per-scene from the Internet Archive item (license on the item page:
+  // Attribution 3.0). The generative engine above survives ONLY as an
+  // automatic fallback when the stream cannot load. Credit shown on boot.
+  var MUSBASE = 'https://archive.org/download/Stellardrone-LightYears/Stellardrone%20-%20Light%20Years%20-%20';
+  var MUSTRK = {
+    'neon':    { f: '06%20Cepheid.mp3',                    vol: 0.16 },
+    'city':    { f: '04%20Light%20Years.mp3',              vol: 0.14 },
+    'rooftop': { f: '02%20Airglow.mp3',                    vol: 0.15 },
+    'dojo':    { f: '03%20Eternity.mp3',                   vol: 0.12 },
+    'armory':  { f: '09%20Eternity%20%28Reprise%29.mp3',   vol: 0.12 }
+    // 'void' / 'construct' are ABSENT: the film-silence ruling holds.
+  };
+  var musEl = null, musWant = 0, musOn = true, musFadeT = null, musKey = '';
+  function musTarget() { return (musOn && !A.muted) ? musWant : 0; }
+  function musFadeStart() { if (!musFadeT) musFadeT = setInterval(function () {
+    if (!musEl) { clearInterval(musFadeT); musFadeT = null; return; }
+    var t = musTarget(), v = musEl.volume, d = t - v;
+    if (Math.abs(d) < 0.004) {
+      musEl.volume = t;
+      if (t === 0 && musWant === 0) { try { musEl.pause(); } catch (e) {} }
+      clearInterval(musFadeT); musFadeT = null; return;
+    }
+    musEl.volume = v + d * 0.12;   // ~2 s ease
+  }, 60); }
+  A.music = function (name) {
+    musKey = name;
+    var p = MUSTRK[name];
+    if (!p) { musWant = 0; if (musEl) musFadeStart(); genBed(name); return; }   // silence keys stay silent on BOTH layers
+    genBedStop();
+    if (!musEl) {
+      musEl = new Audio(); musEl.loop = true; musEl.preload = 'auto'; musEl.volume = 0;
+      musEl.addEventListener('error', function () { musEl = null; genBed(musKey); });   // stream lost -> generative fallback
+    }
+    var url = MUSBASE + p.f;
+    if (musEl.src !== url) { musEl.src = url; try { musEl.play().catch(function () {}); } catch (e) {} }
+    else if (musEl.paused) { try { musEl.play().catch(function () {}); } catch (e) {} }
+    musWant = p.vol; musFadeStart();
   };
   A.musicToggle = function () {
     musOn = !musOn;
-    if (mus && ctx) mus.g.gain.setTargetAtTime((musOn && !A.muted) ? musSceneGain : 0, ctx.currentTime, 1.2);
+    if (musEl) musFadeStart();
+    if (gen && ctx) gen.g.gain.setTargetAtTime((musOn && !A.muted) ? genSceneGain : 0, ctx.currentTime, 1.2);
     return musOn;
   };
 
@@ -2759,7 +2803,7 @@
       return;
     }
     if (lv === 'music') {
-      say('music ' + (A.musicToggle() ? 'on \u2014 a generative bed, never the same twice' : 'off'), true);
+      say('music ' + (A.musicToggle() ? 'on \u2014 Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
       return;
     }
     if (lv === 'voice') {

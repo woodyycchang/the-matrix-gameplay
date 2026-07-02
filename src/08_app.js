@@ -184,7 +184,7 @@
       return;
     }
     if (lv === 'music') {
-      say('music ' + (A.musicToggle() ? 'on \u2014 a generative bed, never the same twice' : 'off'), true);
+      say('music ' + (A.musicToggle() ? 'on \u2014 Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
       return;
     }
     if (lv === 'voice') {
