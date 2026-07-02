@@ -57,7 +57,7 @@
    "type": "UNIT",
    "why": "总线增益表复核",
    "status": "PASS",
-   "evidence": "0542fcb 全量审计表; 3214272 极简裁决"
+   "evidence": "0542fcb 全量审计表; 3214272 极简裁决 | 黄金比例法令: 线性域 music:amb = phi:1 (MUS 0.14 / AMB 0.0865 / 冻结再除phi), 单一常量源"
   },
   {
    "path": "ROOT/SOUND/user-ear",

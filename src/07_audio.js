@@ -1,5 +1,9 @@
 /* THE CONSTRUCT — 07_audio.js — WebAudio synth + operator voice (browser); inert in Node */
 (function (G) {
+  var PHI = 1.6180339887;
+  var MUS_LEVEL = 0.14;                    // the universe (music) leads
+  var AMB_LEVEL = MUS_LEVEL / PHI;         // ~0.0865 - the dust (ambience) follows at phi
+  var AMB_DUCK  = AMB_LEVEL / PHI;         // ~0.0535 - frozen time steps down by phi again
   'use strict';
   var C = G.C;
   var hasWindow = typeof window !== 'undefined' && typeof window.AudioContext !== 'undefined' || (typeof window !== 'undefined' && typeof window.webkitAudioContext !== 'undefined');
@@ -31,6 +35,9 @@
       var AC = window.AudioContext || window.webkitAudioContext;
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination);
+      // GOLDEN RATIO MIX LAW (user decree): linear-gain domain, phi = 1.618...
+      // music : ambience = phi : 1 (music ~4.2 dB above the bed), and each
+      // further background step (frozen-time duck) divides by phi again.
       ambGain = ctx.createGain(); ambGain.gain.value = 0; ambGain.connect(master);
       // engine drone: sawtooth + sub sine through a lowpass, idle silent until ridden
       engGain = ctx.createGain(); engGain.gain.value = 0;
@@ -126,7 +133,7 @@
   // generative engine above. Attribution shown on the boot screen.
   var MUSBASE = 'https://archive.org/download/Stellardrone-LightYears/Stellardrone%20-%20Light%20Years%20-%20';
   var MUSLIST = ['01%20Red%20Giant.mp3','02%20Airglow.mp3','03%20Eternity.mp3','04%20Light%20Years.mp3','05%20In%20Time.mp3','06%20Cepheid.mp3','07%20Ultra%20Deep%20Field.mp3','08%20Nightscape.mp3','09%20Eternity%20%28Reprise%29.mp3','10%20A%20Moment%20Of%20Stillness.mp3'];
-  var MUSVOL = 0.14;
+  var MUSVOL = MUS_LEVEL;
   var musEl = null, musIdx = 0, musErr = 0, musWant = 0, musOn = true, musFadeT = null;
   function musTarget() { return (musOn && !A.muted) ? musWant : 0; }
   function musFadeStart() { if (!musFadeT) musFadeT = setInterval(function () {
@@ -273,7 +280,7 @@
       else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.14, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.05, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
-      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : 0.22, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
+      ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : AMB_LEVEL, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
     }, 220);
   };
 
@@ -322,8 +329,8 @@
       case 'swishBlade': hiss(0.18, 0.2, 1300, 420, 1.7); break;
       case 'punch': thump(140, 0.09, 0.34); hiss(0.08, 0.24, 900, 300, 1.5); blip(220, 0.12, 0.08, 'triangle', 0.02); break;
       case 'swish': hiss(0.16, 0.22, 1200, 400, 1.6); break;
-      case 'freeze': thump(90, 0.16, 0.32); blip(140, 0.05, 0.06, 'sine'); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.1); break;
-      case 'resume': hiss(0.3, 0.2, 200, 1500, 1); if (ambGain) ambGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.8); break;
+      case 'freeze': thump(90, 0.16, 0.32); blip(140, 0.05, 0.06, 'sine'); if (ambGain) ambGain.gain.linearRampToValueAtTime(AMB_DUCK, ctx.currentTime + 0.1); break;
+      case 'resume': hiss(0.3, 0.2, 200, 1500, 1); if (ambGain) ambGain.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 0.8); break;
       case 'ring': if (!ringTimer) { ring(); ringTimer = setInterval(ring, 2100); } break;
       case 'ringStop': if (ringTimer) { clearInterval(ringTimer); ringTimer = null; } break;
       case 'exitFlash': hiss(0.5, 0.4, 2000, 200, 1); break;

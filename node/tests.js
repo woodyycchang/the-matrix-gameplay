@@ -1280,7 +1280,7 @@ section('minimalism: a sound must earn its place');
   const audM = fsM.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   ok(/case 'tick': break;/.test(audM) && /case 'jump': break;/.test(audM) && /case 'pickup': break;/.test(audM), 'tick, jump-hiss and pickup-ding are CUT: each duplicated what the eye already sees');
   ok(/case 'mount': engineStart\(\); break;/.test(audM) && /case 'dismount': engineStop\(\); break;/.test(audM), 'mount/dismount decorations trimmed - the engine ramp is the signal');
-  ok(/'void' \? 0 : 0\.22/.test(audM), 'the void is truly SILENT (film-accurate) - remaining sounds land harder by contrast');
+  ok(/'void' \? 0 : AMB_LEVEL/.test(audM), 'the void is truly SILENT on the SFX/ambience layer - and the bed level now comes from the golden law');
   ok(/i < 3; i\+\+\) blip\(700/.test(audM), 'materialize trimmed 7 notes -> 3: signature kept, ornament gone');
   ok(/case 'shot':/.test(audM) && /case 'land':/.test(audM) && /case 'freeze':/.test(audM) && /function ring/.test(audM), 'combat, physics, state-changes and the summons all KEEP their sound (information the eye lacks)');
 }
@@ -1432,6 +1432,16 @@ section('autoplay to the letter of the law');
   ok(/p\.then\(function \(\) \{ musFadeStart\(\); \}, function \(\) \{ musArm\(\); \}\)/.test(audZ), 'a NotAllowedError arms the fallback instead of failing silently');
   ok(/addEventListener\('pointerdown', once, true\)/.test(audZ) && /addEventListener\('keydown', once, true\)/.test(audZ) && /addEventListener\('touchstart', once, true\)/.test(audZ), 'ANY first key, click or touch anywhere starts the music - not just ENTER');
   ok(/already cruising: autoplay landed at load/.test(audZ), 'the ENTER path detects an already-playing bed and never layers a second overture');
+}
+
+
+section('golden ratio mix law');
+{
+  const fsAA = require('fs');
+  const audAA = fsAA.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  ok(/var PHI = 1\.6180339887;/.test(audAA) && /AMB_LEVEL = MUS_LEVEL \/ PHI/.test(audAA) && /AMB_DUCK  = AMB_LEVEL \/ PHI/.test(audAA), 'one law, one source: music leads, ambience = music/phi, frozen duck = /phi again');
+  ok(/var MUSVOL = MUS_LEVEL;/.test(audAA) && /\? 0 : AMB_LEVEL/.test(audAA), 'the music bed and the ambience bed both draw from the golden constants');
+  ok(!/\? 0 : 0\.22/.test(audAA) && !/linearRampToValueAtTime\(0\.3,/.test(audAA), 'no stray hardcoded background levels remain outside the law');
 }
 
 // ---------------------------------------------------------------- summary
