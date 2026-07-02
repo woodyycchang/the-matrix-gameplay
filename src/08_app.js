@@ -720,27 +720,53 @@
   // The cache detective, automated: ask GitHub when main was last pushed; if this
   // copy was built meaningfully earlier, it is a stale cached build - confess loudly.
   function checkStale(buildStr) {
+    // SELF-HEALING UPDATES. Three states, ground truth first:
+    // 1) fetch our own URL with no-store and read the BUILD the CDN actually
+    //    serves; if it differs from the running copy -> auto-swap (?v=served).
+    // 2) if served == running but the repo HEAD is newer -> a deploy is in
+    //    flight: say so, poll every 30 s, swap the moment the CDN flips.
+    // 3) otherwise: current, silent. The hard-refresh instruction is retired.
     if (!buildStr || !window.fetch) return;
-    try {
-      fetch('https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main', { headers: { Accept: 'application/vnd.github+json' } })
-        .then(function (r) { return r.json(); })
-        .then(function (j) {
-          var iso = j && j.commit && ((j.commit.committer && j.commit.committer.date) || (j.commit.author && j.commit.author.date));
-          var m = buildStr.match(/(\d{2})(\d{2})-(\d{2})(\d{2})/);
-          if (!iso || !m) return;
-          var nowY = new Date().getUTCFullYear();
-          var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
-          if (Date.parse(iso) - bts > 3 * 60 * 1000) {
-            var el = document.getElementById('stale');
-            if (el) {
-              el.textContent = 'OLD CACHED BUILD ' + buildStr + ' \u2014 LATEST PUSH ' + iso.slice(5, 16).replace('T', ' ') + ' UTC \u2014 HARD-REFRESH (Cmd/Ctrl+Shift+R)';
-              el.style.display = 'block';
+    var base = window.location.origin + window.location.pathname;
+    function servedStamp() {
+      return fetch(base + '?live=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.text(); })
+        .then(function (t) { var m = t.match(/BUILD (\d{4}-\d{4})/); return m ? m[1] : null; })
+        .catch(function () { return null; });
+    }
+    function goTo(stamp) {
+      var el = document.getElementById('stale');
+      if (el) { el.textContent = 'UPDATING TO BUILD ' + stamp + '\u2026'; el.style.display = 'block'; }
+      sayDbg('self-heal: served build ' + stamp + ' differs \u2014 swapping');
+      setTimeout(function () { window.location.replace(base + '?v=' + stamp); }, 800);
+    }
+    servedStamp().then(function (served) {
+      if (served && served !== buildStr) { goTo(served); return; }
+      try {
+        fetch('https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main', { headers: { Accept: 'application/vnd.github+json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            var iso = j && j.commit && ((j.commit.committer && j.commit.committer.date) || (j.commit.author && j.commit.author.date));
+            var m = buildStr.match(/(\d{2})(\d{2})-(\d{2})(\d{2})/);
+            if (!iso || !m) return;
+            var nowY = new Date().getUTCFullYear();
+            var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
+            if (Date.parse(iso) - bts > 3 * 60 * 1000) {
+              var el = document.getElementById('stale');
+              if (el) {
+                el.textContent = 'NEW BUILD DEPLOYING \u2014 this page will refresh itself when it goes live';
+                el.style.background = '#8a6d1a';
+                el.style.display = 'block';
+              }
+              sayDbg('deploy in flight: repo head newer than the served build');
+              var poll = setInterval(function () {
+                servedStamp().then(function (s2) { if (s2 && s2 !== buildStr) { clearInterval(poll); goTo(s2); } });
+              }, 30000);
             }
-            say('warning: this is an OLD cached build (' + buildStr + '). hard-refresh to get the current one.', true);
-          }
-        })
-        .catch(function () {});
-    } catch (e) {}
+          })
+          .catch(function () {});
+      } catch (e) {}
+    });
   }
 
   function loadNeural() {

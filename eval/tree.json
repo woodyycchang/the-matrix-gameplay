@@ -281,7 +281,7 @@
    "type": "UNIT",
    "why": "戳+陈旧横幅",
    "status": "PASS",
-   "evidence": "ef7872d; 4c7aec"
+   "evidence": "ef7872d; 4c7aec | 自愈升级(本提交): 页面读CDN在售戳,不一致自动换新; 部署中琥珀横幅+30s轮询自动切换; 人肉硬刷指令退役"
   },
   {
    "path": "ROOT/TRUST/gate",

@@ -1187,7 +1187,7 @@ section('stale cached builds confess by themselves');
   const tplE = fsE.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/id="stale"/.test(tplE), 'template carries the red stale banner');
   ok(/api\.github\.com\/repos\/woodyycchang\/the-matrix-gameplay\/commits\/main/.test(appE), 'the game asks GitHub when main was last pushed');
-  ok(/checkStale\(bt \? bt\[1\] : ''\)/.test(appE) && /OLD cached build/.test(appE), 'boot compares its own build stamp and warns loudly when stale');
+  ok(/function checkStale/.test(appE) && /servedStamp\(\)/.test(appE) && /self-heal/.test(appE), 'boot checks the SERVED build and heals itself - warning humans to refresh is retired');
 }
 
 
@@ -1472,6 +1472,14 @@ section('rooftop speaks safety; the script sheds its corn');
   ok(/landing is guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
   ok(/you are fine/.test(gm) && !/Pain here is just information/.test(gm), 'falls are met with reassurance, not pain philosophy');
   ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm), 'corn purged');
+}
+
+
+section('self-healing update loop');
+{
+  const fsAE = require('fs');
+  const appAE = fsAE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/\?live=' \+ Date\.now\(\), \{ cache: 'no-store' \}/.test(appAE), 'ground truth: the page reads the BUILD the CDN is actually serving');
 }
 
 // ---------------------------------------------------------------- summary
