@@ -1,0 +1,106 @@
+=== PLAYTHROUGH: the void, the station, the loop, the train ===
+
+> look
+    Nothing here.
+> operator, i need the station
+    A tiled platform under sodium light. The tracks run out of sight both ways — and, if you follow them far enough, back. Somewhere down the line, a train keeps its own timetable.
+  [pass] operator request for "the station" lands on Mobil Ave
+    |▒▒▒▒▒▒▒▒▒▒▒▒▒▒MOBIL▒▒▒▒▒▒▒▒▒▒▒▒▒▒|
+    |░░░░░░░░░░░░░░░░@░░░░░░░░░░░░░░░░|
+    |=================================|
+    |▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓|
+> read wall
+    Chipped tiles on the wall spell M-O-B-I-L. Shuffled, the same five letters spell LIMBO. Someone named this place honestly.
+  [pass] the wall sign resolves as an anagram
+
+--- to the seam: down to the tracks, east until world x = 48 (canonical 0) ---
+> south
+    Walked south 1.
+> east 24
+    A train pulls in, brakes shrieking against the loop. It waits.
+    Walked east 24.
+    [standing at raw x=48, canonical x=0: the join itself]
+  [pass] the seam is canonical x = 0, reached by ordinary walking
+> drop watch
+    Dropped watch at world (0,2).
+
+--- litmus (b): the dropped watch, seen from both approaches ---
+> east 3
+    The doors rattle open.
+    Walked east 3.
+    [east side, canonical x=3, the watch behind us to the west:]
+    |▒▒▒▒▒▒▒▒▒▒▒|
+    |        ░░░|
+    |==◆==@=====|
+    |▓▓▓▓▓▓▓▓▓▓▓|
+> west 6
+    The doors seal.
+    The train pulls out and the sound folds away around the curve. The platform is yours again.
+    Walked west 6.
+    [west side, canonical x=45, the watch ahead to the east:]
+    |▒▒▒▒▒▒▒▒▒▒▒|
+    |░░         |
+    |=====@==◆==|
+    |▓▓▓▓▓▓▓▓▓▓▓|
+  [pass] the watch renders from both sides of the join
+    [code vision over the same ground: the field does not break at the join]
+    |ｳ58*ﾍﾗ488ﾍﾀ|
+    |ﾎﾜｵﾊｻ0ﾈ5ﾗﾎﾕ|
+    |ﾅ4ﾗｴｼ@7ﾂ◆ﾗｵ|
+    |=ﾐ8ｹ+=ﾜﾑﾏ:ﾒ|
+
+--- litmus (a): circumnavigation, one full loop east along the tracks ---
+> east 48
+    Headlights bloom in the tunnel — you scramble up onto the platform as the train slams past and brakes.
+    The doors rattle open.
+    The doors seal.
+    The train pulls out and the sound folds away around the curve. The platform is yours again.
+    Walked east 44.
+    [the arrival shoved us up onto the platform — climbing back down to the tracks]
+> south
+    Walked south 1.
+> east 4
+    Walked east 4.
+    [raw x: 45 -> 93; canonical: 45 -> 45]
+  [pass] one full loop: +48 raw, same canonical ground, zero seam events
+
+--- litmus (c): the station refuses the operator ---
+> operator, i need guns
+    A pedestal sketches itself in green wireframe beside you — and unravels before it can hold anything. The station refuses the request.
+    [the sketch, one frame before it unravels:]
+    |▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒|
+    |░░░░           |
+    |=======@╥=◆====|
+    |▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓|
+> wait 2
+    Waited 2.
+  [pass] nothing materialized; the pedestal unraveled
+  [pass] the sketch is fully de-rezzed
+> operator, load the construct
+    A pedestal sketches itself in green wireframe beside you — and unravels before it can hold anything. The station refuses the request.
+  [pass] scene loads refused: the operator cannot pull us out
+> operator, exit
+    Static on the line. No door compiles, no ring, no way up. Whatever runs this station is not your operator.
+  [pass] exit refused: still on the platform
+
+--- the only way out: the train, on its own timetable ---
+> west 20
+    Headlights bloom in the tunnel — you scramble up onto the platform as the train slams past and brakes.
+    The doors rattle open.
+    Walked west 20.
+> west 1
+    Walked west 1.
+  [pass] waiting on the platform, inside the door zone
+  [pass] the train arrives on its own schedule, unasked
+    |▒▒▒▒▒▒▒▒▒▒▒▒▒▒MOBIL▒▒▒▒▒▒▒▒▒▒▒▒▒▒|
+    |░░░░░░░░░░░░░░░░@░░░░░░░░░░░░░░░░|
+    |======▉▉▉▉▉▉▉▉▯▯▯▯▯▉▉▉▉▉▉▉=======|
+    |▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓|
+> board
+    White in every direction, floor indistinguishable from sky. The loading space idles, ready to compile whatever is asked of it.
+    Rails hum, then vanish. White floods in: the loading space again.
+  [pass] boarded: the one thing that leaves, left with us aboard
+> look
+    Nothing here.
+
+=== END: all beats landed ===

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MOBIL AVE — a between-place</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#020404;overflow:hidden;font-family:ui-monospace,Menlo,Consolas,monospace}
+  #c{position:fixed;inset:0;display:block}
+  .hud{position:fixed;color:#9fe8b4;text-shadow:0 0 6px rgba(40,255,130,.35);pointer-events:none;user-select:-webkit-user-select:none}
+  #title{top:10px;left:14px;font-size:13px;letter-spacing:.22em;opacity:.85}
+  #coords{top:10px;right:14px;font-size:12px;opacity:.9;text-align:right}
+  #log{left:14px;bottom:14px;font-size:12.5px;line-height:1.5;max-width:62ch;opacity:.95}
+  #log div{margin-top:2px}
+  #hint{right:14px;bottom:14px;font-size:11px;opacity:.65;text-align:right;line-height:1.6}
+  #dot{left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#bfeecb;opacity:.7;position:fixed}
+  #fade{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .9s ease}
+  #start{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 42%,#0b1512 0%,#020404 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#bfeecb;z-index:10;cursor:pointer;text-align:center;padding:0 18px}
+  #start h1{font-weight:400;letter-spacing:.5em;font-size:22px;margin:0 0 6px;text-shadow:0 0 18px rgba(60,255,140,.35)}
+  #start .sub{opacity:.7;font-size:12px;letter-spacing:.18em;margin-bottom:26px}
+  #start .keys{font-size:12.5px;line-height:2;opacity:.85}
+  #start .go{margin-top:30px;font-size:13px;letter-spacing:.3em;opacity:.9;animation:pulse 2.2s infinite}
+  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:.95}}
+  .btn{position:fixed;pointer-events:auto;background:rgba(10,30,20,.45);border:1px solid rgba(120,255,170,.35);color:#bfeecb;border-radius:9px;font-family:inherit;font-size:15px;line-height:1;padding:12px 14px;user-select:none;-webkit-user-select:none;touch-action:none}
+  .btn:active{background:rgba(40,120,70,.5)}
+  #pad{left:16px;bottom:64px;display:none;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:8px;position:fixed;pointer-events:none}
+  #pad .btn{position:static;display:flex;align-items:center;justify-content:center}
+  #acts{right:16px;bottom:64px;display:none;gap:8px;position:fixed;flex-direction:column}
+  #acts .btn{position:static}
+  @media (pointer:coarse){#pad{display:grid}#acts{display:flex}#hint{bottom:190px}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title" class="hud">MOBIL&nbsp;AVE</div>
+<div id="coords" class="hud"></div>
+<div id="log" class="hud"></div>
+<div id="hint" class="hud">drag&nbsp;— look&nbsp;&nbsp;·&nbsp;&nbsp;WASD/arrows — walk<br>E — ask the operator&nbsp;&nbsp;·&nbsp;&nbsp;R — read&nbsp;&nbsp;·&nbsp;&nbsp;C — code&nbsp;vision&nbsp;&nbsp;·&nbsp;&nbsp;M — sound</div>
+<div id="dot" class="hud"></div>
+<div id="pad">
+  <span></span><button class="btn" data-k="KeyW">▲</button><span></span>
+  <button class="btn" data-k="KeyA">◀</button><button class="btn" data-k="KeyS">▼</button><button class="btn" data-k="KeyD">▶</button>
+</div>
+<div id="acts">
+  <button class="btn" data-a="e">E</button>
+  <button class="btn" data-a="r">R</button>
+  <button class="btn" data-a="c">C</button>
+  <button class="btn" data-a="m">♪</button>
+</div>
+<div id="fade"></div>
+<div id="start">
+  <h1>MOBIL AVE</h1>
+  <div class="sub">a between-place · the loop is real</div>
+  <div class="keys">
+    walk far enough along the tracks and you arrive behind yourself<br>
+    nothing you ask for will compile here<br>
+    the train keeps its own timetable — it is the only way out
+  </div>
+  <div class="go">CLICK / TAP TO ENTER</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./world.js"></script>
+<script>
+(function(){
+'use strict';
+var W = (typeof WORLD !== 'undefined') ? WORLD : (typeof self !== 'undefined' ? self.WORLD : null);
+if (!W || !window.THREE) { document.getElementById('start').innerHTML = '<div>Could not load the world (script blocked?).</div>'; return; }
+var S = W.SPEC, TILE = S.TILE, DROP = S.DROP;
+
+/* ---------------- renderer / scene ---------------- */
+var canvas = document.getElementById('c');
+var renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true }); }
+catch (e) { document.getElementById('start').innerHTML = '<div>WebGL unavailable on this device.</div>'; return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+var scene = new THREE.Scene();
+var bag = W.build(S, 3);
+var FOG_STATION = new THREE.FogExp2(new THREE.Color(bag.fog.color[0], bag.fog.color[1], bag.fog.color[2]).getHex(), bag.fog.density);
+scene.fog = FOG_STATION;
+scene.background = new THREE.Color().copy(FOG_STATION.color);
+var camera = new THREE.PerspectiveCamera(72, 1, 0.08, 900);
+
+function sizeIt(){ var w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+addEventListener('resize', sizeIt); sizeIt();
+
+/* ---------------- static world: bucket tris into 3 meshes ---------------- */
+var station = new THREE.Group(); scene.add(station);
+function buildBuckets(tris){
+  var b = { matte: [], gloss: [], emit: [] };
+  for (var i=0;i<tris.length;i++){
+    var t = tris[i];
+    var e = t.e[0]+t.e[1]+t.e[2]+t.e[3]+t.e[4]+t.e[5]+t.e[6]+t.e[7]+t.e[8];
+    if (e > 0.01) b.emit.push(t); else if (t.gloss >= 0.5) b.gloss.push(t); else b.matte.push(t);
+  }
+  return b;
+}
+function geoFrom(list, bake){
+  var g = new THREE.BufferGeometry();
+  var pos = new Float32Array(list.length*9), col = new Float32Array(list.length*9);
+  for (var i=0;i<list.length;i++){
+    var t=list[i];
+    for (var k=0;k<9;k++){ pos[i*9+k]=t.p[k]; col[i*9+k]=Math.min(1, t.c[k] + (bake? t.e[k]:0)); }
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color', new THREE.BufferAttribute(col,3));
+  g.computeVertexNormals();
+  return g;
+}
+var MAT = {
+  matte: new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.93, metalness:.03 }),
+  gloss: new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.24, metalness:.42 }),
+  emit:  new THREE.MeshBasicMaterial({ vertexColors:true }),
+  wire:  new THREE.MeshBasicMaterial({ color:0x2bff88, wireframe:true }),
+};
+var buckets = buildBuckets(bag.tris);
+var mStatic = {
+  matte: new THREE.Mesh(geoFrom(buckets.matte,false), MAT.matte),
+  gloss: new THREE.Mesh(geoFrom(buckets.gloss,false), MAT.gloss),
+  emit:  new THREE.Mesh(geoFrom(buckets.emit,true),  MAT.emit),
+};
+station.add(mStatic.matte, mStatic.gloss, mStatic.emit);
+
+/* ---------------- lights ---------------- */
+station.add(new THREE.HemisphereLight(0x24302c, 0x05070a, 0.5));
+var flickerLights = [];
+bag.lights.forEach(function(L){
+  var pl = new THREE.PointLight(new THREE.Color(L.color[0],L.color[1],L.color[2]).getHex(), L.intensity*0.14, L.range*2.6, 2);
+  pl.position.set(L.pos[0],L.pos[1],L.pos[2]);
+  if (L.flicker){ pl.userData.base = pl.intensity; flickerLights.push(pl); }
+  station.add(pl);
+});
+
+/* ---------------- train: dynamic buffers ---------------- */
+var TR_CAP = 26000; // vertices
+function dynMesh(mat){
+  var g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TR_CAP*3),3));
+  g.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(TR_CAP*3),3));
+  g.setDrawRange(0,0);
+  var m = new THREE.Mesh(g, mat); m.frustumCulled = false; station.add(m); return m;
+}
+var trainMatte = dynMesh(new THREE.MeshStandardMaterial({ vertexColors:true, roughness:.5, metalness:.35 }));
+var trainEmit  = dynMesh(new THREE.MeshBasicMaterial({ vertexColors:true }));
+trainMatte.userData.m = trainMatte.material; trainEmit.userData.m = trainEmit.material;
+var headSpot = new THREE.SpotLight(0xfff2cc, 0, 70, 0.42, 0.45, 1.6);
+station.add(headSpot, headSpot.target);
+var trainGlow = new THREE.PointLight(0xffe3a0, 0, 30, 2); station.add(trainGlow);
+function pushDyn(mesh, tris, bake){
+  var pa = mesh.geometry.attributes.position.array, ca = mesh.geometry.attributes.color.array, n=0;
+  for (var i=0;i<tris.length && n+9<=pa.length; i++){
+    var t=tris[i];
+    for (var k=0;k<9;k++){ pa[n+k]=t.p[k]; ca[n+k]=Math.min(1, t.c[k] + (bake? t.e[k]:0)); }
+    n+=9;
+  }
+  mesh.geometry.setDrawRange(0, n/3);
+  mesh.geometry.attributes.position.needsUpdate = true;
+  mesh.geometry.attributes.color.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+}
+
+/* ---------------- life: dust, moths, wisps ---------------- */
+var dust = W.makeDust(S);
+var dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dust.length*3),3));
+var dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color:0xd8b070, size:0.055, transparent:true, opacity:0.8, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true }));
+dustPts.frustumCulled = false; station.add(dustPts);
+
+function glowTex(){
+  var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d');
+  var g=x.createRadialGradient(32,32,2,32,32,30); g.addColorStop(0,'rgba(255,240,200,1)'); g.addColorStop(1,'rgba(255,240,200,0)');
+  x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c);
+}
+var mothSprites=[0,1].map(function(){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,depthWrite:false})); sp.scale.set(.16,.16,1); station.add(sp); return sp; });
+
+var glyphTexCache = {};
+function glyphTex(ch, hue){
+  var key = ch + '|' + hue;
+  if (glyphTexCache[key]) return glyphTexCache[key];
+  var c=document.createElement('canvas'); c.width=c.height=96; var x=c.getContext('2d');
+  x.clearRect(0,0,96,96);
+  x.shadowColor = hue; x.shadowBlur = 14;
+  x.fillStyle = hue; x.font = '64px ui-monospace, Menlo, monospace';
+  x.textAlign='center'; x.textBaseline='middle'; x.fillText(ch, 48, 52);
+  var t=new THREE.CanvasTexture(c); glyphTexCache[key]=t; return t;
+}
+var wispSprites=[];
+for (var wi=0; wi<7; wi++){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({transparent:true,depthWrite:false})); sp.scale.set(.5,.5,1); station.add(sp); wispSprites.push(sp); }
+
+/* ---------------- code vision glyph field ---------------- */
+var codeOn=false, glyphField=null;
+function buildGlyphField(){
+  glyphField = new THREE.Group();
+  for (var cx=0; cx<S.TILES; cx++){
+    var sC=(cx+0.5)*TILE;
+    var spots=[ [3.3, S.WALL_Z+0.35], [1.15, -3.4], [-DROP+0.85, 0.6], [2.1, S.TRACK_Z1-0.3] ];
+    for (var y=0;y<4;y++){
+      var g = W.glyphAt(cx,y);
+      var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:glyphTex(g,'#37ff8f'), transparent:true, opacity:.85, depthWrite:false }));
+      var p=W.point(sC, spots[y][0], spots[y][1]);
+      sp.position.set(p[0],p[1],p[2]); sp.scale.set(.62,.62,1);
+      glyphField.add(sp);
+    }
+  }
+  station.add(glyphField);
+}
+function setCode(on){
+  codeOn=on;
+  if (on && !glyphField) buildGlyphField();
+  if (glyphField) glyphField.visible=on;
+  mStatic.matte.material = on? MAT.wire : MAT.matte;
+  mStatic.gloss.material = on? MAT.wire : MAT.gloss;
+  mStatic.emit.material  = on? MAT.wire : MAT.emit;
+  trainMatte.material = on? MAT.wire : trainMatte.userData.m;
+  trainEmit.material  = on? MAT.wire : trainEmit.userData.m;
+  scene.fog = on? new THREE.FogExp2(0x010604, 0.052) : FOG_STATION;
+  scene.background.copy(scene.fog.color);
+  dustPts.material.color.setHex(on?0x2bff88:0xd8b070);
+  log(on? 'Code vision. The field is continuous — the join is a name, not a place.' : 'Scene vision.');
+}
+
+/* ---------------- pedestal (the refusal) ---------------- */
+var pedestals=[];
+function requestOperator(){
+  if (mode!=='station'){ leaveVoid(); return; }
+  var f=W.frame(player.s);
+  var ahead = player.s + Math.cos(player.yaw)*2.1, zA = player.z + Math.sin(player.yaw)*2.1;
+  zA = Math.max(S.WALL_Z+0.7, Math.min(S.TRACK_Z1-0.7, zA));
+  var base = (zA < S.TRACK_Z0 && onPlatTile(player.s)) ? 0 : -DROP;
+  var geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(0.9,1.15,0.9));
+  var mat = new THREE.LineBasicMaterial({ color:0x39ff92, transparent:true, opacity:0.95 });
+  var m = new THREE.LineSegments(geo, mat);
+  var p = W.point(ahead, base+0.575, zA);
+  var up = W.frame(ahead).up;
+  m.position.set(p[0],p[1],p[2]);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(up[0],up[1],up[2]));
+  m.scale.set(1,0.01,1);
+  station.add(m);
+  pedestals.push({ m:m, t:0, up:up });
+  log('A pedestal sketches itself in green wireframe beside you — and unravels before it can hold anything. The station refuses the request.');
+  if (audio.on) audio.blip(220, .08, .18);
+}
+function stepPedestals(dt){
+  for (var i=pedestals.length-1;i>=0;i--){
+    var P=pedestals[i]; P.t+=dt;
+    if (P.t<0.45) P.m.scale.y = 0.01 + (P.t/0.45)*0.99;
+    else if (P.t<0.95) P.m.scale.y = 1;
+    else if (P.t<1.75){
+      var u=(P.t-0.95)/0.8;
+      P.m.material.opacity = 0.95*(1-u);
+      P.m.position.x += P.up[0]*dt*0.6; P.m.position.y += P.up[1]*dt*0.6; P.m.position.z += P.up[2]*dt*0.6;
+      P.m.scale.x = 1+Math.sin(u*31)*0.06*u; P.m.scale.z = 1+Math.cos(u*27)*0.06*u;
+    } else { station.remove(P.m); P.m.geometry.dispose(); P.m.material.dispose(); pedestals.splice(i,1); }
+  }
+}
+
+/* ---------------- void ---------------- */
+var voidG = new THREE.Group(); voidG.visible=false; scene.add(voidG);
+(function(){
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(600,600), new THREE.MeshStandardMaterial({ color:0xf2f4f2, roughness:.95 }));
+  floor.rotation.x = -Math.PI/2; voidG.add(floor);
+  voidG.add(new THREE.HemisphereLight(0xffffff, 0xdfe4e0, 1.05));
+  var c=document.createElement('canvas'); c.width=512; c.height=160; var x=c.getContext('2d');
+  x.fillStyle='rgba(20,24,22,0.92)'; x.fillRect(0,0,512,160);
+  x.fillStyle='#cfe9d6'; x.font='28px ui-monospace, Menlo, monospace'; x.textAlign='center';
+  x.fillText('the loading space', 256, 66);
+  x.font='17px ui-monospace, Menlo, monospace'; x.fillStyle='#8fae97';
+  x.fillText('press E — operator, the station', 256, 112);
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:new THREE.CanvasTexture(c), transparent:true }));
+  sp.scale.set(6.4,2.0,1); sp.position.set(0,2.2,-7); voidG.add(sp);
+})();
+var VOID_FOG = new THREE.FogExp2(0xf4f6f4, 0.045);
+
+/* ---------------- player / modes ---------------- */
+var player = { s: 24.5*TILE, z: -3.4, h: 0, yaw: 0.35, pitch: 0.02 };
+var voidP = { x:0, z:0, yaw:0, pitch:0 };
+var mode = 'station';
+var keys = {};
+function onPlatTile(s){ var t=Math.floor(W.canonS(s)/TILE); return t>=S.PLAT0 && t<S.PLAT1; }
+function shortestArc(a,b){ var d=W.canonS(a-b); if (d>S.CIRC/2) d-=S.CIRC; return d; }
+
+var boardingLock=false, shoveT=0, shoveMode='plat';
+function tryShove(pose){
+  if (!pose.arriving || shoveT>0) return;
+  var dS = shortestArc(player.s, pose.s);
+  if (Math.abs(dS) < 61 && player.z > S.TRACK_Z0-0.2 && player.h < -0.4){
+    shoveT = 0.9;
+    if (onPlatTile(player.s)){
+      shoveMode='plat';
+      log('Headlights bloom in the tunnel — you scramble up onto the platform as the train slams past and brakes.');
+    } else {
+      shoveMode='wall';
+      log('Headlights bloom in the tunnel — you flatten against the far wall as the cars hammer past, close enough to touch.');
+    }
+    if (audio.on) audio.brake();
+  }
+}
+function stepStation(dt, t, pose){
+  // look handled by drag; movement:
+  var f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  var r=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  var sp=(keys.ShiftLeft||keys.ShiftRight)?6.8:4.1;
+  var ds=(Math.cos(player.yaw)*f - Math.sin(player.yaw)*r)*sp*dt;
+  var dz=(Math.sin(player.yaw)*f + Math.cos(player.yaw)*r)*sp*dt;
+  player.s += ds; player.z += dz;
+  // lateral bounds
+  player.z = Math.max(S.WALL_Z+0.45, Math.min(S.TRACK_Z1-0.45, player.z));
+  // bare stretch: no platform, wall down to the pit
+  if (!onPlatTile(player.s) && player.z < S.TRACK_Z0+0.35) player.z = S.TRACK_Z0+0.35;
+  if (shoveT>0){
+    shoveT-=dt;
+    if (shoveMode==='plat'){ player.z = Math.min(player.z, S.TRACK_Z0-0.6); player.z += ((S.TRACK_Z0-1.2)-player.z)*Math.min(1,dt*6); }
+    else { player.z = Math.max(player.z, 2.05); player.z += (2.12-player.z)*Math.min(1,dt*6); }
+  }
+  // train is solid (unless walking through an open door)
+  if (pose.present){
+    var dS = shortestArc(player.s, pose.s);
+    var nearDoor = doorGapNear(pose);
+    var zC = 0.6;
+    if (Math.abs(dS) < 60.6 && player.h < 0.5 && !(pose.doors>0.6 && nearDoor)){
+      if (player.z > S.TRACK_Z0-0.25 && player.z < 2.05){
+        if (player.z < zC) player.z = S.TRACK_Z0-0.25; else player.z = 2.05;
+      }
+    }
+    if (pose.doors>0.6 && nearDoor && player.z > S.TRACK_Z0+0.5 && !boardingLock){ board(); }
+    tryShove(pose);
+  }
+  // pillars & benches push-out
+  var ct=Math.floor(W.canonS(player.s)/TILE);
+  for (var pt=8; pt<S.PLAT1; pt+=4){
+    var dS2=shortestArc(player.s,(pt+0.5)*TILE), dz2=player.z-(-4.1);
+    var d2=dS2*dS2+dz2*dz2, R2=0.62;
+    if (d2 < R2*R2 && d2>1e-6){ var d=Math.sqrt(d2), push=(R2-d)/d; player.s+=dS2*push; player.z+=dz2*push; }
+  }
+  [12,20,28,36].forEach(function(bt){
+    var dS3=shortestArc(player.s,(bt+0.5)*TILE), dz3=player.z-(-5.9);
+    if (Math.abs(dS3)<1.55 && Math.abs(dz3)<0.72){
+      if (Math.abs(dS3)/1.55 > Math.abs(dz3)/0.72) player.s += (dS3>0?1:-1)*(1.55-Math.abs(dS3));
+      else player.z += (dz3>0?1:-1)*(0.72-Math.abs(dz3));
+    }
+  });
+  // height: platform vs track bed
+  var hT = (player.z < S.TRACK_Z0 && onPlatTile(player.s)) ? 0 : -DROP;
+  player.h += (hT-player.h)*Math.min(1, dt*7);
+  // camera
+  var eye=W.point(player.s, player.h+1.62, player.z);
+  var fr=W.frame(player.s);
+  var upv=new THREE.Vector3(fr.up[0],fr.up[1],fr.up[2]);
+  var fwd=new THREE.Vector3(fr.fwd[0],fr.fwd[1],fr.fwd[2]);
+  var lat=new THREE.Vector3(fr.lat[0],fr.lat[1],fr.lat[2]);
+  var dir=fwd.clone().multiplyScalar(Math.cos(player.yaw)).add(lat.clone().multiplyScalar(Math.sin(player.yaw)));
+  var right=dir.clone().cross(upv).normalize();
+  dir.multiplyScalar(Math.cos(player.pitch)).add(upv.clone().multiplyScalar(Math.sin(player.pitch))).normalize();
+  camera.position.set(eye[0],eye[1],eye[2]);
+  camera.up.copy(upv.clone().addScaledVector(dir, -upv.dot(dir)).normalize());
+  camera.lookAt(eye[0]+dir.x, eye[1]+dir.y, eye[2]+dir.z);
+  // HUD coords: raw vs canonical — the winding, visible
+  var xr=(player.s/TILE), xc=(W.canonS(player.s)/TILE);
+  coordsEl.textContent = 'x ' + xr.toFixed(1) + ' → ' + xc.toFixed(1) + (player.h<-0.4? '  · tracks':'  · platform');
+}
+function doorGapNear(pose){
+  var carL=(S.TRAIN.x1-S.TRAIN.x0)*TILE/10;
+  for (var c=0;c<10;c++){
+    var sC=pose.s-(S.TRAIN.x1-S.TRAIN.x0)*TILE/2+(c+0.5)*carL;
+    var tl=W.canonS(sC)/TILE;
+    if (tl>=S.DOOR0-0.4 && tl<=S.DOOR1+0.4 && Math.abs(shortestArc(player.s,sC))<0.62) return true;
+  }
+  return false;
+}
+function board(){
+  boardingLock=true;
+  log('The doors are open. You step out of the loop.');
+  fade(1, function(){
+    mode='void'; station.visible=false; voidG.visible=true;
+    scene.fog=VOID_FOG; scene.background.copy(VOID_FOG.color);
+    voidP={x:0,z:0,yaw:0,pitch:0};
+    setTimeout(function(){ fade(0); log('Nothing here. White in every direction — the loading space.'); }, 250);
+  });
+}
+function leaveVoid(){
+  fade(1, function(){
+    mode='station'; station.visible=true; voidG.visible=false;
+    scene.fog=codeOn? scene.fog : FOG_STATION; if(!codeOn){scene.background.copy(FOG_STATION.color);}
+    player.s=24.5*TILE; player.z=-3.4; player.h=0; boardingLock=false;
+    setTimeout(function(){ fade(0); log('A tiled platform under sodium light. The tracks run out of sight both ways — and, if you follow them far enough, back.'); }, 250);
+  });
+}
+function stepVoid(dt){
+  var f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  var r=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  var sp=4.1;
+  voidP.x += (Math.sin(voidP.yaw)*f + Math.cos(voidP.yaw)*r)*sp*dt;
+  voidP.z += (-Math.cos(voidP.yaw)*f + Math.sin(voidP.yaw)*r)*sp*dt;
+  camera.position.set(voidP.x, 1.62, voidP.z);
+  camera.up.set(0,1,0);
+  camera.lookAt(voidP.x + Math.sin(voidP.yaw)*Math.cos(voidP.pitch), 1.62 + Math.sin(voidP.pitch), voidP.z - Math.cos(voidP.yaw)*Math.cos(voidP.pitch));
+  coordsEl.textContent='—';
+}
+
+/* ---------------- HUD log ---------------- */
+var logEl=document.getElementById('log'), coordsEl=document.getElementById('coords');
+var logLines=[];
+function log(s){ logLines.push(s); if(logLines.length>3) logLines.shift(); logEl.innerHTML=logLines.map(function(l){return '<div>'+l+'</div>';}).join(''); }
+
+/* ---------------- fade ---------------- */
+var fadeEl=document.getElementById('fade');
+function fade(to, cb){ fadeEl.style.opacity=to; if(cb) setTimeout(cb, 920); }
+
+/* ---------------- input ---------------- */
+addEventListener('keydown', function(e){ keys[e.code]=true;
+  if(e.code==='KeyE') requestOperator();
+  if(e.code==='KeyR') readWall();
+  if(e.code==='KeyC' && mode==='station') setCode(!codeOn);
+  if(e.code==='KeyM') audio.toggle();
+});
+addEventListener('keyup', function(e){ keys[e.code]=false; });
+var dragging=false, lx=0, ly=0;
+function pdown(x,y,tgt){ if(tgt.closest && tgt.closest('.btn')) return; dragging=true; lx=x; ly=y; }
+function pmove(x,y){ if(!dragging) return; var dx=x-lx, dy=y-ly; lx=x; ly=y;
+  var P = mode==='station'? player: voidP;
+  P.yaw += dx*0.0042; P.pitch = Math.max(-1.35, Math.min(1.35, P.pitch - dy*0.0042));
+}
+addEventListener('mousedown', function(e){ pdown(e.clientX,e.clientY,e.target); });
+addEventListener('mousemove', function(e){ pmove(e.clientX,e.clientY); });
+addEventListener('mouseup', function(){ dragging=false; });
+addEventListener('touchstart', function(e){ var t=e.touches[0]; pdown(t.clientX,t.clientY,e.target); }, {passive:true});
+addEventListener('touchmove', function(e){ var t=e.touches[0]; pmove(t.clientX,t.clientY); }, {passive:true});
+addEventListener('touchend', function(){ dragging=false; });
+document.querySelectorAll('#pad .btn').forEach(function(b){
+  var k=b.getAttribute('data-k');
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); keys[k]=true; }, {passive:false});
+  b.addEventListener('touchend', function(e){ e.preventDefault(); keys[k]=false; }, {passive:false});
+});
+document.querySelectorAll('#acts .btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    var a=b.getAttribute('data-a');
+    if(a==='e') requestOperator(); if(a==='r') readWall(); if(a==='c' && mode==='station') setCode(!codeOn); if(a==='m') audio.toggle();
+  });
+});
+function readWall(){
+  if (mode!=='station'){ log('Nothing to read here.'); return; }
+  var ct=W.canonS(player.s)/TILE;
+  if (ct>=S.SIGN0-1 && ct<=S.SIGN0+6 && player.z < -4.2)
+    log('Chipped tiles on the wall spell M-O-B-I-L. Shuffled, the same five letters spell LIMBO. Someone named this place honestly.');
+  else log('Nothing to read here.');
+}
+
+/* ---------------- audio (synth only, optional) ---------------- */
+var audio = { on:false, ctx:null, hum:null, train:null, toggle:function(){
+  try{
+    if(!this.ctx){ this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+      var c=this.ctx, sr=c.sampleRate, buf=c.createBuffer(1, sr*2, sr), d=buf.getChannelData(0), last=0;
+      for (var i=0;i<d.length;i++){ var w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.2; }
+      var src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+      var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=130;
+      var g=c.createGain(); g.gain.value=0;
+      src.connect(lp).connect(g).connect(c.destination); src.start();
+      this.hum=g;
+      var src2=c.createBufferSource(); src2.buffer=buf; src2.loop=true;
+      var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=0.8;
+      var g2=c.createGain(); g2.gain.value=0;
+      src2.connect(bp).connect(g2).connect(c.destination); src2.start();
+      this.train=g2; this.bp=bp;
+    }
+    this.on=!this.on; this.ctx.resume();
+    this.hum.gain.linearRampToValueAtTime(this.on?0.05:0, this.ctx.currentTime+0.4);
+    log(this.on? 'Sound on. Listen for the timetable.':'Sound off.');
+  }catch(e){ log('No audio on this device.'); }
+},
+step:function(pose){ if(!this.on||!this.train) return;
+  var tgt = pose.present ? (pose.moving*0.20 + (pose.doors>0? 0.02:0.045)) : 0;
+  this.train.gain.setTargetAtTime(tgt, this.ctx.currentTime, 0.25);
+  this.bp.frequency.setTargetAtTime(300+pose.moving*700, this.ctx.currentTime, 0.3);
+},
+brake:function(){ if(!this.on) return; try{
+  var c=this.ctx, sr=c.sampleRate, n=sr*1.3, buf=c.createBuffer(1,n,sr), d=buf.getChannelData(0);
+  for (var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  var s=c.createBufferSource(); s.buffer=buf;
+  var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=9; bp.frequency.setValueAtTime(1500,c.currentTime); bp.frequency.exponentialRampToValueAtTime(480,c.currentTime+1.2);
+  var g=c.createGain(); g.gain.setValueAtTime(0.18,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+1.25);
+  s.connect(bp).connect(g).connect(c.destination); s.start();
+}catch(e){} },
+blip:function(f,dur,vol){ if(!this.on) return; try{
+  var c=this.ctx,o=c.createOscillator(),g=c.createGain();
+  o.frequency.value=f; g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);
+  o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+dur);
+}catch(e){} } };
+
+/* ---------------- main loop ---------------- */
+var clock=new THREE.Clock(), t0=14, lastDoors=0, announcedArrive=false;
+function animate(){
+  requestAnimationFrame(animate);
+  var dt=Math.min(0.05, clock.getDelta());
+  var t=t0+clock.elapsedTime;
+  var res=W.trainTris(S,3,t), pose=res.pose;
+  pushDyn(trainMatte, res.bag.tris.filter(function(x){return x.e[0]+x.e[1]+x.e[2]<0.01;}), false);
+  pushDyn(trainEmit,  res.bag.tris.filter(function(x){return x.e[0]+x.e[1]+x.e[2]>=0.01;}), true);
+  if (pose.present){
+    var fS=pose.s-(S.TRAIN.x1-S.TRAIN.x0)*TILE/2;
+    var hp=W.point(fS-0.6,-DROP+1.0,0.6), tp=W.point(fS-14,-DROP+0.4,0.6);
+    headSpot.position.set(hp[0],hp[1],hp[2]); headSpot.target.position.set(tp[0],tp[1],tp[2]);
+    headSpot.intensity = 1.6 + pose.moving*2.6;
+    var gp=W.point(pose.s,-DROP+2.1,0.6); trainGlow.position.set(gp[0],gp[1],gp[2]); trainGlow.intensity=0.7;
+    if (pose.arriving && !announcedArrive){ announcedArrive=true; log('A train pulls in, brakes shrieking against the loop. It waits.'); if(audio.on) audio.brake(); }
+    if (pose.doors>0.6 && lastDoors<=0.6){ log('The doors rattle open.'); audio.blip(880,.12,.1); audio.blip(660,.16,.1); }
+    if (pose.doors<=0.6 && lastDoors>0.6){ log('The doors seal.'); }
+  } else {
+    headSpot.intensity=0; trainGlow.intensity=0;
+    if (announcedArrive){ announcedArrive=false; log('The train pulls out and the sound folds away around the curve. The platform is yours again.'); }
+  }
+  lastDoors=pose.doors;
+  flickerLights.forEach(function(pl){ pl.intensity = pl.userData.base * W.flicker(t); });
+  // life
+  var pa=dustGeo.attributes.position.array;
+  for (var i=0;i<dust.length;i++){ var p=W.dustPos(dust[i],t); pa[i*3]=p[0]; pa[i*3+1]=p[1]; pa[i*3+2]=p[2]; }
+  dustGeo.attributes.position.needsUpdate=true;
+  W.moths(t).forEach(function(m,i){ var p=W.point(m.s,m.h,m.z); mothSprites[i].position.set(p[0],p[1],p[2]); });
+  W.wisps(t).forEach(function(w2,i){
+    var sp=wispSprites[i], p=W.point(w2.s,w2.h,w2.z);
+    sp.position.set(p[0],p[1],p[2]); sp.material.opacity=Math.max(0,Math.min(1,w2.alpha))*0.9;
+    if (sp.userData.g!==w2.glyph){ sp.userData.g=w2.glyph; sp.material.map=glyphTex(w2.glyph,'#48ffa0'); sp.material.needsUpdate=true; }
+  });
+  stepPedestals(dt);
+  if (mode==='station') stepStation(dt,t,pose); else stepVoid(dt);
+  audio.step(pose);
+  renderer.render(scene,camera);
+}
+
+/* ---------------- enter ---------------- */
+document.getElementById('start').addEventListener('click', function(){
+  this.style.display='none';
+  log('A tiled platform under sodium light. The tracks run out of sight both ways — and, if you follow them far enough, back. Somewhere down the line, a train keeps its own timetable.');
+  animate();
+});
+})();
+</script>
+</body>
+</html>
