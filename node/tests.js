@@ -1468,8 +1468,8 @@ section('rooftop speaks safety; the script sheds its corn');
 {
   const fsAD = require('fs');
   const gm = fsAD.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
-  ok(/You cannot be hurt here/.test(gm) && /run, jump, fly/.test(gm) && !/wide as your doubt/.test(gm), 'rooftop invites flight - explicit safety, no dare-framing');
-  ok(/landing is guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
+  ok(/you cannot be hurt here/.test(gm) && /run\\u2026 jump\\u2026 fly/.test(gm) && !/wide as your doubt/.test(gm), 'rooftop invites flight in transmission grammar - explicit safety, no dare-framing');
+  ok(/landing guaranteed/.test(gm) && !/Do not slow down at the edge/.test(gm), 'the hint coaches the run-up, never pressures the edge');
   ok(/you are fine/.test(gm) && !/Pain here is just information/.test(gm), 'falls are met with reassurance, not pain philosophy');
   ok(!/playing god/.test(gm) && !/no excuses/.test(gm) && !/as sharp as you believe/.test(gm) && !/White suits you/.test(gm), 'corn purged - including the white-suits-you wink');
 }
@@ -1498,7 +1498,7 @@ section('the parrot is dead: examples teach format, not sentences');
   const inG = fsAG.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
   ok(/never repeat any example sentence word-for-word/.test(inG), 'the system law forbids verbatim example repetition');
   ok(!/I hear you\. Name a program or an object and I will load it\./.test(inG), 'the old single attractor sentence is gone');
-  ok(/Line is open/.test(inG) && /Name a program, I will load it/.test(inG), 'two differently-worded greeting exemplars force interpolation');
+  ok(/line is open/.test(inG) && /name a program\\u2026 i will load it/.test(inG), 'two differently-worded greeting exemplars force interpolation (transmission shape)');
 }
 
 
@@ -1510,8 +1510,8 @@ section('JARVIS register: no dashes, one voice, true comments');
   const auH = fsAH.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
   const Ls = gmH.slice(gmH.indexOf('var L = C.LINES = {'), gmH.indexOf('};', gmH.indexOf('var L = C.LINES = {')));
   ok(!/\u2014|\\u2014|—/.test(Ls), 'the conversation dictionary contains zero em-dashes in any form');
-  ok(/mission-control AI: short complete sentences, status first, never dashes/.test(inH), 'the neural voice spec is the JARVIS bible');
-  ok(/Voice or text, whichever you prefer\./.test(gmH) && /Sidearm loaded\. Handle with intent\./.test(gmH) && /You looked\. Everyone does\./.test(gmH), 'rewritten lines follow the status-report skeleton');
+  ok(/TRANSMISSION heard through interference/.test(inH), 'the neural voice spec is the transmission bible');
+  ok(/speak, or type/.test(gmH) && /sidearm loaded/.test(gmH) && /you looked\\u2026 everyone does/.test(gmH), 'rewritten lines carry the fragment skeleton');
   ok(/hard cap 0\.018/.test(auH), 'the engine comment finally tells the truth (0.018, not 0.014)');
 }
 
@@ -1532,6 +1532,20 @@ section('the address bar stays pristine');
   const fsAJ = require('fs');
   const appAJ = fsAJ.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/history\.replaceState\(null, '', location\.pathname\)/.test(appAJ), 'any query is wiped on boot - the visible URL is always the bare path');
+}
+
+
+section('EXO transmission grammar (research-grounded)');
+{
+  const fsAK = require('fs');
+  const gmK = fsAK.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  const inK = fsAK.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
+  const LsK = gmK.slice(gmK.indexOf('var L = C.LINES = {'), gmK.indexOf('};', gmK.indexOf('var L = C.LINES = {')));
+  const vals = (LsK.match(/: '\\u2026/g) || []).length;
+  ok(vals >= 20, 'the script speaks in transmissions: ' + vals + ' lines open with an ellipsis (interference grammar)');
+  ok(/TRANSMISSION heard through interference: lowercase fragments joined by ellipses/.test(inK), 'the neural voice spec is the transmission bible');
+  ok(/\\u2026i hear you\\u2026 name a program\\u2026/.test(inK), 'exemplars model the fragment shape');
+  ok(/help:/.test(LsK) && !/help: '\\u2026/.test(LsK), 'the controls line stays crisp: UI is not a transmission');
 }
 
 // ---------------------------------------------------------------- summary
