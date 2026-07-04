@@ -866,6 +866,9 @@
     started = true;
     hud.boot.classList.add('gone');
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
+    // URL HYGIENE: self-heal swaps navigate with ?v= to defeat the browser
+    // cache, but the address bar keeps none of it - wipe any query on boot.
+    try { if (location.search) history.replaceState(null, '', location.pathname); } catch (e) {}
     A.init();
     A.music();   // the universal bed begins the moment you enter
     A.setAmbience('void');

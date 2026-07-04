@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0704-2326</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0704-2331</span></div>
 </div>
 
 <script>
@@ -771,7 +771,7 @@
     var W = 13, D = 9, H = 3.3;
     var s = {
       name: 'dojo', sky: 'dojo', fog: { near: 14, far: 40, col: '#d8cfbb' },
-      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 2.0], yaw: Math.PI },   // mat edge, 2.5 m of air behind (was 2.8: back band of the room)
+      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 3.2], yaw: Math.PI },   // entry side, facing down the long axis: mats, dummy, receding posts - reads DOJO at frame one
       update: function () {}
     };
     var m = C.newMesh();
@@ -3564,6 +3564,9 @@
     started = true;
     hud.boot.classList.add('gone');
     setTimeout(function () { hud.boot.style.display = 'none'; }, 700);
+    // URL HYGIENE: self-heal swaps navigate with ?v= to defeat the browser
+    // cache, but the address bar keeps none of it - wipe any query on boot.
+    try { if (location.search) history.replaceState(null, '', location.pathname); } catch (e) {}
     A.init();
     A.music();   // the universal bed begins the moment you enter
     A.setAmbience('void');
