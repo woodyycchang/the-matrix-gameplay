@@ -68,7 +68,7 @@
     var W = 13, D = 9, H = 3.3;
     var s = {
       name: 'dojo', sky: 'dojo', fog: { near: 14, far: 40, col: '#d8cfbb' },
-      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 2.8], yaw: Math.PI },
+      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 2.0], yaw: Math.PI },   // mat edge, 2.5 m of air behind (was 2.8: back band of the room)
       update: function () {}
     };
     var m = C.newMesh();

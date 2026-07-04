@@ -1515,6 +1515,17 @@ section('JARVIS register: no dashes, one voice, true comments');
   ok(/hard cap 0\.018/.test(auH), 'the engine comment finally tells the truth (0.018, not 0.014)');
 }
 
+
+section('dojo spawn stands clear of the wall');
+{
+  const fsAI = require('fs');
+  const scI = fsAI.readFileSync(__dirname + '/../src/04_scenes.js', 'utf8');
+  const seg = scI.slice(scI.indexOf('function sceneDojo'), scI.indexOf('function sceneDojo') + 300);
+  const D = parseFloat((seg.match(/\bD = ([0-9.]+)/) || [])[1]);
+  const z = parseFloat((scI.match(/name: 'dojo'[\s\S]{0,220}?pos: \[0, 0, ([0-9.]+)\]/) || [])[1]);
+  ok(isFinite(D) && isFinite(z) && (D / 2 - z) >= 2.0, 'spawn keeps >=2 m behind it, measured from the room itself (' + (D / 2 - z).toFixed(1) + ' m)');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
