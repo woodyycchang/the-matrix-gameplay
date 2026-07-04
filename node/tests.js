@@ -1523,7 +1523,7 @@ section('dojo spawn stands clear of the wall');
   const seg = scI.slice(scI.indexOf('function sceneDojo'), scI.indexOf('function sceneDojo') + 300);
   const D = parseFloat((seg.match(/\bD = ([0-9.]+)/) || [])[1]);
   const z = parseFloat((scI.match(/name: 'dojo'[\s\S]{0,220}?pos: \[0, 0, ([0-9.]+)\]/) || [])[1]);
-  ok(isFinite(D) && isFinite(z) && (D / 2 - z) >= 1.2 && /name: 'dojo'[\s\S]{0,260}?yaw: -0\.35/.test(scI), 'spawn faces INTO the room under the real -cos forward convention - first frame reads DOJO');
+  ok(isFinite(D) && isFinite(z) && (D / 2 - z) >= 1.2 && /name: 'dojo'[\s\S]{0,260}?yaw: 0 \}/.test(scI), 'spawn faces dead square down the long axis (real -cos convention) - a symmetric first frame');
 }
 
 

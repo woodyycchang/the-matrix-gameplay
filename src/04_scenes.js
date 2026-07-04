@@ -68,7 +68,7 @@
     var W = 13, D = 9, H = 3.3;
     var s = {
       name: 'dojo', sky: 'dojo', fog: { near: 14, far: 40, col: '#d8cfbb' },
-      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 3.2], yaw: -0.35 },   // entry side; fwd = (sin,-cos): yaw~0 faces -z down the long axis, -0.35 puts the dummy 19deg left - reads DOJO at frame one
+      groundY: 0, ambience: 'dojo', colliders: [], insts: [], spawn: { pos: [0, 0, 3.2], yaw: 0 },   // entry side, dead square down the long axis (fwd = (sin,-cos): yaw 0 faces -z)
       update: function () {}
     };
     var m = C.newMesh();
