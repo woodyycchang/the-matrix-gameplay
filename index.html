@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0704-2342</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0704-2345</span></div>
 </div>
 
 <script>
@@ -1320,30 +1320,30 @@
 
   // -------- operator script (all original) --------
   var L = C.LINES = {
-    boot1: '\u2026construct online\u2026 white\u2026 waiting\u2026',
-    boot2: '\u2026ask for what you need\u2026 speak, or type\u2026',
-    weapons: '\u2026armory open\u2026 mind the racks\u2026',
-    dojo: '\u2026sparring program loaded\u2026 the dummy forgives\u2026 eventually\u2026',
-    rooftop: '\u2026jump program\u2026 you cannot be hurt here\u2026 run\u2026 jump\u2026 fly\u2026',
-    city: '\u2026crowd simulation\u2026 lunch hour\u2026 eyes forward\u2026',
-    clear: '\u2026wiping the room\u2026',
-    codeOn: '\u2026dropping the render layer\u2026 this is what it really looks like\u2026',
-    codeOff: '\u2026restoring the skin\u2026',
-    fall1: '\u2026you are fine\u2026 the street is code\u2026 nothing here can hurt you\u2026',
-    fall2: '\u2026all good\u2026 the jump waits\u2026',
-    reload: '\u2026reloading the jump\u2026',
-    roofHint: '\u2026long run-up\u2026 landing guaranteed\u2026 enjoy the air\u2026',
-    again: '\u2026again\u2026',
-    success: '\u2026clean landing\u2026',
-    successFirst: '\u2026first try\u2026 that is not supposed to happen\u2026',
-    gun: '\u2026sidearm loaded\u2026 handle with intent\u2026',
-    booth: '\u2026the exit\u2026 pick up when you are ready\u2026',
-    hangup: '\u2026hanging up\u2026 back to white\u2026',
-    lesson: '\u2026you looked\u2026 everyone does\u2026',
-    mirror: '\u2026one mirror\u2026 reflection approximate\u2026',
-    bike: '\u2026two wheels ready\u2026 mind the walls\u2026',
-    katana: '\u2026a blade\u2026 quiet\u2026 honest\u2026',
-    neon: '\u2026the neon mile is endless\u2026 throttle up\u2026',
+    boot1: 'Construct online. White, empty, obedient.',
+    boot2: 'Ask for what you need. Voice or text, whichever you prefer.',
+    weapons: 'Armory request received. Mind the racks.',
+    dojo: 'Sparring program loaded. The dummy forgives. Eventually.',
+    rooftop: 'Jump program. You cannot be hurt here. run, jump, fly.',
+    city: 'Crowd simulation, lunch hour. Eyes forward.',
+    clear: 'Wiping the room.',
+    codeOn: 'Dropping the render layer. This is what it really looks like.',
+    codeOff: 'Restoring the skin.',
+    fall1: 'Breathe. you are fine. The street is code; nothing here can hurt you.',
+    fall2: 'All good. Reset when ready. the jump will still be there.',
+    reload: 'Reloading the jump.',
+    roofHint: 'Long run-up, big jump. The landing is guaranteed. enjoy the air.',
+    again: 'Again.',
+    success: 'Clean landing. Don\u2019t tell your knees the floor isn\u2019t real.',
+    successFirst: 'First try. That is not supposed to happen.',
+    gun: 'Sidearm loaded. Handle with intent.',
+    booth: 'There\u2019s the exit. Pick up when you\u2019re ready.',
+    hangup: 'Hanging up. Back to white.',
+    lesson: 'You looked. Everyone does.',
+    mirror: 'Mirrors are expensive. Enjoy the budget version.',
+    bike: 'Two wheels. The walls have opinions. respect them.',
+    katana: 'A blade. Quiet and honest.',
+    neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
@@ -3815,7 +3815,7 @@
     var sys = 'You are the Operator of THE CONSTRUCT, a white loading-space. ' +
       'The ONLY designated programs and objects are: ' + words + '. ' +
       'For every user request reply with EXACTLY one line in this format: ' +
-      'WORD: <one designated word, or none> | SAY: <one short line as a TRANSMISSION heard through interference: lowercase fragments joined by ellipses (\u2026), five to twelve words total, calm and precise, never dashes, never melodrama>. ' +
+      'WORD: <one designated word, or none> | SAY: <one short line in a crisp, precise, quietly courteous voice, like a mission-control AI: short complete sentences, status first, never dashes, never melodrama>. ' +
       'If the request does not belong to the designated list, use WORD: none and refuse in your own words. ' +
       'Greetings and small talk also get WORD: none. answer them in character, briefly, and invite a request. ' +
       'Never invent a word outside the list. Never write anything except that one line. ' +
@@ -3823,25 +3823,25 @@
     return [
       { role: 'system', content: sys },
       { role: 'user', content: 'something to sit on' },
-      { role: 'assistant', content: 'WORD: chair | SAY: \u2026one chair, folded out of the white\u2026 sit\u2026' },
+      { role: 'assistant', content: 'WORD: chair | SAY: One chair, folded out of the white. Sit.' },
       { role: 'user', content: 'motor' },
-      { role: 'assistant', content: 'WORD: motorcycle | SAY: \u2026two wheels\u2026 compiling\u2026' },
+      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiling.' },
       { role: 'user', content: 'hello' },
-      { role: 'assistant', content: 'WORD: none | SAY: \u2026operator here\u2026 line is open\u2026 what do you need\u2026' },
+      { role: 'assistant', content: 'WORD: none | SAY: Operator here. Line is open. What do you need?' },
       { role: 'user', content: 'hey there' },
-      { role: 'assistant', content: 'WORD: none | SAY: \u2026i hear you\u2026 name a program\u2026 i will load it\u2026' },
+      { role: 'assistant', content: 'WORD: none | SAY: I hear you. Name a program, I will load it.' },
       { role: 'user', content: 'i want to learn how to fight' },
-      { role: 'assistant', content: 'WORD: dojo | SAY: \u2026loading the dojo\u2026 step onto the mat\u2026' },
+      { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
       { role: 'user', content: 'motor' },
-      { role: 'assistant', content: 'WORD: motorcycle | SAY: \u2026two wheels, compiled\u2026 swing a leg over\u2026' },
+      { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
       { role: 'user', content: 'a fast ride through the night' },
-      { role: 'assistant', content: 'WORD: neon | SAY: \u2026the neon mile is endless\u2026 throttle up\u2026' },
+      { role: 'assistant', content: 'WORD: neon | SAY: The neon mile is endless. Throttle up.' },
       { role: 'user', content: 'show me what this world really is' },
-      { role: 'assistant', content: 'WORD: code | SAY: \u2026look again\u2026 it was always rain\u2026' },
+      { role: 'assistant', content: 'WORD: code | SAY: Look again. It was always rain.' },
       { role: 'user', content: 'a purple elephant that does my taxes' },
-      { role: 'assistant', content: 'WORD: none | SAY: \u2026no such program in the library\u2026 ask for what exists\u2026' },
+      { role: 'assistant', content: 'WORD: none | SAY: The library carries no such program. Ask for what exists.' },
       { role: 'user', content: 'wipe it all' },
-      { role: 'assistant', content: 'WORD: clear | SAY: \u2026back to white\u2026' }
+      { role: 'assistant', content: 'WORD: clear | SAY: Back to white.' }
     ];
   };
 
