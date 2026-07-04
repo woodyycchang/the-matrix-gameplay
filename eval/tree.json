@@ -146,15 +146,15 @@
    "path": "ROOT/INPUT/keyboard-route",
    "type": "UNIT",
    "why": "按键路径无同步重活",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "keydown处理器羽量级(flag置位+preventDefault); 内联唤醒罪已在savepoint前伏法; 取证行在案"
   },
   {
    "path": "ROOT/INPUT/touch",
    "type": "UNIT",
    "why": "触控与桌面同权",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "USER",
+   "evidence": "机器侧: touch.active门控遍布, 处理器在编; 手感=涌现叶 - 清单: 真机拖动视角顺滑否/双区操作可用否/chips可点否"
   },
   {
    "path": "ROOT/DIEGESIS",
@@ -205,15 +205,15 @@
    "path": "ROOT/PERF/frame-budget",
    "type": "UNIT",
    "why": "ms表+自适应存在且真触发",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "frame(): t0=performance.now() -> adapt(ms)@544, throttled时跳过; ms表真实驱动自适应(adapt体440-452在案)"
   },
   {
    "path": "ROOT/PERF/hot-alloc",
    "type": "UNIT",
    "why": "热循环零分配审计",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "渲染热路径分配扫描入册: 稳态循环复用类型化缓冲, frame体首段零new/[]/{}; 全文件new/.push计数记录"
   },
   {
    "path": "ROOT/PERF/load-waits",
