@@ -136,9 +136,13 @@
     if (!ttCur) {
       ttCur = ttQueue.shift();
       if (!ttCur) return;
+      var kids = hud.log.children;
+      for (var ki = 0; ki < kids.length; ki++) kids[ki].classList.add('old');
       var div = document.createElement('div');
-      div.className = 'line' + (ttCur.system ? ' sys' : '');
+      div.className = 'line' + (ttCur.system ? ' sys' : '') + (/^you: /.test(ttCur.text) ? ' you' : '');
       hud.log.appendChild(div);
+      requestAnimationFrame(function () { div.classList.add('in'); });
+      setTimeout(function () { div.classList.add('faded'); }, 9000);   // transmissions linger, then evaporate
       ttCur.el = div; ttChars = 0;
       while (hud.log.children.length > 4) hud.log.removeChild(hud.log.firstChild);
     }
@@ -156,12 +160,14 @@
     }
   }
   function openConsole() {
+    document.body.classList.add('con');
     consoleOpen = true;
     if (document.exitPointerLock && document.pointerLockElement) { try { document.exitPointerLock(); } catch (e) {} }
     hud.inRow.classList.add('open');
     hud.input.focus();
   }
   function closeConsole() {
+    document.body.classList.remove('con');
     consoleOpen = false;
     hud.input.blur();
   }
@@ -851,7 +857,7 @@
         } else {
           var r = C.intent.parseReply(m.reply);
           var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
-          if (r.say) say('operator: ' + r.say);       // the model IS the operator: one face, one channel; empty say = the scene speaks
+          if (r.say) say(r.say);                      // teletype adds the operator tag itself; adding it here doubled the prefix
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();

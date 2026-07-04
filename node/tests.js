@@ -1090,8 +1090,8 @@ section('UI layout sanity (template guards)');
 {
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#console\{position:fixed;left:0;right:0;bottom:0;/.test(tpl) && /align-items:center/.test(tpl), 'console is a FULL-WIDTH lower-third strip; content centers inside it');
-  ok(/#chips\{display:flex;gap:8px;flex-wrap:wrap;justify-content:center/.test(tpl) && !/#chips\{position:fixed/.test(tpl), 'chips WRAP inside the console - every chip visible at any width, nothing ever clipped');
+  ok(/#console\{position:fixed;left:0;right:0;bottom:6vh;/.test(tpl) && /align-items:center/.test(tpl), 'console is a floating full-width cinematic band; content centers inside it');
+  ok(/flex-wrap:wrap;justify-content:center/.test(tpl) && /body\.con #chips\{opacity:\.9;pointer-events:auto\}/.test(tpl), 'chips wrap centered and reveal only while the console is open');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
 }
@@ -1348,7 +1348,7 @@ section('every string earns its place (surface-wording verdict)');
   const intR = fsR.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
   const appR = fsR.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(!/'Loading ' \+ word/.test(intR), "the double announcement is dead: the scene speaks for itself, 'Loading X.' does not");
-  ok(/if \(r\.say\) say\('operator: ' \+ r\.say\)/.test(appR), 'the model IS the operator: one prefix, one channel, no split face');
+  ok(/if \(r\.say\) say\(r\.say\);/.test(appR) && /'operator: '\) \+ ttCur\.text/.test(appR), 'one operator tag, added once, by the teletype (double-prefix bug dead)');
   ok(/your line is queued\.'/.test(appR) && !/answering the moment he is up/.test(appR), 'still-waking says it once, not twice');
 }
 
@@ -1358,7 +1358,7 @@ section('real-view layout: nothing pinned, nothing bleeding');
   const fsS = require('fs');
   const tplS = fsS.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/html,body\{height:100%;overflow:hidden/.test(tplS), 'the page itself can never scroll or reveal a background band (rule pre-existed)');
-  ok(/#console\{position:fixed;left:0;right:0;bottom:0;/.test(tplS), 'console spans FULL width (left:0+right:0) - never a narrow left-pinned box');
+  ok(/#console\{position:fixed;left:0;right:0;bottom:6vh;/.test(tplS), 'console spans full width as a floating band, never a pinned box');
 }
 
 
@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#console\{[^}]*background:linear-gradient\(to top, rgba\(251,251,249,\.94\)/.test(tplT.replace(/\n\s*/g,'')), 'a fading paper backdrop keeps the log readable over summoned objects and dark scenes');
+  ok(/#log \.line\{[^}]*mix-blend-mode:difference/.test(tplT) && !/#console\{[^}]*linear-gradient/.test(tplT), 'the backdrop is GONE by design: legibility over any scene comes from difference blending, like EXO');
 }
 
 
@@ -1375,7 +1375,7 @@ section('full screen, dynamically adjusted');
   const fsU = require('fs');
   const tplU = fsU.readFileSync(__dirname + '/../template.html', 'utf8');
   const appU = fsU.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok((tplU.match(/width:min\(860px,94vw\)/g) || []).length >= 3, 'log, input row and chips all share the fluid centered cap inside the strip');
+  ok(/min\(920px,94vw\)/.test(tplU) && /min\(680px,90vw\)/.test(tplU), 'the floating stack keeps fluid centered caps');
   ok(/requestFullscreen/.test(appU) && /exitFullscreen/.test(appU), 'F toggles true browser fullscreen');
   ok(/F fullscreen/.test(tplU), 'the boot keys teach it');
 }
@@ -1532,6 +1532,18 @@ section('the address bar stays pristine');
   const fsAJ = require('fs');
   const appAJ = fsAJ.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/history\.replaceState\(null, '', location\.pathname\)/.test(appAJ), 'any query is wiped on boot - the visible URL is always the bare path');
+}
+
+
+section('EXO transmission UI');
+{
+  const fsAL = require('fs');
+  const tplL = fsAL.readFileSync(__dirname + '/../template.html', 'utf8').replace(/\n\s*/g,'');
+  const appL = fsAL.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
+  ok(/letter-spacing:\.26em/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL), 'transmission typography: wide tracking, lines evaporate');
+  ok(/classList\.add\('in'\)/.test(appL) && /classList\.add\('faded'\)/.test(appL) && /\/\^you: \//.test(appL), 'lifecycle wired: fade-in, evaporate, faint player echoes');
+  ok(/classList\.add\('con'\)/.test(appL) && /classList\.remove\('con'\)/.test(appL), 'Esc reveals the console; play hides every app control');
+  ok(/\.chip\{[^}]*border:0/.test(tplL), 'chips are ghost text, not app buttons');
 }
 
 // ---------------------------------------------------------------- summary
