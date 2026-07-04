@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0702-1835</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0704-2317</span></div>
 </div>
 
 <script>
@@ -1321,27 +1321,27 @@
   // -------- operator script (all original) --------
   var L = C.LINES = {
     boot1: 'Construct online. White, empty, obedient.',
-    boot2: 'Ask for what you need — speak it, or type below.',
+    boot2: 'Ask for what you need. Voice or text, whichever you prefer.',
     weapons: 'Armory request received. Mind the racks.',
     dojo: 'Sparring program loaded. The dummy forgives. Eventually.',
-    rooftop: 'Jump program. You cannot be hurt here \u2014 run, jump, fly.',
-    city: 'Crowd simulation, lunch hour. Eyes forward — stay with me.',
+    rooftop: 'Jump program. You cannot be hurt here. run, jump, fly.',
+    city: 'Crowd simulation, lunch hour. Eyes forward.',
     clear: 'Wiping the room.',
     codeOn: 'Dropping the render layer. This is what it really looks like.',
     codeOff: 'Restoring the skin.',
-    fall1: 'Breathe \u2014 you are fine. The street is code; nothing here can hurt you.',
-    fall2: 'All good. Reset when ready \u2014 the jump will still be there.',
+    fall1: 'Breathe. you are fine. The street is code; nothing here can hurt you.',
+    fall2: 'All good. Reset when ready. the jump will still be there.',
     reload: 'Reloading the jump.',
-    roofHint: 'Long run-up, big jump. The landing is guaranteed \u2014 enjoy the air.',
+    roofHint: 'Long run-up, big jump. The landing is guaranteed. enjoy the air.',
     again: 'Again.',
     success: 'Clean landing. Don\u2019t tell your knees the floor isn\u2019t real.',
     successFirst: 'First try. That is not supposed to happen.',
-    gun: 'Careful — that\u2019s load-bearing make-believe.',
+    gun: 'Sidearm loaded. Handle with intent.',
     booth: 'There\u2019s the exit. Pick up when you\u2019re ready.',
     hangup: 'Hanging up. Back to white.',
-    lesson: 'You looked. Everyone looks — that is the lesson.',
+    lesson: 'You looked. Everyone does.',
     mirror: 'Mirrors are expensive. Enjoy the budget version.',
-    bike: 'Two wheels. The walls have opinions \u2014 respect them.',
+    bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
@@ -2341,7 +2341,7 @@
     engOsc.frequency.setTargetAtTime(40 + sp * 2.2, now, 0.06);
     engSub.frequency.setTargetAtTime(20 + sp * 1.1, now, 0.06);
     engFilt.frequency.setTargetAtTime(150 + sp * 24 + th * 180, now, 0.05);
-    // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
+    // idle ~0.0015, climbs with speed+throttle, hard cap 0.018 (source peaked at 0.022 and read as "too loud")
     var g = A.muted ? 0 : Math.min(0.018, 0.002 + sp * 0.00034 + th * 0.0038);
     engGain.gain.setTargetAtTime(g, now, 0.05);
   };
@@ -2723,7 +2723,7 @@
     if (down && started) {
       if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
-      if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
+      if (k === 'm') { var m = A.toggleMute(); say(m ? 'Audio muted.' : 'Audio on.', true); }
       if (k === 'f') {
         try {
           if (document.fullscreenElement) document.exitFullscreen();
@@ -2882,16 +2882,16 @@
       return;
     }
     if (lv === 'music') {
-      say('music ' + (A.musicToggle() ? 'on \u2014 Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
+      say('music ' + (A.musicToggle() ? 'on. Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
       return;
     }
     if (lv === 'voice') {
-      say('human voice is disabled \u2014 every line is text. the world still sounds.', true);
+      say('Human voice is disabled. Text carries every line. The world still sounds.', true);
       return;
     }
     if (lv === 'debug') {
       dbg = !dbg;
-      say('debug channel ' + (dbg ? 'ON \u2014 telemetry visible' : 'off'), true);
+      say('debug channel ' + (dbg ? 'ON. Telemetry visible' : 'off'), true);
       return;
     }
     if (lv === 'unlock') {
@@ -2908,7 +2908,7 @@
     if (neural.state === 'off') {
       neural.queue.push(v);
       loadNeural();   // the first unheard line wakes the operator itself
-      say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
+      say('That requires the operator. Waking him now.', true);
       return;
     }
     if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued.', true); return; }
@@ -2931,11 +2931,11 @@
         setTimeout(function () { routeLine(txt); }, 0);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
-      recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
+      recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('Mic unavailable here. Type instead', true); };
       recog.start();
       listening = true;
       hud.mic.classList.add('live');
-    } catch (e) { say('mic unavailable here — type instead', true); }
+    } catch (e) { say('Mic unavailable here. Type instead', true); }
   }
   function stopListen() { if (recog && listening) try { recog.stop(); } catch (e) {} }
 
@@ -3482,7 +3482,7 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    sayLoad('waking the operator \u2014 one-off ~0.5 GB download; instant from cache after that');
+    sayLoad('Waking the operator. One-off ~0.5 GB download; instant from cache after that');
     sayDbg('model: Qwen3-0.6B (onnx-community, q4f16/webgpu \u2192 q4/wasm)');
     var lastPct = -1;
     try {
@@ -3506,7 +3506,7 @@
         // system message - without it the token budget burns on <think> blocks.
         if (neural.ctx && neural.ctx[0] && neural.ctx[0].role === 'system') neural.ctx[0].content += ' /no_think';
         neural.state = 'on';
-        say('operator online.', true);
+        say('Operator online.', true);
         sayDbg('engine: ' + (m.device || 'cpu'));
         var q = neural.queue.splice(0);
         // human voice disabled: no voice engine download (saves ~90 MB; world SFX unaffected)
@@ -3549,7 +3549,7 @@
         } else {
           var r = C.intent.parseReply(m.reply);
           var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
-          if (r.say) say(r.say, true);                 // ALWAYS show what the model said   // empty say = the scene will speak for itself
+          if (r.say) say('operator: ' + r.say);       // the model IS the operator: one face, one channel; empty say = the scene speaks
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();
@@ -3812,11 +3812,11 @@
     var sys = 'You are the Operator of THE CONSTRUCT, a white loading-space. ' +
       'The ONLY designated programs and objects are: ' + words + '. ' +
       'For every user request reply with EXACTLY one line in this format: ' +
-      'WORD: <one designated word, or none> | SAY: <one short line in your dry, calm operator voice>. ' +
+      'WORD: <one designated word, or none> | SAY: <one short line in a crisp, precise, quietly courteous voice, like a mission-control AI: short complete sentences, status first, never dashes, never melodrama>. ' +
       'If the request does not belong to the designated list, use WORD: none and refuse in your own words. ' +
-      'Greetings and small talk also get WORD: none \u2014 answer them in character, briefly, and invite a request. ' +
+      'Greetings and small talk also get WORD: none. answer them in character, briefly, and invite a request. ' +
       'Never invent a word outside the list. Never write anything except that one line. ' +
-      'The example replies below show FORMAT and TONE only \u2014 never repeat any example sentence word-for-word; phrase every SAY fresh.';
+      'The example replies below show FORMAT and TONE only. never repeat any example sentence word-for-word; phrase every SAY fresh.';
     return [
       { role: 'system', content: sys },
       { role: 'user', content: 'something to sit on' },
@@ -3824,7 +3824,7 @@
       { role: 'user', content: 'motor' },
       { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiling.' },
       { role: 'user', content: 'hello' },
-      { role: 'assistant', content: 'WORD: none | SAY: Operator. Line is open \u2014 what do you need?' },
+      { role: 'assistant', content: 'WORD: none | SAY: Operator here. Line is open. What do you need?' },
       { role: 'user', content: 'hey there' },
       { role: 'assistant', content: 'WORD: none | SAY: I hear you. Name a program, I will load it.' },
       { role: 'user', content: 'i want to learn how to fight' },

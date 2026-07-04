@@ -1206,7 +1206,7 @@ section('quiet boot + Qwen3 brain (research-grounded)');
   const appG = fsG.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/function sayDbg/.test(appG) && /var dbg = false/.test(appG) && /lv === 'debug'/.test(appG), 'telemetry channel exists, defaults OFF, toggles via typing debug');
   ok(/sayDbg\('construct online/.test(appG) && /sayDbg\('voice link ok/.test(appG) && /sayDbg\('voice: '/.test(appG), 'build/probe/voice telemetry routed off the player channel');
-  ok(/say\('operator online\.', true\)/.test(appG), 'the player hears one clean diegetic line when he wakes');
+  ok(/say\('Operator online\.', true\)/.test(appG), 'the player hears one clean diegetic line when he wakes (bible register)');
   ok(/onnx-community\/Qwen3-0\.6B-ONNX/.test(appG) && !/SmolLM2-360M-Instruct/.test(appG), 'brain upgraded to Qwen3-0.6B (official transformers.js drop-in)');
   ok(/\/no_think/.test(appG), "Qwen3's thinking mode is disabled via the documented /no_think soft switch");
 }
@@ -1220,7 +1220,7 @@ section('wait shrunk on every lever physics allows');
   ok(/warm the worker at app bootstrap/.test(appH) && /conn\.saveData/.test(appH) && /neural\.quiet = true; loadNeural\(\)/.test(appH), 'the brain preloads at boot for everyone; data-saver keeps lazy consent');
   ok(/function sayLoad/.test(appH) && /neural\.quiet = false;/.test(appH), 'preload is silent on the player channel and flips loud the moment the player asks');
   ok(/m\.pct \/ 10\) \* 10/.test(appH), 'download feedback in 10% steps - a big file never looks frozen');
-  ok(/one-off ~0\.5 GB download; instant from cache/.test(appH), 'the waking line sets honest expectations');
+  ok(/One-off ~0\.5 GB download; instant from cache/.test(appH), 'the waking line sets honest expectations');
 }
 
 
@@ -1304,7 +1304,7 @@ section('voice transport: no beheading, no clicks (Loop-1 N1a verdict)');
   ok(!/A\._ttsNode\.stop\(\)/.test(audO), 'the bare hard-stop (mid-word beheading + audible click) is gone');
   ok(/setTargetAtTime\(0, ctx\.currentTime, 0\.004\)/.test(audO) && /stop\(ctx\.currentTime \+ 0\.015\)/.test(audO), 'the only sanctioned interrupt rides a ~12ms fader to zero before stopping');
   ok(/g\.gain\.value = 1\.0;   \/\/ unity fader/.test(audO), 'the fader sits at unity - transport, never an effect (copy-only policy holds)');
-  ok(/human voice is disabled/.test(appO), "typing 'voice' explains the state in text - nothing is spoken");
+  ok(/Human voice is disabled/.test(appO), "typing 'voice' explains the state in text - nothing is spoken");
 }
 
 
@@ -1348,7 +1348,7 @@ section('every string earns its place (surface-wording verdict)');
   const intR = fsR.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
   const appR = fsR.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(!/'Loading ' \+ word/.test(intR), "the double announcement is dead: the scene speaks for itself, 'Loading X.' does not");
-  ok(/if \(r\.say\) say\(r\.say/.test(appR), 'an empty say prints nothing - no blank lines in the log');
+  ok(/if \(r\.say\) say\('operator: ' \+ r\.say\)/.test(appR), 'the model IS the operator: one prefix, one channel, no split face');
   ok(/your line is queued\.'/.test(appR) && !/answering the moment he is up/.test(appR), 'still-waking says it once, not twice');
 }
 
@@ -1499,6 +1499,20 @@ section('the parrot is dead: examples teach format, not sentences');
   ok(/never repeat any example sentence word-for-word/.test(inG), 'the system law forbids verbatim example repetition');
   ok(!/I hear you\. Name a program or an object and I will load it\./.test(inG), 'the old single attractor sentence is gone');
   ok(/Line is open/.test(inG) && /Name a program, I will load it/.test(inG), 'two differently-worded greeting exemplars force interpolation');
+}
+
+
+section('JARVIS register: no dashes, one voice, true comments');
+{
+  const fsAH = require('fs');
+  const gmH = fsAH.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  const inH = fsAH.readFileSync(__dirname + '/../src/09_intent.js', 'utf8');
+  const auH = fsAH.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  const Ls = gmH.slice(gmH.indexOf('var L = C.LINES = {'), gmH.indexOf('};', gmH.indexOf('var L = C.LINES = {')));
+  ok(!/\u2014|\\u2014|—/.test(Ls), 'the conversation dictionary contains zero em-dashes in any form');
+  ok(/mission-control AI: short complete sentences, status first, never dashes/.test(inH), 'the neural voice spec is the JARVIS bible');
+  ok(/Voice or text, whichever you prefer\./.test(gmH) && /Sidearm loaded\. Handle with intent\./.test(gmH) && /You looked\. Everyone does\./.test(gmH), 'rewritten lines follow the status-report skeleton');
+  ok(/hard cap 0\.018/.test(auH), 'the engine comment finally tells the truth (0.018, not 0.014)');
 }
 
 // ---------------------------------------------------------------- summary

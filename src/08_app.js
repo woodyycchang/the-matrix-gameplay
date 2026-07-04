@@ -25,7 +25,7 @@
     if (down && started) {
       if (k === 'enter' || k === 't' || k === '/') { e.preventDefault(); openConsole(); }
       if (k === 'c') game.toggleCode();
-      if (k === 'm') { var m = A.toggleMute(); say('audio ' + (m ? 'muted' : 'on'), true); }
+      if (k === 'm') { var m = A.toggleMute(); say(m ? 'Audio muted.' : 'Audio on.', true); }
       if (k === 'f') {
         try {
           if (document.fullscreenElement) document.exitFullscreen();
@@ -184,16 +184,16 @@
       return;
     }
     if (lv === 'music') {
-      say('music ' + (A.musicToggle() ? 'on \u2014 Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
+      say('music ' + (A.musicToggle() ? 'on. Stellardrone, \u201cLight Years\u201d (CC BY)' : 'off'), true);
       return;
     }
     if (lv === 'voice') {
-      say('human voice is disabled \u2014 every line is text. the world still sounds.', true);
+      say('Human voice is disabled. Text carries every line. The world still sounds.', true);
       return;
     }
     if (lv === 'debug') {
       dbg = !dbg;
-      say('debug channel ' + (dbg ? 'ON \u2014 telemetry visible' : 'off'), true);
+      say('debug channel ' + (dbg ? 'ON. Telemetry visible' : 'off'), true);
       return;
     }
     if (lv === 'unlock') {
@@ -210,7 +210,7 @@
     if (neural.state === 'off') {
       neural.queue.push(v);
       loadNeural();   // the first unheard line wakes the operator itself
-      say('that needs the operator \u2014 waking him now. I will answer when he is up.', true);
+      say('That requires the operator. Waking him now.', true);
       return;
     }
     if (neural.state === 'loading') { neural.quiet = false; neural.queue.push(v); say('still waking\u2026 your line is queued.', true); return; }
@@ -233,11 +233,11 @@
         setTimeout(function () { routeLine(txt); }, 0);
       };
       recog.onend = function () { listening = false; hud.mic.classList.remove('live'); };
-      recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('mic unavailable here — type instead', true); };
+      recog.onerror = function () { listening = false; hud.mic.classList.remove('live'); say('Mic unavailable here. Type instead', true); };
       recog.start();
       listening = true;
       hud.mic.classList.add('live');
-    } catch (e) { say('mic unavailable here — type instead', true); }
+    } catch (e) { say('Mic unavailable here. Type instead', true); }
   }
   function stopListen() { if (recog && listening) try { recog.stop(); } catch (e) {} }
 
@@ -784,7 +784,7 @@
   function loadNeural() {
     if (neural.state !== 'off') return;
     neural.state = 'loading';
-    sayLoad('waking the operator \u2014 one-off ~0.5 GB download; instant from cache after that');
+    sayLoad('Waking the operator. One-off ~0.5 GB download; instant from cache after that');
     sayDbg('model: Qwen3-0.6B (onnx-community, q4f16/webgpu \u2192 q4/wasm)');
     var lastPct = -1;
     try {
@@ -808,7 +808,7 @@
         // system message - without it the token budget burns on <think> blocks.
         if (neural.ctx && neural.ctx[0] && neural.ctx[0].role === 'system') neural.ctx[0].content += ' /no_think';
         neural.state = 'on';
-        say('operator online.', true);
+        say('Operator online.', true);
         sayDbg('engine: ' + (m.device || 'cpu'));
         var q = neural.queue.splice(0);
         // human voice disabled: no voice engine download (saves ~90 MB; world SFX unaffected)
@@ -851,7 +851,7 @@
         } else {
           var r = C.intent.parseReply(m.reply);
           var w = r.word || C.intent.rescueWord(text);  // USER text only: a word in the reply is a mention, not an intent
-          if (r.say) say(r.say, true);                 // ALWAYS show what the model said   // empty say = the scene will speak for itself
+          if (r.say) say('operator: ' + r.say);       // the model IS the operator: one face, one channel; empty say = the scene speaks
           if (w) game.request(w);           // dispatch the named (or rescued) designated word
         }
         resolve();

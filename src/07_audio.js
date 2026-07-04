@@ -65,7 +65,7 @@
     engOsc.frequency.setTargetAtTime(40 + sp * 2.2, now, 0.06);
     engSub.frequency.setTargetAtTime(20 + sp * 1.1, now, 0.06);
     engFilt.frequency.setTargetAtTime(150 + sp * 24 + th * 180, now, 0.05);
-    // idle ~0.0015, climbs with speed+throttle, hard cap 0.014 (source peaked at 0.022 and read as "too loud")
+    // idle ~0.0015, climbs with speed+throttle, hard cap 0.018 (source peaked at 0.022 and read as "too loud")
     var g = A.muted ? 0 : Math.min(0.018, 0.002 + sp * 0.00034 + th * 0.0038);
     engGain.gain.setTargetAtTime(g, now, 0.05);
   };
