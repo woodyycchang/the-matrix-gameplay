@@ -1585,6 +1585,17 @@ section('N1 ride-feel: the branch equations live natively');
   ok(/bk\.crashCd = 0\.45;/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /this\.shake = Math\.max\(this\.shake \|\| 0, 0\.5\)/.test(gmN), 'crashHit unified: cooldown, hard cut, shake');
 }
 
+
+section('N2 boulevard: twice as wide, dressed like the branch');
+{
+  const fsN2 = require('fs');
+  const scN = fsN2.readFileSync(__dirname + '/../src/04_scenes.js', 'utf8');
+  ok(/addQuadY\(m, -10\.2, z1, 10\.2, z0/.test(scN), 'the road half is 10.2 - room for three lanes a side');
+  ok(/-6\.95, z1, -6\.7/.test(scN) && /6\.7, z1, 6\.95/.test(scN), 'twin cyan dividers mark the outer lanes');
+  ok(/box\(\[-16\.5, 0, -1e6\], \[-9\.9, 14, 1e6\]\)/.test(scN), 'the walls retreated with the width');
+  ok(/'#2b0b3c'/.test(scN) && /r\(\) < 0\.2 \? '#f5f7ff'/.test(scN), "the branch's facade language: plum doorways and bright sign plates");
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

@@ -258,25 +258,31 @@
     var z0 = -ci * NEON_CHUNK, z1 = z0 - NEON_CHUNK;
     var r = C.rng(820 + ci * 7), hues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
     // road + sidewalks for this segment
-    C.addQuadY(m, -7.4, z1, 7.4, z0, 0.001, '#07070e', 'floor');
-    C.addQuadY(m, -7.4, z1, -5.2, z0, 0.004, '#0c0c16', 'floor');
-    C.addQuadY(m, 5.2, z1, 7.4, z0, 0.004, '#0c0c16', 'floor');
+    C.addQuadY(m, -10.2, z1, 10.2, z0, 0.001, '#07070e', 'floor');
+    C.addQuadY(m, -12.6, z1, -10.2, z0, 0.004, '#0c0c16', 'floor');
+    C.addQuadY(m, 10.2, z1, 12.6, z0, 0.004, '#0c0c16', 'floor');
     // curb neon strips
-    C.addQuadY(m, -5.3, z1, -5.0, z0, 0.02, '#ff2bd6', 'floor');
-    C.addQuadY(m, 5.0, z1, 5.3, z0, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, -10.3, z1, -10.0, z0, 0.02, '#ff2bd6', 'floor');
+    C.addQuadY(m, 10.0, z1, 10.3, z0, 0.02, '#ff2bd6', 'floor');
     C.addQuadY(m, -3.3, z1, -3.05, z0, 0.02, '#19e3ff', 'floor');
+    C.addQuadY(m, -6.95, z1, -6.7, z0, 0.02, '#19e3ff', 'floor');
     C.addQuadY(m, 3.05, z1, 3.3, z0, 0.02, '#19e3ff', 'floor');
+    C.addQuadY(m, 6.7, z1, 6.95, z0, 0.02, '#19e3ff', 'floor');
     // centreline dashes
     for (var cz = z0 - 4; cz > z1; cz -= 9) C.addQuadY(m, -0.28, cz, 0.28, cz + 4.4, 0.02, '#ff2bd6', 'floor');
     // towers along this segment, both rows
     for (var i = 0; i < 10; i++) {
       var z = z0 - 4 - i * 9.5;
       var htL = 14 + r() * 26;
-      C.addBox(m, -10.5 - r() * 2, 0, z, 4 + r() * 2.5, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
-      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -7.4, hues[(i + ci) % 5], true);
+      C.addBox(m, -15.5 - r() * 2, 0, z, 4 + r() * 2.5, htL, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z - htL * 0.46, 1, z + htL * 0.46, htL * 0.92, -12.6, hues[(i + ci) % 5], true);
+      C.addQuadX(m, z - 1.0, 0, z + 1.0, 2.4, -12.55, '#2b0b3c', true);
+      C.addQuadX(m, z - 1.9, 5.6, z + 1.9, 7.4, -12.55, (r() < 0.2 ? '#f5f7ff' : hues[(i * 3 + ci) % 5]), true);
       var htR = 14 + r() * 26;
-      C.addBox(m, 10.5 + r() * 2, 0, z + 4, 4 + r() * 2.5, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
-      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 7.4, hues[(i + ci + 2) % 5], false);
+      C.addBox(m, 15.5 + r() * 2, 0, z + 4, 4 + r() * 2.5, htR, 6 + r() * 3, '#0a0a14', { noBottom: true });
+      C.addQuadX(m, z + 4 - htR * 0.46, 1, z + 4 + htR * 0.46, htR * 0.92, 12.6, hues[(i + ci + 2) % 5], false);
+      C.addQuadX(m, z + 3.0, 0, z + 5.0, 2.4, 12.55, '#2b0b3c', false);
+      C.addQuadX(m, z + 2.1, 5.6, z + 5.9, 7.4, 12.55, (r() < 0.2 ? '#f5f7ff' : hues[(i * 3 + ci + 2) % 5]), false);
     }
     C.anchorize(m, 0.05, 73, 8); C.meshBounds(m);
     return m;
@@ -288,9 +294,9 @@
       insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }, infinite: true, chunks: {}
     };
     // persistent side-walls + a bike at the line
-    s.colliders.push(box([-11, 0, -1e6], [-5.0, 14, 1e6]));
-    s.colliders.push(box([5.0, 0, -1e6], [11, 14, 1e6]));
-    s.insts.push(inst(P.lamppost(), [-5.6, 0, -6], 0, { label: 'lamp' }));
+    s.colliders.push(box([-16.5, 0, -1e6], [-9.9, 14, 1e6]));
+    s.colliders.push(box([9.9, 0, -1e6], [16.5, 14, 1e6]));
+    s.insts.push(inst(P.lamppost(), [-12.9, 0, -6], 0, { label: 'lamp' }));
     s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
     // chunk manager: keep a window of segments around the rider's z
     s.update = function (game) {

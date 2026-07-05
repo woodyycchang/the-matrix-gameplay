@@ -334,8 +334,8 @@
    "path": "ROOT/NEON-RIDE/N2-boulevard",
    "type": "UNIT",
    "why": "路拓宽|x|17+车道基建+立面招牌色板",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 路半宽7.4->10.2, 双青分道线±3.2/±6.8, 塔退±13.5+, 面牌±12.6, 墙[9.9,16.5], 梅门#2b0b3c+亮牌(白闪20%), 灯柱随迁; chunk管理器未动=无限保持"
   },
   {
    "path": "ROOT/NEON-RIDE/N3-traffic",
