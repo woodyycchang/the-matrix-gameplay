@@ -310,6 +310,46 @@
    "why": "单一生成引擎(垫+双LFO),一次接线覆盖",
    "status": "FIXED",
    "evidence": "本提交: UNIVERSAL——十曲专辑连续巡航自ENTER起贯穿全程含虚空(用户指令覆盖电影静默于音乐层;音效层虚空静默不变); CC BY署名在boot; 断流跳曲/三连败落生成兜底"
+  },
+  {
+   "path": "ROOT/NEON-RIDE",
+   "type": "BRANCH",
+   "why": "分支四要素移植战役",
+   "status": "PENDING",
+   "priors": [
+    "ROOT/NEON-RIDE/N1-ride-feel",
+    "ROOT/NEON-RIDE/N2-boulevard",
+    "ROOT/NEON-RIDE/N3-traffic",
+    "ROOT/NEON-RIDE/N4-infinite-e2e"
+   ]
+  },
+  {
+   "path": "ROOT/NEON-RIDE/N1-ride-feel",
+   "type": "UNIT",
+   "why": "速度耦合转向+yaw钳±1.15+lean弹簧+crashHit核心",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/NEON-RIDE/N2-boulevard",
+   "type": "UNIT",
+   "why": "路拓宽|x|17+车道基建+立面招牌色板",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/NEON-RIDE/N3-traffic",
+   "type": "UNIT",
+   "why": "P.car对向车流+环形回收+实体碰撞+近擦",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/NEON-RIDE/N4-infinite-e2e",
+   "type": "UNIT",
+   "why": "模拟5km长跑:insts有界/车数恒定+手感清单",
+   "status": "PENDING",
+   "evidence": ""
   }
  ]
 }
