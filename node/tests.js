@@ -1571,7 +1571,7 @@ section('scene-aware voice: code-green after dark');
   const tplO = fsAO.readFileSync(__dirname + '/../template.html', 'utf8');
   const appO = fsAO.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/body\.dark #log \.line\{color:#9affc0/.test(tplO) && /body\.dark #inrow input\{color:#9affc0/.test(tplO), 'dark scenes wear the Matrix default #9affc0 across lines, chips and input');
-  ok(/classList\.toggle\('dark', \/NEON\|ARMORY\/i/.test(appO), 'the scene-title site flips the skin - no new state machinery');
+  ok(/classList\.toggle\('dark', \/NEON\/i/.test(appO), 'only NEON flips the code-green skin; armory and the rest keep the original ink');
 }
 
 // ---------------------------------------------------------------- summary
