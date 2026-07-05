@@ -4,6 +4,14 @@ A 3D browser action game in one HTML file. Ride a motorcycle 3 km down a neon St
 
 **Play:** open `index.html` in a desktop browser. That's the whole install. No server, no internet connection, no assets to download. The file is 699 KB with three.js embedded.
 
+![the boulevard, low and long](shots/01_boulevard.png)
+
+| oncoming, under the signs | the sidewalk wall |
+|---|---|
+| ![oncoming](shots/02_oncoming.png) | ![the signs](shots/03_signs.png) |
+
+*Frames by an honest camera: no headless GL exists in this environment, so a purpose-built software rasterizer runs the game's own world script (THREE as math), hijacks the scene from inside the game IIFE, and z-buffers ~14k triangles with the game's FogExp2 into PNG.*
+
 Once GitHub Pages is enabled for this repo (Settings → Pages → deploy from `main`, root), the game is playable at:
 `https://woodyycchang.github.io/the-street-protocol/`
 
