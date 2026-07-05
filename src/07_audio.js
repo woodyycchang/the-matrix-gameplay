@@ -318,6 +318,14 @@
       else if (name === 'neon') { loopNoise('lowpass', 70, 0.6, 0.16, 0.13, 26); loopNoise('bandpass', 560, 3.5, 0.07, 0.21, 120); }
       else if (name === 'crowd') { loopNoise('lowpass', 320, 0.4, 0.14, 0.6, 60); loopNoise('bandpass', 900, 1.4, 0.05, 1.3, 240); }
       else if (name === 'dojo') { loopNoise('lowpass', 110, 0.5, 0.16); }
+      else if (name === 'station') {
+        var o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), of2 = ctx.createBiquadFilter(), og2 = ctx.createGain();
+        o1.type = 'sawtooth'; o2.type = 'sawtooth'; o1.frequency.value = 46; o2.frequency.value = 46.6;
+        of2.type = 'lowpass'; of2.frequency.value = 140; og2.gain.value = 0.10;
+        o1.connect(of2); o2.connect(of2); of2.connect(og2); og2.connect(ambGain);
+        o1.start(); o2.start(); ambNodes.push(o1, o2, of2, og2);
+        loopNoise('bandpass', 2100, 2.0, 0.035, 0.19, 260);
+      }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
       ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : AMB_LEVEL, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
     }, 220);
@@ -358,6 +366,7 @@
       case 'powerdown': thump(46, 0.7, 0.5); hiss(0.9, 0.28, 900, 90, 1.4); blip(180, 0.5, 0.1, 'sawtooth'); break;
       case 'alarm': blip(620, 0.16, 0.14, 'square'); blip(470, 0.16, 0.14, 'square', 0.22); blip(620, 0.16, 0.12, 'square', 0.44); break;
       case 'whisper': hiss(1.2, 0.1, 1500, 320, 3.2); hiss(0.9, 0.07, 950, 260, 2.6, 0.4); break;
+      case 'clank': thump(240, 0.14, 0.1); blip(1240, 0.35, 0.028, 'triangle', 0.02); hiss(0.22, 0.05, 700, 300, 2); break;
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
       case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;

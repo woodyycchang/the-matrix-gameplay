@@ -718,7 +718,7 @@
     // stairs are 0.28 risers, the walker's support scan does the rest.
     var s = {
       name: 'erebus station', sky: 'erebus', fog: { near: 9, far: 46, col: '#070b16' },
-      groundY: -7, ambience: 'void', colliders: [], insts: [],
+      groundY: -7, ambience: 'station', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 27], yaw: 0 },
       label: 'EREBUS STATION'
     };
@@ -831,8 +831,10 @@
     wallZ(-30,-5.2,-3.8,0,1.4); wallZ(-30,-5.2,-3.8,2.3,4); wallZ(-30,3.8,5.2,0,1.4); wallZ(-30,3.8,5.2,2.3,4);   // two viewport slits
     C.addBox(m,0,0.55,-25,5.6,1.1,1.6,SD,{noBottom:true}); col(-2.8,0,-25.8,2.8,1.1,-24.2);   // console dais
     C.addQuadY(m,-2.4,-25.7,2.4,-24.3,1.12,'#0e2f3f');
-    quad4([-4.5,1.4,-29.9],[-4.5,2.3,-29.9],[-1.2,0.2,-23.4],[-1.2,0.05,-23.4],'#2a2417');   // sun shafts
-    quad4([4.5,1.4,-29.9],[4.5,2.3,-29.9],[1.2,0.2,-23.4],[1.2,0.05,-23.4],'#2a2417');
+    s.shafts = [];
+    var sh1 = inst(P.sunShaft(true), [-4.2, 0, -29.8], 0, { label: 'shaft', kind: 'shaft' }); sh1.state = 'on';
+    var sh2 = inst(P.sunShaft(true), [4.2, 0, -29.8], Math.PI, { label: 'shaft', kind: 'shaft' }); sh2.state = 'on';
+    s.insts.push(sh1, sh2); s.shafts.push(sh1, sh2);
     // ---------------- REACTOR deck (y=-7) ----------------
     floor(-12,16,12,34,-7,'#12161f');
     wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
@@ -854,8 +856,8 @@
     // the alcove + the figure
     floor(6,34,10,36.5,-7,'#0e1219'); wallZ(36.5,6,10,-7,-3.4); wallX(6,34,36.5,-7,-3.4); wallX(10,34,36.5,-7,-3.4);
     C.addQuadZ(m,6.6,-6.6,9.4,-3.8,36.3,'#141033',false);   // violet backlight
-    var fig=inst(P.figure(), [8,-7,35.6], Math.PI, { label:'figure', kind:'figure', state:'still' });
-    s.insts.push(fig); s.fig=fig;
+    var fig=inst(P.figure(), [8,-7,35.6], Math.PI, { label:'figure', kind:'figure' });
+    fig.state='still'; s.figWait=fig; s.fig=null;
     // two crew-log terminals
     s.logs=[{x:3.2,z:27.4,head:'STATION LOG 01 // CMDR. E. ASHE',text:'DAY 212 - Resupply skiff away on schedule. Erebus holds 41 souls.\\nDr. Vann insists the survey array is reading a structured return from\\ninside the storm. Probably instrument nois…',shown:false},{x:1.8,z:-26.2,head:'STATION LOG 04 // FINAL ENTRY',text:'DAY 244 - If anyone reads this: do not answer it.\\nIt learned the crew from the archive and it wears them well.\\nIt is very patient and very polite and it is standing behi-\\n[ENTRY…',shown:false},{x:22,z:-12.6,head:'MEDICAL LOG 02 // DR. I. OKONKWO, CMO',text:'DAY 236 - Third crewman this week reporting the same dream. Identical detail, identical order: the corridor, the door, the light going out. Prescribing rest. Logging it as shared stress response.',shown:false},{x:20,z:-13.2,y:5.5,head:'ARCHIVE QUERY LOG 03 // ARCHIVIST R. TAN',text:'DAY 240 - Query anomaly. 3,118 files accessed between 03:00 and 03:04 station time. No crew awake. No process logged. The files were all personnel records. Every one of them was read.',shown:false}];
     C.addBox(m,3.2,1.05,27.9,0.7,1.3,0.16,'#0c1a28',{noBottom:true});
@@ -863,7 +865,7 @@
     C.meshBounds(m); C.anchorize(m, 0.05, 61, 8);
     s.insts.unshift(inst(m, [0,0,0], 0, { label: 'station', kind: 'static' }));
     // ---------------- director (once-each ghost beats) ----------------
-    s._dir = { black:false, phase:0, pt:0, fig:false };
+    s._dir = { black:false, phase:0, pt:0, fig:false, figIn:false, med:false, day:true, clankAt:8 };
     s.update = function (game) {
       var p = game.player.pos, d = s._dir, t = game.time || 0;
       var dtv = Math.min(0.06, t - (s._tT === undefined ? t : s._tT)); s._tT = t;
@@ -874,6 +876,26 @@
       if (!d.black && p[1] < -4 && p[2] > 15){ d.black=true; d.phase=1; d.pt=t; game.emit('powerdown'); swapEmg('dead'); game.fx.flash=0.5; game.fx.flashCol='#02030a'; }
       if (d.black && d.phase===1 && t-d.pt>0.9){ d.phase=2; game.emit('alarm'); swapEmg('red'); }
       if (d.black && d.phase===2 && t-d.pt>3.4){ d.phase=3; game.emit('whisper'); swapEmg('half'); }
+      // med bay first entry: the cabinet door swings (ghost #1)
+      if (!d.med && p[0] > 15 && p[0] < 29 && p[2] > -14 && p[2] < -2 && Math.abs(p[1]) < 1.5) {
+        d.med = true; game.emit('creak');
+        s.cab.state = 'open'; s.cab.mesh = P.cabDoor(true);
+        s.cab.glyphEpoch = (s.cab.glyphEpoch | 0) + 1; s.cab.reResolve = 1; s.cab.loadT = 0;
+      }
+      // blackout dims the whole station's air; half power lifts it partly
+      if (d.black && d.phase === 1) { s.fog.col = '#03040a'; s.fog.far = 26; }
+      if (d.black && d.phase === 3 && s.fog.far < 40) { s.fog.col = '#060a13'; s.fog.far = 40; }
+      // the bridge light columns follow the sun
+      var dayNow = Math.sin(t * (Math.PI * 2 / 240)) * 0.45 + 0.12 > 0.1;
+      if (dayNow !== d.day) { d.day = dayNow;
+        for (var si2 = 0; si2 < s.shafts.length; si2++) { var sh3 = s.shafts[si2];
+          sh3.state = dayNow ? 'on' : 'off'; sh3.mesh = P.sunShaft(dayNow); sh3.loadT = 0; } }
+      // random metal knocks, somewhere in the hull
+      if (t > d.clankAt) { d.clankAt = t + 6 + ((t * 977) % 8); game.emit('clank'); }
+      // the figure fades IN when you commit to the alcove...
+      if (s.figWait && !d.figIn && Math.hypot(p[0] - 8, p[2] - 35.6) < 8 && p[1] < -4) {
+        d.figIn = true; s.figWait.loadT = 0; s.insts.push(s.figWait); s.fig = s.figWait; s.figWait = null;
+      }
       // the figure dissolves on approach
       if (!d.fig && s.fig && Math.hypot(p[0]-8,p[2]-35.6)<2.3 && p[1]<-4){ d.fig=true; game.emit('whisper');
         s.fig.reResolve=1; s.fig.glyphEpoch=(s.fig.glyphEpoch|0)+1; s.fig._goneAt=t+0.55; }

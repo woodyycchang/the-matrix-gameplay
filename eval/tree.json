@@ -406,13 +406,15 @@
    "type": "BRANCH",
    "why": "賽博龐克巨塔站体: erebus分支跨引擎移植为关键词主题",
    "status": "PENDING",
-   "evidence": "E0-E4机器侧全FIXED(817绿); 待E5手感",
+   "evidence": "E0-E4+G1-G4全FIXED(830绿); 待E5手感",
    "priors": [
     "ROOT/EREBUS/E1-skeleton",
     "ROOT/EREBUS/E2-atmosphere",
     "ROOT/EREBUS/E3-wordchain",
     "ROOT/EREBUS/E4-courts",
-    "ROOT/EREBUS/E5-feel"
+    "ROOT/EREBUS/E5-feel",
+    "ROOT/EREBUS/G12-wings-balcony",
+    "ROOT/EREBUS/G34-director-ambience"
    ]
   },
   {
@@ -449,6 +451,20 @@
    "why": "手感叶",
    "status": "PENDING",
    "evidence": ""
+  },
+  {
+   "path": "ROOT/EREBUS/G12-wings-balcony",
+   "type": "UNIT",
+   "why": "平价一环:四真房+露台环4.6/穹顶12.6归正+四日志",
+   "status": "FIXED",
+   "evidence": "51e1d00: 817->820, 轴向虚空坠井顺手抓获"
+  },
+  {
+   "path": "ROOT/EREBUS/G34-director-ambience",
+   "type": "UNIT",
+   "why": "平价二环:柜摆鬼/人影两段式/断电雾潜/光柱随日/station床+随机敲击",
+   "status": "FIXED",
+   "evidence": "本提交: 820->830, 法庭全节拍在案"
   }
  ]
 }

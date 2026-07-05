@@ -240,6 +240,15 @@
     return m;
   };
 
+  P.sunShaft = function (on) { // bridge viewport light column: day on, night off
+    var m = C.newMesh();
+    var cc = on ? '#3a3220' : '#0b0d13';
+    var b = m.v.length; m.v.push([-0.35, 1.4, 0], [-0.35, 2.3, 0], [2.9, 0.2, 6.4], [2.9, 0.05, 6.4]);
+    C.addFace(m, [b, b + 1, b + 2, b + 3], cc);
+    C.meshBounds(m);
+    return m;
+  };
+
   P.cabDoor = function (open) { // med-bay cabinet door: shut, or swung open (ghost)
     var m = C.newMesh();
     C.addBox(m, 0, 0, open ? -0.36 : 0, 0.05, 0.95, 0.78, '#232a38');
