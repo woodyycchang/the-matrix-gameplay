@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0454</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0501</span></div>
 </div>
 
 <script>
@@ -1910,7 +1910,7 @@
   // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
   // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
   //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 0.24, TURBO_STEER: 0.17, EYE: 1.34,
+  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, PHI_MAX: 0.42, ROLL_RATE: 2.2, G: 9.81, VMIN_TURN: 5, LEAN_VGATE: 8, CS_T: 0.12, CS_A: 0.05, EYE: 1.34,
              TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
 
   Game.prototype.mountBike = function (it) {
@@ -1968,17 +1968,28 @@
     // 3.4 m lanes vs the branch's 10 m. Hands off -> gentle self-straighten.
     var sTgt = C.clamp(steerIn, -1.4, 1.4);
     bk.sSm = (bk.sSm || 0) + (sTgt - (bk.sSm || 0)) * Math.min(1, (Math.abs(sTgt) > Math.abs(bk.sSm || 0) ? 9 : 12) * dt);
-    // KINEMATIC CARVE: rotation comes FROM rolling - yawRate = v/L * tan(steer).
-    // Standing still you cannot rotate at all; the wheels are the leverage and
-    // the path is the arc. The middle-point spin is physically abolished.
-    var steerAng = bk.sSm * (bk.boosting ? B.TURBO_STEER : B.STEER);
-    p.yaw += (bk.speed / 30) * Math.tan(steerAng) * dt;
+    // REAL MOTORCYCLE PHYSICS (balanced-turn law, production form):
+    // input sets a TARGET LEAN; roll approaches it at a limited roll rate
+    // (the gyro smoothing); the LEAN then makes the turn:
+    //   yawRate = g * tan(lean) / v    [Bosch: tan(lean) = v*yawRate/g]
+    // Same lean, more speed = WIDER arc - lean deeper or slow down, like a
+    // real bike. Walking pace gates the lean itself; a 0.12 s countersteer
+    // flick seasons the entry.
+    var leanTgt = C.clamp(bk.sSm, -1, 1) * B.PHI_MAX * Math.min(1, bk.speed / B.LEAN_VGATE);
+    var dphi = C.clamp(leanTgt - bk.lean, -B.ROLL_RATE * dt, B.ROLL_RATE * dt);
+    if ((bk._csDir || 0) === 0 && Math.abs(bk.sSm) > 0.35 && Math.abs(bk.lean) < 0.04 && bk.speed > 6) {
+      bk._csDir = bk.sSm > 0 ? 1 : -1; bk._csT = B.CS_T;   // the entry flick begins
+    }
+    bk.lean += dphi;
+    if (Math.abs(bk.sSm) < 0.1 && Math.abs(bk.lean) < 0.02) bk._csDir = 0;
+    var yawRate = B.G * Math.tan(bk.lean) / Math.max(bk.speed, B.VMIN_TURN);
+    if ((bk._csT || 0) > 0) { bk._csT -= dt; p.yaw += -(bk._csDir || 0) * (B.CS_A / B.CS_T) * dt; }
+    p.yaw += yawRate * dt;
     if (sc.infinite) {
       p.yaw = C.clamp(p.yaw, -0.17, 0.17);   // LEAN-CARVE: ~20\u00b0 max nose angle - a held turn banks and arcs, never pivots sideways
       if (Math.abs(steerIn) < 0.04 || bk.speed < 1.2) p.yaw += -p.yaw * Math.min(1, 1.2 * dt);   // hands off OR stopped: square up to the axis
     }
-    var leanT = C.clamp(bk.sSm, -1, 1) * 0.95 * Math.min(1, bk.speed / (B.MAX * 0.85));
-    bk.lean += (leanT - bk.lean) * Math.min(1, (Math.abs(bk.sSm) > 0.05 ? 8 : 4) * dt);   // snap in, ease out
+
     // longitudinal — roll-on with diminishing accel near vmax; turbo lifts the cap and boosts accel
     var maxv = bk.boosting ? B.BOOST : B.MAX;
     if (thr) {
@@ -2324,7 +2335,7 @@
       eyeT = C.lerp(0.34, EYE, k); rollT = C.lerp(1.25, 0, k) + Math.sin(this._riseT * 9) * 0.05 * (1 - k);
     } else {
       eyeT = EYE; rollT = 0;
-      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.24; }   // the bank is VISIBLE: ~23\u00b0 at full lean
+      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.55; }   // display = physical roll * 0.55 (~13 deg at full lean)   // the bank is VISIBLE: ~23\u00b0 at full lean
       if (this.shake > 0) { this.shake = Math.max(0, this.shake - 2.4 * dt); rollT += (Math.random() - 0.5) * this.shake * 0.22; eyeT += (Math.random() - 0.5) * this.shake * 0.08; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
