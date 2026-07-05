@@ -481,6 +481,63 @@
    "why": "终屏色板重调:采样他家成片像素而非材质表;雾曲线对齐FogExp2;Rig C自拍双机位目审",
    "status": "FIXED",
    "evidence": "本提交: 墙#2e3a50对锚#2a364b/地青洗#28404f/CY AM OR提饱和/雾7-58; our_rotunda与our_reactor自拍均入他家色族; 830绿保持"
+  },
+  {
+   "path": "ROOT/EPANG",
+   "type": "BRANCH",
+   "why": "阿房宮: epang分支跨引擎移植为关键词主题",
+   "status": "PENDING",
+   "evidence": "E0勘测入册(eval/epang-port.md); E1-E6排程",
+   "priors": [
+    "ROOT/EPANG/E1-skeleton",
+    "ROOT/EPANG/E2-sky-props",
+    "ROOT/EPANG/E3-wordchain",
+    "ROOT/EPANG/E4-quotes-wading",
+    "ROOT/EPANG/E5-courts",
+    "ROOT/EPANG/E6-feel"
+   ]
+  },
+  {
+   "path": "ROOT/EPANG/E1-skeleton",
+   "type": "UNIT",
+   "why": "宫门/前庭/前殿朱柱/歌舞两翼/空中複道y5/藏宝/双川真涉水/龙桥/回廊",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EPANG/E2-sky-props",
+   "type": "UNIT",
+   "why": "epang昼夜天+蜀山剪影;龙首/灯笼/铜鼎",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EPANG/E3-wordchain",
+   "type": "UNIT",
+   "why": "六件套+chip12",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EPANG/E4-quotes-wading",
+   "type": "UNIT",
+   "why": "入区賦文打字机+splash",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EPANG/E5-courts",
+   "type": "UNIT",
+   "why": "八点支撑/穿墙/引言/涉水/天算子/零NaN/词",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EPANG/E6-feel",
+   "type": "UNIT",
+   "why": "手感叶+像素回执自拍",
+   "status": "PENDING",
+   "evidence": ""
   }
  ]
 }
