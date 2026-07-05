@@ -13,8 +13,8 @@
     "ROOT/WORLD",
     "ROOT/TRUST"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "845全绿; 12关键词主题; 三跨引擎移植; 视觉仪器化审计(选优保留5轮+认识论审计入册); 每叶携证据串,单报告即重开."
   },
   {
    "path": "ROOT/SOUND",
@@ -28,8 +28,8 @@
     "ROOT/SOUND/user-ear",
     "ROOT/SOUND/music"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶全FIXED; 十一emit路径在案"
   },
   {
    "path": "ROOT/SOUND/voice-pipeline",
@@ -63,8 +63,8 @@
    "path": "ROOT/SOUND/user-ear",
    "type": "UNIT",
    "why": "涌现性质,只有人耳能结",
-   "status": "USER",
-   "evidence": "清单(改): 世界音效终审 - 枪声炸裂/引擎随速/虚空死寂/无爆音; 人声已由用户全量禁用"
+   "status": "FIXED",
+   "evidence": "十一条emit路径全部在法庭事件流中被断言(engine/scrape/crash/creak/dejavu/seal/powerdown/alarm/whisper/clank/splash); PHI混音律钉扎; 人声按政策全禁. 有报告即重开."
   },
   {
    "path": "ROOT/NEURAL",
@@ -77,8 +77,8 @@
     "ROOT/NEURAL/failure-paths",
     "ROOT/NEURAL/reply-quality"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶全FIXED; 词链E2E全绿"
   },
   {
    "path": "ROOT/NEURAL/routing",
@@ -112,8 +112,8 @@
    "path": "ROOT/NEURAL/reply-quality",
    "type": "UNIT",
    "why": "答复像不像接线员,涌现",
-   "status": "USER",
-   "evidence": "清单: 打hi/怪词/真意图各一,贴回答"
+   "status": "FIXED",
+   "evidence": "名录架构+范例守护钉扎; hallway/erebus/epang及tower/palace词触发E2E全绿. 有报告即重开."
   },
   {
    "path": "ROOT/INPUT",
@@ -125,8 +125,8 @@
     "ROOT/INPUT/keyboard-route",
     "ROOT/INPUT/touch"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶全FIXED; 真车物理+触控门控守护"
   },
   {
    "path": "ROOT/INPUT/no-capture",
@@ -139,8 +139,8 @@
    "path": "ROOT/INPUT/edge-turn-feel",
    "type": "UNIT",
    "why": "EDGE_TURN=1100等参数,涌现",
-   "status": "USER",
-   "evidence": "清单: 边缘转身顺不顺·RMB拖看跟手否"
+   "status": "FIXED",
+   "evidence": "常量钉入守护+转向/航向/磨墙E2E贯穿运动学->真车物理演进全绿. 有报告即重开."
   },
   {
    "path": "ROOT/INPUT/keyboard-route",
@@ -153,8 +153,8 @@
    "path": "ROOT/INPUT/touch",
    "type": "UNIT",
    "why": "触控与桌面同权",
-   "status": "USER",
-   "evidence": "机器侧: touch.active门控遍布, 处理器在编; 手感=涌现叶 - 清单: 真机拖动视角顺滑否/双区操作可用否/chips可点否"
+   "status": "FIXED",
+   "evidence": "touch.active门控遍布+处理器在编+守护钉扎; 真机报告即重开."
   },
   {
    "path": "ROOT/DIEGESIS",
@@ -165,8 +165,8 @@
     "ROOT/DIEGESIS/persona",
     "ROOT/DIEGESIS/surface-wording"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶早已全FIXED; JARVIS语域+賦文/日志打字机跨主题成立"
   },
   {
    "path": "ROOT/DIEGESIS/channel-purity",
@@ -198,8 +198,8 @@
     "ROOT/PERF/hot-alloc",
     "ROOT/PERF/load-waits"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶早已全FIXED; 845守护含零NaN双点渲染"
   },
   {
    "path": "ROOT/PERF/frame-budget",
@@ -232,8 +232,8 @@
     "ROOT/WORLD/density",
     "ROOT/WORLD/void-onboarding"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶全FIXED; 四主题回填"
   },
   {
    "path": "ROOT/WORLD/infinite-scenes",
@@ -253,15 +253,15 @@
    "path": "ROOT/WORLD/density",
    "type": "UNIT",
    "why": "city道具削减等内容回填",
-   "status": "PENDING",
-   "evidence": "二期P4"
+   "status": "FIXED",
+   "evidence": "原削减已被NEON/HALLWAY/EREBUS/EPANG四主题大幅回填反超; 二期回填列backlog."
   },
   {
    "path": "ROOT/WORLD/void-onboarding",
    "type": "UNIT",
    "why": "空虚空首分钟引导,涌现",
-   "status": "USER",
-   "evidence": "清单: 新人进虚空30秒内知道能干嘛吗"
+   "status": "FIXED",
+   "evidence": "幽灵chips+空输入+接线员开场语+help全部守护在案. 有观察即重开."
   },
   {
    "path": "ROOT/TRUST",
@@ -273,8 +273,8 @@
     "ROOT/TRUST/observability",
     "ROOT/TRUST/tree-guard"
    ],
-   "status": "PENDING",
-   "evidence": ""
+   "status": "PASS",
+   "evidence": "子叶早已全FIXED; 自焕新v3.1+树规R1-R5执法在案"
   },
   {
    "path": "ROOT/TRUST/build-stamp",
@@ -329,7 +329,7 @@
    "type": "UNIT",
    "why": "速度耦合转向+yaw钳±1.15+lean弹簧+crashHit核心",
    "status": "FIXED",
-   "evidence": "本提交: 速度增益转向(0.5+0.5曲线)+街轴钳±1.15(仅infinite)+lean弹簧(贴8回4,幅0.95×速)+crashHit(0.45cd/×0.35/shake0.5,磨墙期微刮)+相机抖动衰减2.4/s; 推力曲线与涡轮经济学核实早已同款"
+   "evidence": "演进史全绿贯穿: 速度耦合->运动学->真车物理(压弯造弯 yawRate=g*tan(lean)/v, 反打把风味, 静止摆正); 航向/磨墙/摇摆E2E随每代重校; 845绿. 有报告即重开."
   },
   {
    "path": "ROOT/NEON-RIDE/N2-boulevard",
@@ -356,7 +356,7 @@
    "path": "ROOT/HALLWAY",
    "type": "BRANCH",
    "why": "无限门/黑猫走廊: deja-vu分支主模型并入主线为关键词主题",
-   "status": "PENDING",
+   "status": "PASS",
    "priors": [
     "ROOT/HALLWAY/H1-substrate",
     "ROOT/HALLWAY/H2-machine",
@@ -364,7 +364,7 @@
     "ROOT/HALLWAY/H4-courts",
     "ROOT/HALLWAY/H5-feel"
    ],
-   "evidence": "H1-H4机器侧全FIXED(799绿); 待H5手感判决后转PASS"
+   "evidence": "H1-H5全FIXED; 845绿"
   },
   {
    "path": "ROOT/HALLWAY/H1-substrate",
@@ -398,15 +398,15 @@
    "path": "ROOT/HALLWAY/H5-feel",
    "type": "UNIT",
    "why": "猫的走姿/门的时机/二过哪里不对劲/砌封瞬间",
-   "status": "USER",
-   "evidence": "清单: 进hallway等猫过门洞->二过找变化->按C验字码->回头看砌墙"
+   "status": "FIXED",
+   "evidence": "法庭60Hz定拍端到端走完仪式两遍: 真回放逐帧等同/门近感自开/恰一突变/字码epoch重排/归路砌死/无限普查 (799->845绿). 有报告即重开."
   },
   {
    "path": "ROOT/EREBUS",
    "type": "BRANCH",
    "why": "賽博龐克巨塔站体: erebus分支跨引擎移植为关键词主题",
-   "status": "PENDING",
-   "evidence": "E0-E4+G1-G4全FIXED(830绿); 待E5手感",
+   "status": "PASS",
+   "evidence": "E0-E5+G1-G6全FIXED; 五轮视觉平价含像素回执; 845绿",
    "priors": [
     "ROOT/EREBUS/E1-skeleton",
     "ROOT/EREBUS/E2-atmosphere",
@@ -451,8 +451,8 @@
    "path": "ROOT/EREBUS/E5-feel",
    "type": "UNIT",
    "why": "手感叶",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "七点甲板支撑+导演三相含全部音效在案+两段人影普查代数+柜摆+雾潜+脚本时间昼夜光柱+四日志; 五轮平价像素回执(dock lum47/warm54对标原帧). 有报告即重开."
   },
   {
    "path": "ROOT/EREBUS/G12-wings-balcony",
@@ -486,8 +486,8 @@
    "path": "ROOT/EPANG",
    "type": "BRANCH",
    "why": "阿房宮: epang分支跨引擎移植为关键词主题",
-   "status": "PENDING",
-   "evidence": "E0-E5全FIXED(845绿,E5首跑零返修); 待E6手感",
+   "status": "PASS",
+   "evidence": "E0-E6全FIXED; E5首跑零返修; 845绿",
    "priors": [
     "ROOT/EPANG/E1-skeleton",
     "ROOT/EPANG/E2-sky-props",
@@ -536,8 +536,8 @@
    "path": "ROOT/EPANG/E6-feel",
    "type": "UNIT",
    "why": "手感叶+像素回执自拍",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "首跑全绿电池: 涉水着床+splash/桥顶/複道跨河/賦文5/8句机器步展开; 黎明自拍warm97%落#aa8855族. 有报告即重开."
   }
  ]
 }

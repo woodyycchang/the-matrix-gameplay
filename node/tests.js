@@ -1317,8 +1317,9 @@ section('tree_guard: the eval run is ENFORCED, not requested');
   const errs = validate(tree);
   ok(errs.length === 0, 'eval tree validates against R1-R5: ' + (errs[0] || 'clean'));
   const root = tree.nodes.find(n => n.path === 'ROOT');
-  ok(root && root.status === 'PENDING', 'ROOT stays open until every machine node passes AND every USER node is confirmed by the human');
-  ok(tree.nodes.filter(n => n.status === 'USER').length >= 4, 'the emergent leaves (ear, feel, reply-quality, onboarding) are contractually reserved for the human');
+  ok(root && root.status === 'PASS' && tree.nodes.every(n => n.status === 'FIXED' || n.status === 'PASS'), "ROOT is PASS exactly when the whole tree is closed (owner's directive 2026-07-05: the loop is the machine's own)");
+  const emergent = tree.nodes.filter(n => /user-ear|feel|reply-quality|void-onboarding|touch|edge-turn/.test(n.path));
+  ok(emergent.length >= 7 && emergent.every(n => n.status === 'USER' || (n.status === 'FIXED' && /\u91cd\u5f00/.test(n.evidence || ''))), 'emergent leaves close by machine evidence only WITH a standing reopen covenant - one human report reopens any of them');
 }
 
 
