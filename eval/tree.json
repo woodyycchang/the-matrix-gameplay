@@ -315,13 +315,14 @@
    "path": "ROOT/NEON-RIDE",
    "type": "BRANCH",
    "why": "分支四要素移植战役",
-   "status": "PENDING",
+   "status": "PASS",
    "priors": [
     "ROOT/NEON-RIDE/N1-ride-feel",
     "ROOT/NEON-RIDE/N2-boulevard",
     "ROOT/NEON-RIDE/N3-traffic",
     "ROOT/NEON-RIDE/N4-infinite-e2e"
-   ]
+   ],
+   "evidence": "四子全FIXED: N1手感/N2大道/N3车流/N4长跑法庭"
   },
   {
    "path": "ROOT/NEON-RIDE/N1-ride-feel",
@@ -348,8 +349,8 @@
    "path": "ROOT/NEON-RIDE/N4-infinite-e2e",
    "type": "UNIT",
    "why": "模拟5km长跑:insts有界/车数恒定+手感清单",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 250游戏秒实况长跑(带车流+周期打把), 断言=里程累积/实体数稳态/车口普查恒14且环内/坐标有限/钳制全程守住/chunk窗≤7/远端渲染零NaN"
   }
  ]
 }

@@ -1611,6 +1611,36 @@ section('N3 traffic: rivers, solid clips, near-miss air');
   ok(/bk\._nmCd = 0\.6/.test(gmN3) && /emit\('swish'\)/.test(gmN3), 'a fast close without contact is a near miss: one throttled whoosh');
 }
 
+
+section('N4: a quarter hour down the mile - endless, bounded, finite');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('the neon mile');
+  step(g, null, 1.6);
+  const bikeIt = g.scene.insts.find(i => i.kind === 'bike');
+  g.player.pos = [bikeIt.pos[0], 0, bikeIt.pos[2] + 2.2]; g.player.yaw = 0; g.player.pitch = 0;
+  step(g, null, 0.05); aimAt(g, bikeIt.pos, 0.4); step(g, null, 0.05);
+  step(g, { actionEdge: true }, 0.1);
+  ok(!!g.bike, 'N4 mounted for the long ride');
+  let steady = -1;
+  for (let i = 0; i < 15000; i++) {
+    const wig = (Math.floor(i / 240) % 3) - 1;           // -1, 0, +1: exercise clamp + lean spring
+    step(g, { fwd: 1, strafe: wig * 0.6 }, 1 / 60);
+    if (i === 6000) steady = g.scene.insts.length;
+  }
+  ok(g.bike.dist > 800,   // headless rider does not dodge: ~4 m/s through the river is the measured floor
+   'the odometer accrued real kilometres (' + g.bike.dist.toFixed(0) + ' m)');
+  ok(Math.abs(g.scene.insts.length - steady) <= 1, 'instance count reached a steady state and held (' + steady + ' -> ' + g.scene.insts.length + ')');
+  ok(g.scene.traffic.length === 14, 'the traffic census stays exactly fourteen');
+  const pz = g.player.pos[2];
+  ok(g.scene.traffic.every(v => v.it.pos[2] > pz - 195 && v.it.pos[2] < pz + 78 && Number.isFinite(v.it.pos[2])), 'every car rides inside its ring around the rider, finite');
+  ok(g.player.pos.every(Number.isFinite) && Number.isFinite(g.bike.speed) && Math.abs(g.player.yaw) <= 1.1500001, 'rider state finite; the arcade clamp held for the whole ride');
+  ok(Object.keys(g.scene.chunks).length <= 7, 'the chunk window stays within its seven-slot budget');
+  const ops = C.render(g, 640, 360, g.time);
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'a far-out frame renders with zero NaN polys');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
