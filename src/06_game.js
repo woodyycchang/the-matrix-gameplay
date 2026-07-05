@@ -584,6 +584,13 @@
 
   Game.prototype.moveBike = function (input, dt) {
     var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
+    var self = this;
+    function crashHit(strength) {                    // shared unit (branch-ported)
+      bk.crashCd = 0.45;
+      bk.speed *= 0.35;
+      self.shake = Math.max(self.shake || 0, strength);
+      self.emit('impactSmall');
+    }
     // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
     p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
     var wantTurbo = !!input.sprint;
@@ -641,14 +648,28 @@
     }
     bk.crashCd = Math.max(0, (bk.crashCd || 0) - dt);
     if (hitWall) {
-      if (bk.crashCd <= 0) {                 // unified crashHit (branch-ported): cooldown, hard cut, shake
-        bk.crashCd = 0.45;
-        bk.speed *= 0.35;
-        this.shake = Math.max(this.shake || 0, 0.5);
-      } else bk.speed *= 0.985;              // grinding inside cooldown only scrubs
+      if (bk.crashCd <= 0) crashHit(0.5);
+      else bk.speed *= 0.985;                // grinding inside cooldown only scrubs
       // throttle the scrape sound: at most one every 0.15s, so grinding the wall
       // can't stack dozens of hisses into a roar
       if (this.time - (bk._lastScrape || -1) > 0.15) { this.emit('scrape'); bk._lastScrape = this.time; }
+    }
+    // traffic is solid; a clip is a clip (branch-ported)
+    var tf = sc.traffic;
+    if (tf) {
+      bk._nmCd = Math.max(0, (bk._nmCd || 0) - dt);
+      for (var ti = 0; ti < tf.length; ti++) {
+        var tv = tf[ti];
+        var dxv = p.pos[0] - tv.it.pos[0], dzv = p.pos[2] - tv.it.pos[2];
+        var adx = Math.abs(dxv), adz = Math.abs(dzv);
+        if (adz < 2.5 && adx < 1.55) {
+          p.pos[0] = tv.it.pos[0] + (dxv >= 0 ? 1 : -1) * 1.75;
+          if (bk.crashCd <= 0) crashHit(0.85);
+        } else if (adz < 3.0 && adx < 2.6 && bk._nmCd <= 0 && Math.abs(-bk.speed - tv.dir * tv.speed) > 9) {
+          bk._nmCd = 0.6;                    // near miss: fast air, one throttled whoosh
+          this.emit('swish');
+        }
+      }
     }
     p.pos[1] = sc.groundY;
     bk.dist += Math.abs(bk.speed) * dt;   // odometer — visible proof the road never ends

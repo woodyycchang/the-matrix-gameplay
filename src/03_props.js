@@ -215,6 +215,22 @@
   };
 
   // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
+  P.car = function (hue) { // low street car; nose at +z like every prop front
+    var m = C.newMesh();
+    var hull = '#0b0b16', glass = '#141a2e';
+    C.addBox(m, 0, 0.34, 0, 1.62, 0.52, 3.5, hull);                 // body
+    C.addBox(m, 0, 0.74, -0.25, 1.30, 0.34, 1.7, glass);            // cabin
+    C.addQuadY(m, -0.7, -1.6, 0.7, 1.6, 0.055, hue);                // neon underglow
+    C.addBox(m, -0.52, 0.42, 1.74, 0.28, 0.10, 0.06, '#f5f7ff');    // headlights
+    C.addBox(m, 0.52, 0.42, 1.74, 0.28, 0.10, 0.06, '#f5f7ff');
+    C.addBox(m, -0.52, 0.42, -1.74, 0.28, 0.10, 0.06, '#ff2b55');   // taillights
+    C.addBox(m, 0.52, 0.42, -1.74, 0.28, 0.10, 0.06, '#ff2b55');
+    C.addBox(m, 0, 0.16, 1.1, 1.5, 0.3, 0.5, '#07070d');            // wheel masses
+    C.addBox(m, 0, 0.16, -1.1, 1.5, 0.3, 0.5, '#07070d');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.bike = function () { // original naked street bike; nose at +z like every prop front
     var m = C.newMesh();
     var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';

@@ -341,8 +341,8 @@
    "path": "ROOT/NEON-RIDE/N3-traffic",
    "type": "UNIT",
    "why": "P.car对向车流+环形回收+实体碰撞+近擦",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: P.car(头白尾红+霓虹底光), 14车/6道(±1.6/5.0/8.4)左迎右顺 6.0-10.9, 环形回收(+60后掷-150/-170前掷+45), 实体碰撞推离+crashHit(0.85,墙0.5共用单元), 近擦0.6s节流swish"
   },
   {
    "path": "ROOT/NEON-RIDE/N4-infinite-e2e",

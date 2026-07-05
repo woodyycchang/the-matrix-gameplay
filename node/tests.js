@@ -790,6 +790,7 @@ section('motorcycle nitrous (finite turbo, ported from the branch CFG)');
   ok(!g.bike.boosting, 'turbo will not engage below the speed gate');
 
   // get up to speed, then hold turbo — it should engage and drain
+  if (g.scene && g.scene.traffic) g.scene.traffic.length = 0;   // physics isolation: the river has its own guards
   for (let i = 0; i < 60; i++) step(g, { fwd: 1 }, 1 / 60);
   const tBefore = g.bike.turbo;
   for (let i = 0; i < 30; i++) step(g, { fwd: 1, sprint: true }, 1 / 60);
@@ -1582,7 +1583,7 @@ section('N1 ride-feel: the branch equations live natively');
   ok(/steerCouple = 0\.5 \+ 0\.5 \* C\.clamp\(bk\.speed/.test(gmN), 'steering authority grows with speed (branch shape), not the inverse');
   ok(/if \(sc\.infinite\) p\.yaw = C\.clamp\(p\.yaw, -1\.15, 1\.15\)/.test(gmN), 'the arcade clamp: you ride DOWN the street');
   ok(/Math\.abs\(steerIn\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4, exactly the branch rhythm');
-  ok(/bk\.crashCd = 0\.45;/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /this\.shake = Math\.max\(this\.shake \|\| 0, 0\.5\)/.test(gmN), 'crashHit unified: cooldown, hard cut, shake');
+  ok(/function crashHit\(strength\)/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /self\.shake = Math\.max\(self\.shake \|\| 0, strength\)/.test(gmN), 'crashHit is one shared unit: cooldown, hard cut, shake');
 }
 
 
@@ -1594,6 +1595,20 @@ section('N2 boulevard: twice as wide, dressed like the branch');
   ok(/-6\.95, z1, -6\.7/.test(scN) && /6\.7, z1, 6\.95/.test(scN), 'twin cyan dividers mark the outer lanes');
   ok(/box\(\[-16\.5, 0, -1e6\], \[-9\.9, 14, 1e6\]\)/.test(scN), 'the walls retreated with the width');
   ok(/'#2b0b3c'/.test(scN) && /r\(\) < 0\.2 \? '#f5f7ff'/.test(scN), "the branch's facade language: plum doorways and bright sign plates");
+}
+
+
+section('N3 traffic: rivers, solid clips, near-miss air');
+{
+  const fsN3 = require('fs');
+  const prN = fsN3.readFileSync(__dirname + '/../src/03_props.js', 'utf8');
+  const scN3 = fsN3.readFileSync(__dirname + '/../src/04_scenes.js', 'utf8');
+  const gmN3 = fsN3.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  ok(/P\.car = function \(hue\)/.test(prN) && /'#f5f7ff'/.test(prN) && /'#ff2b55'/.test(prN), 'P.car exists with white heads and red tails');
+  ok(/LANES = \[-8\.4, -5\.0, -1\.6, 1\.6, 5\.0, 8\.4\]/.test(scN3) && /lane < 0 \? 1 : -1/.test(scN3), 'six lanes: left flows toward you, right flows with you');
+  ok(/pz \+ 60\) trv\.it\.pos\[2\] = pz - 150/.test(scN3) && /pz - 170\) trv\.it\.pos\[2\] = pz \+ 45/.test(scN3), 'the river ring-recycles around the rider - endless like the road');
+  ok(/crashHit\(0\.85\)/.test(gmN3) && /crashHit\(0\.5\)/.test(gmN3) && /function crashHit\(strength\)/.test(gmN3), 'traffic clips at 0.85, walls at 0.5, one shared unit');
+  ok(/bk\._nmCd = 0\.6/.test(gmN3) && /emit\('swish'\)/.test(gmN3), 'a fast close without contact is a near miss: one throttled whoosh');
 }
 
 // ---------------------------------------------------------------- summary

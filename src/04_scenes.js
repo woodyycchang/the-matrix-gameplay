@@ -298,9 +298,27 @@
     s.colliders.push(box([9.9, 0, -1e6], [16.5, 14, 1e6]));
     s.insts.push(inst(P.lamppost(), [-12.9, 0, -6], 0, { label: 'lamp' }));
     s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
+    // TRAFFIC (branch-ported): six lanes, both flows, ring-recycled around the rider
+    s.traffic = [];
+    var LANES = [-8.4, -5.0, -1.6, 1.6, 5.0, 8.4], carHues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
+    for (var tvi = 0; tvi < 14; tvi++) {
+      var lane = LANES[tvi % 6];
+      var tdir = lane < 0 ? 1 : -1;                    // left flows toward you, right flows with you
+      var itc = inst(P.car(carHues[tvi % 5]), [lane, 0, -20 - tvi * 34], tdir > 0 ? Math.PI : 0, { kind: 'car', label: 'traffic' });
+      s.insts.push(itc);
+      s.traffic.push({ it: itc, dir: tdir, speed: 6 + ((tvi * 37) % 50) / 10 });
+    }
     // chunk manager: keep a window of segments around the rider's z
     s.update = function (game) {
       var pz = game.player.pos[2];
+      // move + ring-recycle the river around the rider
+      var tnow = game.time || 0, dtv = Math.min(0.05, tnow - (s._tT === undefined ? tnow : s._tT)); s._tT = tnow;
+      for (var tri = 0; tri < s.traffic.length; tri++) {
+        var trv = s.traffic[tri];
+        trv.it.pos[2] += trv.dir * trv.speed * dtv;
+        if (trv.it.pos[2] > pz + 60) trv.it.pos[2] = pz - 150 - (tri % 5) * 9;
+        if (trv.it.pos[2] < pz - 170) trv.it.pos[2] = pz + 45 + (tri % 4) * 8;
+      }
       var cur = Math.max(0, Math.round(-pz / NEON_CHUNK));
       var lo = Math.max(0, cur - NEON_BEHIND), hi = cur + NEON_AHEAD;
       // spawn missing chunks in range

@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0407</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0425</span></div>
 </div>
 
 <script>
@@ -586,6 +586,22 @@
   };
 
   // ---------- vehicles & blades (feel constants ported from the author's STREET PROTOCOL) ----------
+  P.car = function (hue) { // low street car; nose at +z like every prop front
+    var m = C.newMesh();
+    var hull = '#0b0b16', glass = '#141a2e';
+    C.addBox(m, 0, 0.34, 0, 1.62, 0.52, 3.5, hull);                 // body
+    C.addBox(m, 0, 0.74, -0.25, 1.30, 0.34, 1.7, glass);            // cabin
+    C.addQuadY(m, -0.7, -1.6, 0.7, 1.6, 0.055, hue);                // neon underglow
+    C.addBox(m, -0.52, 0.42, 1.74, 0.28, 0.10, 0.06, '#f5f7ff');    // headlights
+    C.addBox(m, 0.52, 0.42, 1.74, 0.28, 0.10, 0.06, '#f5f7ff');
+    C.addBox(m, -0.52, 0.42, -1.74, 0.28, 0.10, 0.06, '#ff2b55');   // taillights
+    C.addBox(m, 0.52, 0.42, -1.74, 0.28, 0.10, 0.06, '#ff2b55');
+    C.addBox(m, 0, 0.16, 1.1, 1.5, 0.3, 0.5, '#07070d');            // wheel masses
+    C.addBox(m, 0, 0.16, -1.1, 1.5, 0.3, 0.5, '#07070d');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.bike = function () { // original naked street bike; nose at +z like every prop front
     var m = C.newMesh();
     var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';
@@ -1005,9 +1021,27 @@
     s.colliders.push(box([9.9, 0, -1e6], [16.5, 14, 1e6]));
     s.insts.push(inst(P.lamppost(), [-12.9, 0, -6], 0, { label: 'lamp' }));
     s.insts.push(inst(P.bike(), [1.4, 0, 0], 0, { kind: 'bike', label: 'motorcycle' }));
+    // TRAFFIC (branch-ported): six lanes, both flows, ring-recycled around the rider
+    s.traffic = [];
+    var LANES = [-8.4, -5.0, -1.6, 1.6, 5.0, 8.4], carHues = ['#19e3ff', '#ff2bd6', '#ffd166', '#9fffe0', '#b9a8ff'];
+    for (var tvi = 0; tvi < 14; tvi++) {
+      var lane = LANES[tvi % 6];
+      var tdir = lane < 0 ? 1 : -1;                    // left flows toward you, right flows with you
+      var itc = inst(P.car(carHues[tvi % 5]), [lane, 0, -20 - tvi * 34], tdir > 0 ? Math.PI : 0, { kind: 'car', label: 'traffic' });
+      s.insts.push(itc);
+      s.traffic.push({ it: itc, dir: tdir, speed: 6 + ((tvi * 37) % 50) / 10 });
+    }
     // chunk manager: keep a window of segments around the rider's z
     s.update = function (game) {
       var pz = game.player.pos[2];
+      // move + ring-recycle the river around the rider
+      var tnow = game.time || 0, dtv = Math.min(0.05, tnow - (s._tT === undefined ? tnow : s._tT)); s._tT = tnow;
+      for (var tri = 0; tri < s.traffic.length; tri++) {
+        var trv = s.traffic[tri];
+        trv.it.pos[2] += trv.dir * trv.speed * dtv;
+        if (trv.it.pos[2] > pz + 60) trv.it.pos[2] = pz - 150 - (tri % 5) * 9;
+        if (trv.it.pos[2] < pz - 170) trv.it.pos[2] = pz + 45 + (tri % 4) * 8;
+      }
       var cur = Math.max(0, Math.round(-pz / NEON_CHUNK));
       var lo = Math.max(0, cur - NEON_BEHIND), hi = cur + NEON_AHEAD;
       // spawn missing chunks in range
@@ -1909,6 +1943,13 @@
 
   Game.prototype.moveBike = function (input, dt) {
     var p = this.player, sc = this.scene, cols = sc.colliders, B = C.BIKE, bk = this.bike;
+    var self = this;
+    function crashHit(strength) {                    // shared unit (branch-ported)
+      bk.crashCd = 0.45;
+      bk.speed *= 0.35;
+      self.shake = Math.max(self.shake || 0, strength);
+      self.emit('impactSmall');
+    }
     // look (pitch only via mouse; yaw is driven by steering for the body, but let mouse nudge view)
     p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
     var wantTurbo = !!input.sprint;
@@ -1966,14 +2007,28 @@
     }
     bk.crashCd = Math.max(0, (bk.crashCd || 0) - dt);
     if (hitWall) {
-      if (bk.crashCd <= 0) {                 // unified crashHit (branch-ported): cooldown, hard cut, shake
-        bk.crashCd = 0.45;
-        bk.speed *= 0.35;
-        this.shake = Math.max(this.shake || 0, 0.5);
-      } else bk.speed *= 0.985;              // grinding inside cooldown only scrubs
+      if (bk.crashCd <= 0) crashHit(0.5);
+      else bk.speed *= 0.985;                // grinding inside cooldown only scrubs
       // throttle the scrape sound: at most one every 0.15s, so grinding the wall
       // can't stack dozens of hisses into a roar
       if (this.time - (bk._lastScrape || -1) > 0.15) { this.emit('scrape'); bk._lastScrape = this.time; }
+    }
+    // traffic is solid; a clip is a clip (branch-ported)
+    var tf = sc.traffic;
+    if (tf) {
+      bk._nmCd = Math.max(0, (bk._nmCd || 0) - dt);
+      for (var ti = 0; ti < tf.length; ti++) {
+        var tv = tf[ti];
+        var dxv = p.pos[0] - tv.it.pos[0], dzv = p.pos[2] - tv.it.pos[2];
+        var adx = Math.abs(dxv), adz = Math.abs(dzv);
+        if (adz < 2.5 && adx < 1.55) {
+          p.pos[0] = tv.it.pos[0] + (dxv >= 0 ? 1 : -1) * 1.75;
+          if (bk.crashCd <= 0) crashHit(0.85);
+        } else if (adz < 3.0 && adx < 2.6 && bk._nmCd <= 0 && Math.abs(-bk.speed - tv.dir * tv.speed) > 9) {
+          bk._nmCd = 0.6;                    // near miss: fast air, one throttled whoosh
+          this.emit('swish');
+        }
+      }
     }
     p.pos[1] = sc.groundY;
     bk.dist += Math.abs(bk.speed) * dt;   // odometer — visible proof the road never ends
