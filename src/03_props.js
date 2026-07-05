@@ -240,6 +240,31 @@
     return m;
   };
 
+  P.shuttle = function () { // the docked skiff: fuselage + cone nose along +x, skids, wing, tail, canopy, engine glow
+    var m = C.newMesh();
+    var R = 1.05, L = 5.0, N = 8;
+    for (var i = 0; i < N; i++) {
+      var a0 = i * Math.PI * 2 / N, a1 = (i + 1) * Math.PI * 2 / N;
+      var y0 = 1.45 + Math.cos(a0) * R, z0 = Math.sin(a0) * R;
+      var y1 = 1.45 + Math.cos(a1) * R, z1 = Math.sin(a1) * R;
+      var b = m.v.length; m.v.push([-L/2, y0, z0], [L/2, y0, z0], [L/2, y1, z1], [-L/2, y1, z1]);
+      C.addFace(m, [b, b+1, b+2, b+3], '#4a4640');
+      var b2 = m.v.length; m.v.push([L/2, y0, z0], [L/2 + 1.7, 1.45, 0], [L/2, y1, z1]);
+      C.addFace(m, [b2, b2+1, b2+2], '#2c2a28');
+      var b3 = m.v.length; m.v.push([-L/2, y1, z1], [-L/2, 1.45, 0], [-L/2, y0, z0]);
+      C.addFace(m, [b3, b3+1, b3+2], '#232120');
+    }
+    C.addBox(m, 0, 0.32, -1.15, 4.2, 0.6, 0.42, '#26242a');
+    C.addBox(m, 0, 0.32, 1.15, 4.2, 0.6, 0.42, '#26242a');
+    C.addBox(m, -0.6, 2.35, 0, 1.5, 0.4, 4.2, '#33302c', { noBottom: true });
+    C.addBox(m, -2.2, 2.9, 0, 0.4, 1.3, 1.0, '#2c2a28', { noBottom: true });
+    C.addBox(m, 1.35, 1.95, 0, 1.1, 0.5, 1.15, '#0e141c', { noBottom: true });
+    var e = m.v.length; m.v.push([-L/2 - 0.02, 0.95, -0.55], [-L/2 - 0.02, 1.95, -0.55], [-L/2 - 0.02, 1.95, 0.55], [-L/2 - 0.02, 0.95, 0.55]);
+    C.addFace(m, [e, e+1, e+2, e+3], '#ffb85e');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.sunShaft = function (on) { // bridge viewport light column: day on, night off
     var m = C.newMesh();
     var cc = on ? '#3a3220' : '#0b0d13';

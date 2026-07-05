@@ -74,3 +74,13 @@ Answer: NO in one proven case; MIXED elsewhere; channel outage confirmed live.
 DOCTRINE: eyes propose, instruments judge; stats-first on every frame (colors<6 or top>70% = distrust);
 bare placeholder = declared outage, ASCII map + histogram take the bench. Every visual verdict in this
 log now carries numeric receipts.
+
+### Pass 4 - KEPT (docking bay identity, from the user's side-by-side + branch source)
+- Warm rust walls baked (#4a3e33 base; their steel x work-light read; anchors #52493f/#423529);
+  grey grime-stained tile floor; hazard zones in their exact pair #b07a34/#1a1b20; P.shuttle
+  (fuselage/nose/skids/wing/tail/canopy/engine glow/scorch) + collider; 5 crates (1/3 hazard);
+  fuel hose+pump; gantry crane; ceiling panel field + 2 amber strips + 1 cyan; twin portholes
+  w/ star pinpricks; airlock amber seam + strobe + twin screens; doorFrame white jambs; corridor
+  end light panel; log console.
+- Verdict: dock warm-family coverage and color count judged post-shot (receipts in commit);
+  other rooms regression-checked same shot batch.

@@ -743,23 +743,59 @@
     function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.18,x1,y1,z+0.18); panels('z',x0,x1,y0,y1,z,(cc||ST), z>0); }
     function stripY(x0,z0,x1,z1,y,ccc){ C.addQuadY(m,x0,z0,x1,z1,y,ccc); }
     function quad4(p0,p1,p2,p3,cc){ var b=m.v.length; m.v.push(p0,p1,p2,p3); C.addFace(m,[b,b+1,b+2,b+3],cc); }
+    function ceilQ(x0,z0,x1,z1,y,cc){ quad4([x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],cc); }   // DOWN-facing
     function stair(x0,x1,z0,dz,steps,yA,yB){
       var rise=(yB-yA)/steps;
       for(var i=0;i<steps;i++){ var zz=z0+dz*i*0.55, yy=yA+rise*(i+1);
         col(x0,yy-0.26,Math.min(zz,zz+dz*0.55),x1,yy,Math.max(zz,zz+dz*0.55));
         C.addBox(m,(x0+x1)/2,yy-0.13,zz+dz*0.275,(x1-x0),0.26,0.55,SD,{noBottom:true}); }
     }
-    // ---------------- DOCKING BAY (spawn) ----------------
-    floor(-8,18,8,32,0,FL);
-    wallZ(32,-8,8,0,5.5); wallX(-8,18,32,0,5.5); wallX(8,18,32,0,5.5);
-    wallZ(18,-8,-2,0,5.5); wallZ(18,2,8,0,5.5); wallZ(18,-2,2,3.1,5.5);   // doorway to corridor
-    stripY(-7.5,18.6,7.5,19.0,0.02,'#1c2836'); stripY(-7.5,31.0,7.5,31.4,0.02,'#1c2836');
-    C.addQuadZ(m,-3,0.6,3,3.4,31.8,'#16304a',false);   // airlock plate
-    stripY(-0.35,18.2,0.35,31.6,0.03,AM);              // guide line
+    // ---------------- DOCKING BAY (spawn) - warm rust identity, per the branch ----------------
+    var RW='#4a3e33';   // steel-under-worklight, baked (their M.steel x 0xffcf9a cones)
+    floor(-8,18,8,32,0,'#3c3a3a');
+    wallZ(32,-8,8,0,5.5,RW); wallX(-8,18,32,0,5.5,RW); wallX(8,18,32,0,5.5,RW);
+    wallZ(18,-8,-2,0,5.5,RW); wallZ(18,2,8,0,5.5,RW); wallZ(18,-2,2,3.1,5.5,RW);   // doorway to corridor
+    for (var dz2=18; dz2<32; dz2+=2.0){ for (var dx2=-8; dx2<8; dx2+=2.0){
+      var dg = C.rng(((dx2*61+dz2*97)|0)>>>0);
+      C.addQuadY(m,dx2+0.05,dz2+0.05,Math.min(8,dx2+1.95),Math.min(32,dz2+1.95),0.007,C.scaleHex('#3e3c3c',0.86+dg()*0.24));
+      if (dg() < 0.34) C.addQuadY(m,dx2+0.5+dg()*0.6,dz2+0.4+dg()*0.7,dx2+1.5+dg()*0.4,dz2+1.4+dg()*0.4,0.009,'#2c2a29'); } }
+    for (var hz2=0; hz2<8; hz2++){ var hx=-5+hz2*1.25;
+      C.addQuadY(m,hx,30.3,hx+0.62,31.7,0.011,'#b07a34'); C.addQuadY(m,hx+0.62,30.3,hx+1.25,31.7,0.011,'#1a1b20'); }
+    for (var hz3=0; hz3<6; hz3++){ var hzz=22+hz3*0.9;
+      C.addQuadY(m,-7,hzz,-2.2,hzz+0.45,0.011,'#b07a34'); C.addQuadY(m,-7,hzz+0.45,-2.2,hzz+0.9,0.011,'#1a1b20'); }
+    var skf = inst(P.shuttle(), [-4.4, 0, 26.2], 0, { label: 'skiff', kind: 'shuttle' });
+    s.insts.push(skf); col(-7.3,0,24.9,-1.6,2.4,27.5);
+    C.addQuadY(m,-6.2,25.2,-4.8,26.2,0.010,'#141312'); C.addQuadY(m,-3.8,26.6,-2.6,27.4,0.010,'#161514');
+    C.addBox(m,-7.7,0.32,24.4,1.3,0.5,0.5,'#26242a',{noBottom:true});
+    C.addBox(m,-7.9,0.22,22.6,0.18,0.18,3.4,'#33302c',{noBottom:true});
+    C.addBox(m,-7.94,1.6,20.9,0.3,3.2,0.18,'#33302c',{noBottom:true});
+    var CRT=[[6.2,0.5,29.5,1.5,1.0,1.5,0],[7.1,0.55,27.6,1.3,1.1,1.2,1],[5.4,1.45,29.2,1.0,0.8,1.0,0],[6.8,0.45,20.8,1.4,0.9,1.6,1],[-6.6,0.5,30.6,1.6,1.0,1.3,0]];
+    for (var ci=0; ci<CRT.length; ci++){ var cb=CRT[ci];
+      C.addBox(m,cb[0],cb[1],cb[2],cb[3],cb[4],cb[5], cb[6]? '#8a6228':'#26242a',{noBottom:true});
+      col(cb[0]-cb[3]/2,0,cb[2]-cb[5]/2,cb[0]+cb[3]/2,cb[1]+cb[4]/2,cb[2]+cb[5]/2);
+      if (cb[6]){ C.addQuadZ(m,cb[0]-cb[3]/2+0.05,cb[1]-0.2,cb[0]+cb[3]/2-0.05,cb[1],cb[2]-cb[5]/2-0.012,'#1a1b20',false); } }
+    C.addBox(m,-7.4,2.55,23.4,0.4,5.1,0.4,TR,{noBottom:true}); C.addBox(m,7.4,2.55,23.4,0.4,5.1,0.4,TR,{noBottom:true});
+    C.addBox(m,0,5.15,23.4,15.2,0.36,0.5,TR,{noBottom:true});
+    C.addBox(m,1.6,4.35,23.4,0.07,1.3,0.07,TR,{noBottom:true}); C.addBox(m,1.6,3.6,23.4,0.4,0.3,0.4,'#26242a',{noBottom:true});
+    for (var cz2=18.4; cz2<31.6; cz2+=2.2){ for (var cx2=-7.6; cx2<7.6; cx2+=2.4){
+      ceilQ(cx2,cz2,Math.min(7.6,cx2+2.3),Math.min(31.6,cz2+2.1),5.46,C.scaleHex('#191a1e',0.9+C.rng(((cx2*31+cz2*67)|0)>>>0)()*0.2)); } }
+    ceilQ(-6.5,21.9,6.5,22.3,5.43,'#ffb85e'); ceilQ(-6.5,28.9,6.5,29.3,5.43,'#ffb85e'); ceilQ(-6.5,25.3,6.5,25.55,5.43,'#7bd8e8');
+    for (var ph=0; ph<2; ph++){ var pz=22.5+ph*5.5;
+      C.addQuadX(m,pz,1.5,pz+1.1,2.5,7.79,'#04060c',true);
+      C.addQuadX(m,pz-0.08,1.42,pz+1.18,1.5,7.78,'#141c2c',true); C.addQuadX(m,pz-0.08,2.5,pz+1.18,2.58,7.78,'#141c2c',true);
+      C.addQuadX(m,pz+0.3,1.9,pz+0.36,1.96,7.795,'#cfe0ff',true); C.addQuadX(m,pz+0.7,2.2,pz+0.75,2.25,7.795,'#9fb8e8',true); }
+    C.addQuadZ(m,-3,0.6,3,3.4,31.8,'#20242c',false);
+    C.addQuadZ(m,-0.06,0.4,0.06,3.2,31.78,AM,false);
+    C.addBox(m,0,3.85,31.7,0.7,0.35,0.2,'#26242a',{noBottom:true}); C.addQuadZ(m,-0.25,3.75,0.25,3.98,31.58,'#ffd9a0',false);
+    C.addQuadZ(m,-4.6,1.5,-3.5,2.2,31.79,'#0e3f52',false); C.addQuadZ(m,3.6,1.4,4.5,2.05,31.79,'#0e3f52',false);
+    C.addQuadZ(m,-2.16,0.05,-2.02,2.75,17.9,'#dfe8ea',false); C.addQuadZ(m,2.02,0.05,2.16,2.75,17.9,'#dfe8ea',false);
+    C.addBox(m,3.2,0.5,26.9,1.0,1.0,0.55,'#26242a',{noBottom:true}); col(2.7,0,26.6,3.7,1.0,27.2);
+    C.addQuadZ(m,2.78,1.05,3.62,1.62,26.6,'#123c4e',false);
     // ---------------- corridor A ----------------
     floor(-2,13,2,18,0,'#243447');
     wallX(-2,13,18,0,3.1); wallX(2,13,18,0,3.1);
     for (var rb=0; rb<3; rb++){ C.addBox(m,0,3.02,14+rb*1.6,3.9,0.14,0.18,TR,{noBottom:true}); }
+    C.addQuadZ(m,-1.9,2.55,1.9,3.0,13.2,'#bcd6de',false);   // end-of-corridor light panel
     // ---------------- CENTRAL ROTUNDA ----------------
     floor(-13,-13,13,2,0); floor(-13,2,-9,10,0); floor(-5,2,13,10,0); floor(-13,10,13,13,0);   // SW stair hole x[-9,-5] z[2,10]
     // walls with 4 doorways (u -2..2, h 2.8): S+N real, E/W sealed-door bays
@@ -860,7 +896,6 @@
     stripY(-6,-26.4,-1,-26.0,3.9,'#9fd8e8'); stripY(1,-26.4,6,-26.0,3.9,'#9fd8e8');
     stripY(-7.5,-19.6,7.5,-19.2,3.9,'#123646');
     // PASS-2: the bridge reads cyan-luminous like theirs - a glowing ceiling field
-    function ceilQ(x0,z0,x1,z1,y,cc){ quad4([x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],cc); }   // DOWN-facing (ceiling)
     for (var bz=-30; bz<-18; bz+=2.0){ for (var bx2=-9; bx2<9; bx2+=2.25){
       var bj = C.rng(((bx2*37+bz*53)|0)>>>0)();
       ceilQ(bx2+0.08,bz+0.08,Math.min(9,bx2+2.17),Math.min(-18,bz+1.92),3.96,C.mixHex('#123c4e','#2c7a94',bj)); } }

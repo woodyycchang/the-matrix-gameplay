@@ -36,6 +36,7 @@ function paint(pose,out){
   console.log('wrote',out,'polys:',ops.filter(o=>o.t==='poly').length);
 }
 const SUF=process.argv[2]||'';
+paint([4,0.02,30, -0.35, 0.06], '/tmp/shot_dock'+SUF+'.png');
 paint([0,0.02,10.5, 0, 0.10], '/tmp/shot_rotunda'+SUF+'.png');
 paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png');
 paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png');
