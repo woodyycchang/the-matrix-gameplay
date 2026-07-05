@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#log\{[^}]*mix-blend-mode:difference/.test(tplT) && !/#console\{[^}]*linear-gradient/.test(tplT), 'no backdrop: the whole report block difference-blends over any scene');
+  ok(/color:#21d95e/.test(tplT) && !/#log\{[^}]*mix-blend-mode/.test(tplT) && /text-shadow:0 1px 2px rgba\(3,24,10/.test(tplT), 'Matrix phosphor: green with a hairline dark edge reads over the white void AND the neon night');
 }
 
 
@@ -1551,7 +1551,7 @@ section('picture anatomy: the reference frame, replicated');
 {
   const fsAM = require('fs');
   const tplM = fsAM.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/placeholder=""/.test(tplM), 'the typing place is BLANK - emptiness is the signal');
+  ok(/placeholder="ask for anything/.test(tplM), 'the predefined words live in the placeholder - people always know what to type, no buttons needed');
   ok(/#lookhint\{display:none;/.test(tplM), 'the persistent hint is retired: the boot screen is the manual');
   ok(/text-transform:uppercase/.test(tplM.slice(tplM.indexOf('#log .line.sys'), tplM.indexOf('#log .line.sys') + 120)), 'system lines render as small CAPS headers, echoing the report format');
 }
