@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#log\{[^}]*mix-blend-mode:difference/.test(tplT) && /color:#b8b8b4/.test(tplT) && !/#log \.line\{[^}]*#0d7a3a/.test(tplT), 'ORIGINAL palette: ink-grey under difference blend - automatic contrast over any scene');
+  ok(/#log \.line\{[^}]*color:var\(--ink\);text-shadow:0 0 6px rgba\(251,251,249,\.9\)/.test(tplT) && !/#log\{[^}]*mix-blend-mode/.test(tplT), 'the archaeological original: ink + paper halo, no blend - crisp on the void, outlined on dark scenes');
 }
 
 
@@ -1543,7 +1543,7 @@ section('EXO transmission UI');
   ok(/#log \.line\{[^}]*text-align:left/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL) && /border-top:1px dashed/.test(tplL), 'picture anatomy: left-aligned telemetry between dashed rules, lines evaporate');
   ok(/classList\.add\('in'\)/.test(appL) && /classList\.add\('faded'\)/.test(appL) && /\/\^you: \//.test(appL), 'lifecycle wired: fade-in, evaporate, faint player echoes');
   ok(/classList\.add\('con'\)/.test(appL) && /classList\.remove\('con'\)/.test(appL), 'Esc reveals the console; play hides every app control');
-  ok(/\.chip\{[^}]*border:0/.test(tplL) && /\.chip\{[^}]*mix-blend-mode:difference/.test(tplL), 'chips are borderless ghost text in the original blend palette');
+  ok(/\.chip\{[^}]*border:0/.test(tplL) && /\.chip\{[^}]*color:var\(--ink\)/.test(tplL), 'chips wear the same ink + halo as the lines');
 }
 
 

@@ -28,8 +28,8 @@
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
   /* console */
   #console{position:fixed;left:4vw;bottom:8vh;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-  #log{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:min(46ch,72vw);border-top:1px dashed rgba(154,154,150,.7);border-bottom:1px dashed rgba(154,154,150,.7);padding:9px 2px 10px;mix-blend-mode:difference}
-  #log .line{font-size:clamp(12px,.6rem + .45vw,15px);letter-spacing:.1em;text-align:left;line-height:1.5;color:#b8b8b4;opacity:0;transition:opacity .8s ease}
+  #log{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:min(46ch,72vw);border-top:1px dashed rgba(154,154,150,.7);border-bottom:1px dashed rgba(154,154,150,.7);padding:9px 2px 10px}
+  #log .line{font-size:clamp(12px,.6rem + .45vw,15px);letter-spacing:.1em;text-align:left;line-height:1.5;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.9);opacity:0;transition:opacity .8s ease}
   #log .line.in{opacity:1}
   #log .line.faded{opacity:0}
   #log .line.sys{font-size:.85em;text-transform:uppercase;letter-spacing:.16em}
@@ -39,7 +39,7 @@
   body.con #inrow{opacity:1;pointer-events:auto}
   #chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin-top:8px;pointer-events:none;opacity:0;transition:opacity .35s;width:min(46ch,72vw)}
   body.con #chips{opacity:.9;pointer-events:auto}
-  .chip{font:inherit;font-size:clamp(10px,.5rem + .4vw,12px);letter-spacing:.14em;text-transform:lowercase;color:#b8b8b4;mix-blend-mode:difference;background:none;border:0;padding:2px 8px;cursor:pointer;opacity:.8}
+  .chip{font:inherit;font-size:clamp(10px,.5rem + .4vw,12px);letter-spacing:.14em;text-transform:lowercase;color:var(--ink);text-shadow:0 0 6px rgba(251,251,249,.85);background:none;border:0;padding:2px 8px;cursor:pointer;opacity:.8}
   .chip:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
   #inrow input{background:transparent;border:0;border-bottom:1px solid rgba(128,128,128,.45);text-align:left;letter-spacing:.12em;flex:1}
   #mic{background:transparent;border-color:transparent;opacity:.5}
@@ -88,7 +88,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0342</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0344</span></div>
 </div>
 
 <script>
