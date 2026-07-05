@@ -366,6 +366,7 @@
       case 'powerdown': thump(46, 0.7, 0.5); hiss(0.9, 0.28, 900, 90, 1.4); blip(180, 0.5, 0.1, 'sawtooth'); break;
       case 'alarm': blip(620, 0.16, 0.14, 'square'); blip(470, 0.16, 0.14, 'square', 0.22); blip(620, 0.16, 0.12, 'square', 0.44); break;
       case 'whisper': hiss(1.2, 0.1, 1500, 320, 3.2); hiss(0.9, 0.07, 950, 260, 2.6, 0.4); break;
+      case 'splash': hiss(0.35, 0.3, 1400, 500, 1.1); thump(140, 0.22, 0.16); blip(320, 0.18, 0.06, 'sine', 0.05); break;
       case 'clank': thump(240, 0.14, 0.1); blip(1240, 0.35, 0.028, 'triangle', 0.02); hiss(0.22, 0.05, 700, 300, 2); break;
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;

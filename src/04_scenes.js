@@ -1035,6 +1035,130 @@
     return s;
   }
 
+  function sceneEpang() {
+    // EPANG PALACE - condensed native staging of Du Mu's rhapsody (branch port).
+    var s = {
+      name: 'epang palace', sky: 'epang', fog: { near: 12, far: 88, col: '#2a2430' },
+      groundY: -0.7, ambience: 'wind', colliders: [], insts: [],
+      spawn: { pos: [0, 0.02, 44], yaw: 0 },
+      label: 'EPANG PALACE'
+    };
+    var VER='#7a1e16', VERD='#4a120e', OCH='#7a6448', OCHD='#5e4c36', STONE='#b8ac96', TILE='#22262c', GOLD='#c9a24a', INKF='#3a3026', WAT='#3f545c', BED='#2c3438';
+    var m = C.newMesh();
+    function col(x0,y0,z0,x1,y1,z1){ s.colliders.push(box([x0,y0,z0],[x1,y1,z1])); }
+    function floor(x0,z0,x1,z1,top,cc){ col(x0,top-0.5,z0,x1,top,z1); C.addQuadY(m,x0,z0,x1,z1,top+0.004,cc||OCH,'floor'); }
+    function quad4(p0,p1,p2,p3,cc){ var b=m.v.length; m.v.push(p0,p1,p2,p3); C.addFace(m,[b,b+1,b+2,b+3],cc); }
+    function ceilQ(x0,z0,x1,z1,y,cc){ quad4([x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],cc); }
+    function wallX(x,z0,z1,y0,y1,cc){ col(x-0.16,y0,z0,x+0.16,y1,z1); C.addQuadX(m,z0,y0,z1,y1,x,(cc||VER), x<0); }
+    function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.16,x1,y1,z+0.16); C.addQuadZ(m,x0,y0,x1,y1,z,(cc||VER), z>0); }
+    function column(x,z,h,r){ // vermilion lacquer column, octagon
+      for (var i=0;i<8;i++){ var a0=i*Math.PI/4, a1=(i+1)*Math.PI/4;
+        quad4([x+Math.cos(a0)*r,0.9,z+Math.sin(a0)*r],[x+Math.cos(a0)*r,h,z+Math.sin(a0)*r],[x+Math.cos(a1)*r,h,z+Math.sin(a1)*r],[x+Math.cos(a1)*r,0.9,z+Math.sin(a1)*r],VER); }
+      C.addBox(m,x,0.78,z,r*2.5,0.24,r*2.5,VERD,{noBottom:true}); col(x-r,0.9,z-r,x+r,h,z+r); }
+    function roofSlope(x0,z0,x1,z1,yLow,yHigh,alongX,cc){ // simple hip slope quad
+      if (alongX) { quad4([x0,yLow,z0],[x0,yHigh,(z0+z1)/2],[x1,yHigh,(z0+z1)/2],[x1,yLow,z0],cc); quad4([x1,yLow,z1],[x1,yHigh,(z0+z1)/2],[x0,yHigh,(z0+z1)/2],[x0,yLow,z1],cc); }
+      else { quad4([x0,yLow,z0],[(x0+x1)/2,yHigh,z0],[(x0+x1)/2,yHigh,z1],[x0,yLow,z1],cc); quad4([x1,yLow,z1],[(x0+x1)/2,yHigh,z1],[(x0+x1)/2,yHigh,z0],[x1,yLow,z0],cc); }
+    }
+    // ---------------- courtyard ground + perimeter red walls ----------------
+    floor(-16,17.5,16,38,0,OCH);
+    for (var ct=0; ct<40; ct++){ var cg=C.rng((ct*131)>>>0);
+      C.addQuadY(m,-15+cg()*29,18+cg()*18,-15+cg()*29+1.6,18+cg()*18+1.6,0.006,C.scaleHex(OCH,0.86+cg()*0.26)); }
+    wallX(-16,17.5,38,0,3.5); wallX(16,17.5,38,0,3.5);
+    C.addQuadX(m,17.5,3.4,38,3.62,-16.02,STONE,true); C.addQuadX(m,17.5,3.4,38,3.62,16.02,STONE,false);   // white coping
+    // ---------------- GATE (spawn, dawn hero) ----------------
+    floor(-16,38,16,48,0,OCHD);
+    C.addBox(m,-6.8,4.0,40.5,4.2,8.0,3.0,VER,{noBottom:true}); col(-8.9,0,39,-4.7,8,42);
+    C.addBox(m,6.8,4.0,40.5,4.2,8.0,3.0,VER,{noBottom:true}); col(4.7,0,39,8.9,8,42);
+    C.addBox(m,0,8.5,40.5,18.4,1.1,3.6,TILE,{noBottom:true});
+    roofSlope(-9.6,38.7,9.6,42.3,9.05,10.1,false,TILE);
+    C.addQuadZ(m,-9.4,8.98,9.4,9.12,38.85,GOLD,false);
+    wallZ(40.5,-4.7,-2.4,0,8); wallZ(40.5,2.4,4.7,0,8);   // gate cheeks; passage open x[-2.4,2.4]
+    for (var gs=0; gs<9; gs++){ C.addQuadZ(m,-1.9+ (gs%3)*1.3, 1.0+((gs/3)|0)*1.3, -1.6+(gs%3)*1.3, 1.3+((gs/3)|0)*1.3, 40.34, GOLD, false); }
+    // ---------------- RIVER A (east-west, between courtyard and hall) ----------------
+    floor(-16,12,16,17.5,-0.7,BED);
+    C.addQuadY(m,-16,12.1,16,17.4,-0.12,WAT);   // water surface (visual)
+    // ghat steps down, east side
+    floor(6,16.1,10,17.5,-0.23,STONE); floor(6,15.1,10,16.1,-0.46,STONE);
+    // DRAGON BRIDGE: arched crossing, center
+    floor(-2.6,11.6,2.6,12.9,0.35,STONE); floor(-2.6,12.9,2.6,14.6,0.85,STONE); floor(-2.6,14.6,2.6,15.9,1.12,STONE);
+    floor(-2.6,15.9,2.6,16.6,0.85,STONE); floor(-2.6,16.6,2.6,17.6,0.35,STONE);
+    floor(-2.6,10.6,2.6,11.6,0.0,STONE); floor(-2.6,17.6,2.6,18.2,0.0,STONE);
+    C.addBox(m,-2.75,0.9,14.6,0.3,1.6,6.4,STONE,{noBottom:true}); C.addBox(m,2.75,0.9,14.6,0.3,1.6,6.4,STONE,{noBottom:true});
+    var drg = inst(P.dragonHead(), [0, 1.28, 11.2], 0, { label: 'dragon', kind: 'dragon' });
+    s.insts.push(drg);
+    // winding waterside covered corridor, west (廊腰縵回)
+    floor(-13.4,11.4,-8.6,18.4,0.22,'#8a7a60');
+    for (var lz=12.2; lz<18; lz+=2.6){ column(-12.9,lz,3.4,0.22); column(-9.1,lz,3.4,0.22); }
+    roofSlope(-13.6,11.2,-8.4,18.6,3.35,4.15,false,TILE);
+    // ---------------- FRONT HALL 前殿 (raised white platform + vermilion columns + hip roof) ----------------
+    floor(-14,-6,14,11.9,0.9,INKF);
+    floor(-14,11.9,14,12.6,0.6,STONE); floor(-14,12.6,14,13.3,0.3,STONE);   // front steps
+    C.addQuadX(m,-6,0,12,0.9,-14.02,STONE,true); C.addQuadX(m,-6,0,12,0.9,14.02,STONE,false);
+    C.addQuadZ(m,-14,0,14,0.9,11.94,STONE,false);
+    for (var cx3=-10; cx3<=10; cx3+=5){ column(cx3, 9.4, 5.4, 0.45); column(cx3, 0.2, 5.4, 0.45); }
+    wallZ(-6,-14,14,0.9,5.4,VER);
+    for (var ds2=0; ds2<12; ds2++){ C.addQuadZ(m,-5.4+(ds2%4)*3.0, 1.6+((ds2/4)|0)*1.3, -5.0+(ds2%4)*3.0, 2.0+((ds2/4)|0)*1.3, -5.84, GOLD, false); }
+    roofSlope(-15.2,-7.2,15.2,13.6,5.4,7.7,false,TILE);
+    C.addQuadZ(m,-15.0,5.34,15.0,5.5,13.5,GOLD,false);   // gilded eave line
+    // flanks: SONG TERRACE (west, open) & DANCE HALL (east)
+    floor(-26,-2,-16.5,10,0.6,STONE);
+    C.addBox(m,-26.1,1.15,4,0.24,1.1,12.2,STONE,{noBottom:true});
+    for (var lt=0; lt<3; lt++){ var li=inst(P.lantern(true), [-24.5+lt*3.4, 0.6, 9.2], 0, { label:'lantern', kind:'lantern' }); li.state='lit'; s.insts.push(li); }
+    floor(16.5,-2,26,10,0.28,INKF);
+    for (var dc=0; dc<2; dc++){ column(18.6+dc*5.4, 0.2, 4.2, 0.34); column(18.6+dc*5.4, 7.8, 4.2, 0.34); }
+    roofSlope(16.2,-2.4,26.4,10.4,4.2,5.6,false,TILE);
+    // ---------------- RIVER B (north-south, east side) + slab bridge ----------------
+    floor(27.2,-8,32.8,20,-0.7,BED);
+    C.addQuadY(m,27.3,-7.9,32.7,19.9,-0.12,WAT);
+    floor(27.0,6.4,33.0,9.0,0.05,STONE);   // slab bridge
+    // ---------------- SKYWAY 複道行空 (y=5 covered, crosses river B) ----------------
+    var st9=0;
+    for (st9=0; st9<17; st9++){ var sy=0.28*(st9+1), sz=12.4-st9*0.62;
+      col(16.9,sy-0.26,sz-0.62,19.1,sy,sz); C.addBox(m,18,sy-0.13,sz-0.31,2.2,0.26,0.62,STONE,{noBottom:true}); }
+    floor(16.9,-1.4,19.1,2.2,4.76,'#8a7a60');   // stair landing
+    floor(16.9,-1.4,42,1.0,5.0,'#8a7a60');       // skyway deck to treasury
+    C.addBox(m,29.5,5.55,-0.2,25.0,1.1,0.22,VER,{noBottom:true}); C.addBox(m,29.5,5.55,1.9,25.0,1.1,0.22,VER,{noBottom:true});
+    col(17,5.0,-1.6,42,6.1,-1.35); col(17,5.0,1.95,42,6.1,2.2);
+    roofSlope(16.7,-1.6,42.2,2.4,6.7,7.4,false,TILE);
+    for (var sc2=19; sc2<41; sc2+=4.2){ column(sc2,-1.15,6.7,0.2); column(sc2,1.95,6.7,0.2); }
+    // ---------------- TREASURY 鼎鐺玉石 (east of river B) ----------------
+    floor(34,-4,46,12,0,'#2c2620');
+    wallX(46,-4,12,0,4.6,'#5e1a12'); wallZ(-4,34,46,0,4.6,'#5e1a12'); wallZ(12,34,46,0,4.6,'#5e1a12');
+    wallX(34,-4,2,0,4.6,'#5e1a12'); wallX(34,5,12,0,4.6,'#5e1a12');   // west door gap z[2,5] ground
+    floor(40,3,44,7,0.0,'#2c2620');
+    roofSlope(33.7,-4.3,46.3,12.3,4.6,6.3,false,TILE);
+    // skyway upper door into treasury + interior stair down
+    wallX(42,-1.6,1.0,6.2,7.2,'#5e1a12');
+    for (var ts=0; ts<15; ts++){ var ty=4.76-0.30*ts, tz=1.4+ts*0.55;
+      col(42.2,ty-0.26,tz-0.55,44.2,ty,tz); C.addBox(m,43.2,ty-0.13,tz-0.275,2.0,0.26,0.55,'#8a7a60',{noBottom:true}); }
+    for (var dg2=0; dg2<3; dg2++){ var di=inst(P.ding(), [37.5+dg2*3.2, 0, 8.4-dg2*2.6], 0.4*dg2, { label:'ding', kind:'ding' }); s.insts.push(di); col(36.6+dg2*3.2,0,7.5-dg2*2.6,38.4+dg2*3.2,1.6,9.3-dg2*2.6); }
+    C.addQuadY(m,36,4.4,44,10.8,0.012,'#4a2410');   // ember pool wash
+    for (var el2=0; el2<3; el2++){ var le=inst(P.lantern(true), [35.5+el2*4.2, 0, 0.0], 0, { label:'lantern', kind:'lantern' }); le.state='lit'; s.insts.push(le); }
+    C.meshBounds(m); C.anchorize(m, 0.05, 71, 8);
+    s.insts.unshift(inst(m, [0,0,0], 0, { label: 'palace', kind: 'static' }));
+    // ---------------- regions: the rhapsody speaks on first entry ----------------
+    s.regions = [
+      { x0:-16, x1:16, z0:38, z1:48, y0:-1, y1:9, cn:'\u5bae\u9580', q:'\u300c\u516d\u738b\u7562\uff0c\u56db\u6d77\u4e00\uff1b\u8700\u5c71\u5140\uff0c\u963f\u623f\u51fa\u3002\u300d', said:false },
+      { x0:-14, x1:14, z0:-6, z1:12, y0:0, y1:6, cn:'\u524d\u6bbf', q:'\u300c\u8986\u58d3\u4e09\u767e\u9918\u91cc\uff0c\u9694\u96e2\u5929\u65e5\u3002\u300d', said:false },
+      { x0:16, x1:43, z0:-1.6, z1:2.4, y0:4.4, y1:8, cn:'\u8907\u9053\u884c\u7a7a', q:'\u300c\u8907\u9053\u884c\u7a7a\uff0c\u4e0d\u9701\u4f55\u8679\uff1f\u300d', said:false },
+      { x0:-26, x1:-16.5, z0:-2, z1:10, y0:0, y1:4, cn:'\u6b4c\u81fa', q:'\u300c\u6b4c\u81fa\u6696\u97ff\uff0c\u6625\u5149\u878d\u878d\u3002\u300d', said:false },
+      { x0:16.5, x1:26, z0:-2, z1:10, y0:0, y1:4, cn:'\u821e\u6bbf', q:'\u300c\u821e\u6bbf\u51b7\u8896\uff0c\u98a8\u96e8\u6dd2\u6dd2\u3002\u300d', said:false },
+      { x0:-13.4, x1:-8.6, z0:11.4, z1:18.4, y0:0, y1:4, cn:'\u5eca\u8170\u7e35\u56de', q:'\u300c\u5eca\u8170\u7e35\u56de\uff0c\u7c37\u7259\u9ad8\u5544\u3002\u300d', said:false },
+      { x0:-2.6, x1:2.6, z0:11.6, z1:17.6, y0:0.2, y1:3, cn:'\u9577\u6a4b\u81e5\u6ce2', q:'\u300c\u9577\u6a4b\u81e5\u6ce2\uff0c\u672a\u96f2\u4f55\u9f8d\uff1f\u300d', said:false },
+      { x0:34, x1:46, z0:-4, z1:12, y0:-0.2, y1:4, cn:'\u9f0e\u9435\u7389\u77f3', q:'\u300c\u9f0e\u9435\u7389\u77f3\uff0c\u91d1\u584a\u73e0\u792b\u3002\u300d', said:false }
+    ];
+    s._splash = { a:false, b:false };
+    s.update = function (game) {
+      var p = game.player.pos;
+      for (var ri=0; ri<s.regions.length; ri++){ var rg=s.regions[ri];
+        if (!rg.said && p[0]>rg.x0 && p[0]<rg.x1 && p[2]>rg.z0 && p[2]<rg.z1 && p[1]>rg.y0 && p[1]<rg.y1){
+          rg.said=true; game.say(rg.cn+' \u2014 '+rg.q, 0.35); } }
+      if (!s._splash.a && p[1] < -0.3 && p[2] > 12 && p[2] < 17.6 && p[0] > -16 && p[0] < 12){ s._splash.a=true; game.emit('splash'); }
+      if (!s._splash.b && p[1] < -0.3 && p[0] > 27 && p[0] < 33){ s._splash.b=true; game.emit('splash'); }
+    };
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -1044,6 +1168,7 @@
       case 'neon': return sceneNeon();
       case 'hallway': return sceneHallway();
       case 'erebus': return sceneErebus();
+      case 'epang': return sceneEpang();
       default: return sceneVoid();
     }
   };

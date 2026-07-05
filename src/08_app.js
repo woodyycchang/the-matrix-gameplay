@@ -288,6 +288,47 @@
               g.addColorStop(0, '#aebfc8');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#d6dadc');
               g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'epang') {
+              // terrestrial day cycle over the Qin plain: dawn rose-gold -> pale day
+              // -> crimson dusk -> indigo night with stars; the bare Shu mountains
+              // stand as a silhouette ridge on the horizon (parallax with yaw).
+              var ph = ((op.time || 0) % 240) / 240;   // 0 dawn .25 day .5 dusk .75 night
+              function lerpC(c1, c2, t2) { return C.mixHex(c1, c2, Math.max(0, Math.min(1, t2))); }
+              var KT = ['#c98a5a', '#a8c0d8', '#b0543a', '#141626'];
+              var KB = ['#e8b088', '#d8e0e6', '#5a2430', '#0a0c18'];
+              var seg = Math.floor(ph * 4), fr = ph * 4 - seg;
+              var top = lerpC(KT[seg], KT[(seg + 1) % 4], fr), bot = lerpC(KB[seg], KB[(seg + 1) % 4], fr);
+              var hor3 = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
+              var g3 = ctx.createLinearGradient(0, 0, 0, Math.max(1, hor3));
+              g3.addColorStop(0, top); g3.addColorStop(1, bot);
+              ctx.fillStyle = g3; ctx.fillRect(0, 0, W, Math.max(1, hor3));
+              ctx.fillStyle = bot; ctx.fillRect(0, Math.max(0, hor3), W, H);
+              var night = seg === 3 ? (0.4 + 0.6 * fr) : (seg === 2 ? fr * 0.4 : 0);
+              if (night > 0.05) {
+                for (var si3 = 0; si3 < 70; si3++) {
+                  var h13 = Math.sin(si3 * 12.9898) * 43758.5453; h13 -= Math.floor(h13);
+                  var h23 = Math.sin(si3 * 78.233) * 12543.21; h23 -= Math.floor(h23);
+                  var sd3 = h13 * Math.PI * 2 - op.yaw; while (sd3 > Math.PI) sd3 -= Math.PI * 2; while (sd3 < -Math.PI) sd3 += Math.PI * 2;
+                  if (Math.abs(sd3) > 1.3) continue;
+                  ctx.fillStyle = 'rgba(220,228,255,' + (night * (0.25 + 0.5 * ((si3 * 29) % 5) / 5)).toFixed(2) + ')';
+                  ctx.fillRect(W * 0.5 + sd3 / 1.3 * W * 0.62, h23 * hor3 * 0.85, 1, 1);
+                }
+              }
+              var sunA = ph * Math.PI * 2 - Math.PI * 0.5, sunEl3 = Math.sin(ph * Math.PI);
+              var sdx3 = ((1.9 - op.yaw) % (Math.PI * 2)); if (sdx3 > Math.PI) sdx3 -= Math.PI * 2; if (sdx3 < -Math.PI) sdx3 += Math.PI * 2;
+              if (Math.abs(sdx3) < 1.5 && seg < 3) {
+                var sx3 = W * 0.5 + sdx3 / 1.25 * W * 0.62, sy3 = hor3 - sunEl3 * H * 0.7;
+                ctx.fillStyle = seg === 0 ? 'rgba(255,214,150,0.95)' : seg === 1 ? 'rgba(255,246,224,0.9)' : 'rgba(255,120,70,0.9)';
+                ctx.beginPath(); ctx.arc(sx3, sy3, seg === 2 ? 20 : 13, 0, Math.PI * 2); ctx.fill();
+              }
+              ctx.fillStyle = seg === 3 ? '#05070e' : (seg === 2 ? '#1c1016' : '#2a2026');
+              ctx.beginPath(); ctx.moveTo(0, hor3);
+              for (var mx = 0; mx <= 40; mx++) {
+                var wx = mx / 40 * W;
+                var mh = Math.sin(mx * 1.7 + 0.6) * 0.5 + Math.sin(mx * 0.53 - op.yaw * 2.2) * 0.5;
+                ctx.lineTo(wx, hor3 - (12 + mh * 16) * (H / 540));
+              }
+              ctx.lineTo(W, hor3); ctx.closePath(); ctx.fill();
             } else if (op.mode === 'erebus') {
               // deep space: starfield pans with yaw; a ringed gas giant sits at a
               // fixed azimuth; the sun orbits (their 240 s period) and slips into
@@ -970,7 +1011,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');

@@ -13,6 +13,7 @@
     city: 'Crowd simulation, lunch hour. Eyes forward.',
     hallway: 'Loading a corridor. Third floor of nowhere. Watch the doorway.',
     erebus: 'Docking at Erebus station. Three decks. Mind the reactor deck.',
+    epang: 'Loading the palace. Twelve courts by the rhapsody. Mind the two rivers.',
     clear: 'Wiping the room.',
     codeOn: 'Dropping the render layer. This is what it really looks like.',
     codeOff: 'Restoring the skin.',
@@ -31,7 +32,7 @@
     bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -59,6 +60,7 @@
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(hallway|corridor|dejavu|deja|vu|doors)\b/, 'hallway'],
     [/\b(erebus|station|tower)\b/, 'erebus'],
+    [/\b(epang|palace)\b/, 'epang'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
     [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
@@ -166,7 +168,7 @@
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus, epang: L.epang }[a.scene];
       this.transition(a.scene, line);
       return a;
     }

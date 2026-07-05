@@ -240,6 +240,49 @@
     return m;
   };
 
+  P.dragonHead = function () { // the bridge prow: a stone dragon head facing +z
+    var m = C.newMesh();
+    var ST='#a89c86';
+    C.addBox(m, 0, 0.35, 0.5, 0.8, 0.7, 1.4, ST);
+    C.addBox(m, 0, 0.62, 1.35, 0.62, 0.5, 0.8, ST);
+    C.addBox(m, 0, 0.42, 1.85, 0.5, 0.26, 0.5, '#948a76');
+    var b = m.v.length; m.v.push([-0.18, 0.95, 0.15], [-0.34, 1.5, -0.35], [-0.06, 0.95, -0.1]);
+    C.addFace(m, [b, b+1, b+2], '#8a8070');
+    var b2 = m.v.length; m.v.push([0.06, 0.95, -0.1], [0.34, 1.5, -0.35], [0.18, 0.95, 0.15]);
+    C.addFace(m, [b2, b2+1, b2+2], '#8a8070');
+    C.addBox(m, -0.2, 0.72, 1.6, 0.1, 0.1, 0.1, '#c9a24a');
+    C.addBox(m, 0.2, 0.72, 1.6, 0.1, 0.1, 0.1, '#c9a24a');
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.lantern = function (lit) { // palace lantern on a post
+    var m = C.newMesh();
+    C.addBox(m, 0, 0.85, 0, 0.09, 1.7, 0.09, '#3a2a1c');
+    C.addBox(m, 0, 1.9, 0, 0.52, 0.62, 0.52, lit ? '#ffb85e' : '#4a3626');
+    C.addBox(m, 0, 2.28, 0, 0.62, 0.1, 0.62, '#22262c', { noBottom: true });
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.ding = function () { // bronze tripod vessel
+    var m = C.newMesh();
+    var BR='#6a4a22';
+    for (var i = 0; i < 8; i++) {
+      var a0 = i * Math.PI / 4, a1 = (i + 1) * Math.PI / 4;
+      var b = m.v.length;
+      m.v.push([Math.cos(a0)*0.75, 0.55, Math.sin(a0)*0.75], [Math.cos(a0)*0.85, 1.35, Math.sin(a0)*0.85],
+               [Math.cos(a1)*0.85, 1.35, Math.sin(a1)*0.85], [Math.cos(a1)*0.75, 0.55, Math.sin(a1)*0.75]);
+      C.addFace(m, [b, b+1, b+2, b+3], BR);
+    }
+    C.addBox(m, 0, 1.4, 0, 1.55, 0.12, 1.55, '#7a5628', { noBottom: true });
+    C.addBox(m, -0.45, 0.28, -0.3, 0.16, 0.6, 0.16, '#54381a');
+    C.addBox(m, 0.45, 0.28, -0.3, 0.16, 0.6, 0.16, '#54381a');
+    C.addBox(m, 0, 0.28, 0.52, 0.16, 0.6, 0.16, '#54381a');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.shuttle = function () { // the docked skiff: fuselage + cone nose along +x, skids, wing, tail, canopy, engine glow
     var m = C.newMesh();
     var R = 1.05, L = 5.0, N = 8;
