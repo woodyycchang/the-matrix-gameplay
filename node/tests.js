@@ -1186,8 +1186,8 @@ section('stale cached builds confess by themselves');
   const appE = fsE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   const tplE = fsE.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/id="stale"/.test(tplE), 'template carries the red stale banner');
-  ok(/api\.github\.com\/repos\/woodyycchang\/the-matrix-gameplay\/commits\/main/.test(appE), 'the game asks GitHub when main was last pushed');
-  ok(/function checkStale/.test(appE) && /servedStamp\(\)/.test(appE) && /self-heal/.test(appE), 'boot checks the SERVED build and heals itself - warning humans to refresh is retired');
+  ok(/raw\.githubusercontent\.com\/woodyycchang\/the-matrix-gameplay\/main\/index\.html/.test(appE), 'the game asks the raw mirror for the newest build - fresh within seconds of a push');
+  ok(/function checkStale/.test(appE) && /SELF-RENEWAL v3/.test(appE), 'boot arms the v3 self-renewal loop - warning humans to refresh is retired');
 }
 
 
@@ -1479,8 +1479,8 @@ section('self-healing update loop');
 {
   const fsAE = require('fs');
   const appAE = fsAE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/\?live=' \+ Date\.now\(\), \{ cache: 'no-store' \}/.test(appAE), 'ground truth: the page reads the BUILD the CDN is actually serving');
-  ok(/auto-swap within ~10 min \(edge cache\)/.test(appAE) && /check #' \+ pn/.test(appAE), 'the amber state names its physics bound and beats a visible pulse - never looks hung');
+  ok(/fetch\(RAW, \{ cache: 'no-store' \}/.test(appAE), 'ground truth is the raw mirror - fresh within seconds of a push');
+  ok(/indexOf\('<\/html>'\) < 0/.test(appAE) && /if \(busy \|\| document\.hidden\) return;/.test(appAE), 'whole-document sanity check; hidden tabs do not churn');
 }
 
 

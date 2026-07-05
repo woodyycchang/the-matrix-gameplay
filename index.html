@@ -86,7 +86,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0001</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0018</span></div>
 </div>
 
 <script>
@@ -3422,65 +3422,37 @@
   // The cache detective, automated: ask GitHub when main was last pushed; if this
   // copy was built meaningfully earlier, it is a stale cached build - confess loudly.
   function checkStale(buildStr) {
-    // SELF-HEALING UPDATES. Three states, ground truth first:
-    // 1) fetch our own URL with no-store and read the BUILD the CDN actually
-    //    serves; if it differs from the running copy -> auto-swap (?v=served).
-    // 2) if served == running but the repo HEAD is newer -> a deploy is in
-    //    flight: say so, poll every 30 s, swap the moment the CDN flips.
-    // 3) otherwise: current, silent. The hard-refresh instruction is retired.
-    // MEASURED DOCTRINE (2026-07-02 14:44 UTC, four-layer probe): the ONLY
-    // bottleneck is the Fastly edge's fixed max-age=600; and ?v= query-busting
-    // NEVER pierced the edge on this path (its cache key ignores queries) -
-    // it only busts the BROWSER layer. Convergence = edge TTL, automated here.
+    // SELF-RENEWAL v3 - the user's law: PUSH -> the open page renews itself,
+    // directly. Measured physics: the Pages edge holds copies ~10 min and
+    // ignores query strings, so polling our own URL can never beat it. So we
+    // poll the RAW mirror instead (raw.githubusercontent - CORS-open, fresh
+    // within seconds of a push); on a new stamp we fetch the full fresh HTML
+    // and document.write it over the running app. Renewal no longer waits
+    // for the CDN at all. First-time visitors still ride the edge - they
+    // have no old copy to be confused by. The amber banner is retired: the
+    // moment of renewal announces itself with one line in the report block.
     if (!buildStr || !window.fetch) return;
-    var base = window.location.origin + window.location.pathname;
-    function servedStamp() {
-      return fetch(base + '?live=' + Date.now(), { cache: 'no-store' })
+    var RAW = 'https://raw.githubusercontent.com/woodyycchang/the-matrix-gameplay/main/index.html';
+    var busy = false;
+    function check() {
+      if (busy || document.hidden) return;
+      fetch(RAW, { cache: 'no-store' })
         .then(function (r) { return r.text(); })
-        .then(function (t) { var m = t.match(/BUILD (\d{4}-\d{4})/); return m ? m[1] : null; })
-        .catch(function () { return null; });
+        .then(function (html) {
+          var m = html.match(/BUILD (\d{4}-\d{4})/);
+          if (!m || m[1] === buildStr) return;
+          if (html.indexOf('</html>') < 0) return;             // whole documents only
+          busy = true;
+          say('UPDATING TO BUILD ' + m[1] + '\u2026', true);
+          setTimeout(function () {
+            try { document.open(); document.write(html); document.close(); }
+            catch (e) { window.location.reload(); }
+          }, 900);
+        })
+        .catch(function () {});
     }
-    function goTo(stamp) {
-      var el = document.getElementById('stale');
-      if (el) { el.textContent = 'UPDATING TO BUILD ' + stamp + '\u2026'; el.style.display = 'block'; }
-      sayDbg('self-heal: served build ' + stamp + ' differs \u2014 swapping');
-      setTimeout(function () { window.location.replace(base + '?v=' + stamp); }, 800);
-    }
-    servedStamp().then(function (served) {
-      if (served && served !== buildStr) { goTo(served); return; }
-      try {
-        fetch('https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main', { headers: { Accept: 'application/vnd.github+json' } })
-          .then(function (r) { return r.json(); })
-          .then(function (j) {
-            var iso = j && j.commit && ((j.commit.committer && j.commit.committer.date) || (j.commit.author && j.commit.author.date));
-            var m = buildStr.match(/(\d{2})(\d{2})-(\d{2})(\d{2})/);
-            if (!iso || !m) return;
-            var nowY = new Date().getUTCFullYear();
-            var bts = Date.UTC(nowY, +m[1] - 1, +m[2], +m[3], +m[4]);
-            if (Date.parse(iso) - bts > 3 * 60 * 1000) {
-              var el = document.getElementById('stale');
-              var pn = 0;
-              function amber() {
-                if (el) {
-                  el.textContent = 'NEW BUILD DEPLOYING \u2014 auto-swap within ~10 min (edge cache)' + (pn ? ' \u00b7 check #' + pn : '');
-                  el.style.background = '#8a6d1a';
-                  el.style.display = 'block';
-                }
-              }
-              amber();
-              sayDbg('deploy in flight: repo head newer than the served build; poll is edge-TTL-bound');
-              var poll = setInterval(function () {
-                pn++;
-                servedStamp().then(function (s2) {
-                  if (s2 && s2 !== buildStr) { clearInterval(poll); goTo(s2); }
-                  else amber();
-                });
-              }, 30000);
-            }
-          })
-          .catch(function () {});
-      } catch (e) {}
-    });
+    setTimeout(check, 4000);
+    setInterval(check, 30000);
   }
 
   function loadNeural() {
