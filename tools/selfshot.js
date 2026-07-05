@@ -36,6 +36,7 @@ function paint(pose,out){
   console.log('wrote',out,'polys:',ops.filter(o=>o.t==='poly').length);
 }
 const SUF=process.argv[2]||'';
+paint([0,0.02,45.5, 0, 0.02], '/tmp/shot_epang'+SUF+'.png');
 paint([4,0.02,30, -0.35, 0.06], '/tmp/shot_dock'+SUF+'.png');
 paint([0,0.02,10.5, 0, 0.10], '/tmp/shot_rotunda'+SUF+'.png');
 paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png');

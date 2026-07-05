@@ -2008,6 +2008,38 @@ section('EREBUS: the director runs its beats once');
   ok(ops2.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the dome deck under the erebus sky renders clean');
 }
 
+section('EPANG: the palace stands and the rhapsody speaks');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  let evs0 = [];
+  g.request('take me to the palace');
+  for (let i = 0; i < 30; i++) evs0 = evs0.concat(step(g, null, 1 / 20));
+  ok(g.scene.name === 'epang palace', "the word chain opens the gates: 'palace' -> epang");
+  const s = g.scene;
+  ok(s.regions.length === 8 && s.regions[0].said === true && has(evs0, 'say'), 'the GATE speaks its line on spawn (' + s.regions.filter(r => r.said).length + ' said)');
+  const probes = [[0, 0, 26, 0, 'courtyard'], [0, 0.9, 4, 0.9, 'front-hall platform'], [0, 1.12, 15.2, 1.12, 'dragon-bridge crest'], [18, 5.0, 0.4, 5.0, 'skyway across the void'], [40, 0, 8, 0, 'treasury'], [-22, 0.6, 4, 0.6, 'song terrace'], [8, -0.23, 16.8, -0.23, 'ghat step']];
+  for (const [x, y, z, want, name] of probes) {
+    g.player.pos = [x, y + 0.9, z]; g.player.vel = [0, 0, 0];
+    step(g, null, 0.9);
+    ok(g.player.grounded && Math.abs(g.player.pos[1] - want) < 0.07, name + ' supports at ' + want + ' (got ' + g.player.pos[1].toFixed(2) + ')');
+  }
+  ok(s.regions.filter(r => r.said).length >= 5, 'crossing the palace typewrites the rhapsody (' + s.regions.filter(r => r.said).length + '/8 lines spoken)');
+  let evsW = [];
+  g.player.pos = [4, 0.2, 15]; g.player.vel = [0, 0, 0];
+  for (let i = 0; i < 20; i++) evsW = evsW.concat(step(g, null, 1 / 20));
+  ok(g.player.grounded && Math.abs(g.player.pos[1] - (-0.7)) < 0.07 && s._splash.a === true && has(evsW, 'splash'), 'wading river A: you land on the bed and it splashes once (y ' + g.player.pos[1].toFixed(2) + ')');
+  g.player.pos = [0, 0.02, 30]; g.player.vel = [0, 0, 0];
+  for (let i = 0; i < 120; i++) step(g, { strafe: 1 }, 1 / 60);
+  ok(g.player.pos[0] < 16.4, 'the courtyard east wall does not pierce (' + g.player.pos[0].toFixed(2) + ')');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops[0].t === 'sky' && ops[0].mode === 'epang' && Number.isFinite(ops[0].time) && Number.isFinite(ops[0].yaw), "the sky op carries mode 'epang' with time and yaw");
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the palace renders with zero NaN polys');
+  g.player.pos = [18, 5.02, 0.4];
+  const ops2 = C.render(g, 480, 270, g.time);
+  ok(ops2.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the skyway view over river B renders clean');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

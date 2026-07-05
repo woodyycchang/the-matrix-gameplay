@@ -487,7 +487,7 @@
    "type": "BRANCH",
    "why": "阿房宮: epang分支跨引擎移植为关键词主题",
    "status": "PENDING",
-   "evidence": "E0勘测入册(eval/epang-port.md); E1-E6排程",
+   "evidence": "E0-E5全FIXED(845绿,E5首跑零返修); 待E6手感",
    "priors": [
     "ROOT/EPANG/E1-skeleton",
     "ROOT/EPANG/E2-sky-props",
@@ -501,36 +501,36 @@
    "path": "ROOT/EPANG/E1-skeleton",
    "type": "UNIT",
    "why": "宫门/前庭/前殿朱柱/歌舞两翼/空中複道y5/藏宝/双川真涉水/龙桥/回廊",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "e6d9514: 122行整机/八区/双川真涉水/龙桥拱/複道跨河y5/藏宝"
   },
   {
    "path": "ROOT/EPANG/E2-sky-props",
    "type": "UNIT",
    "why": "epang昼夜天+蜀山剪影;龙首/灯笼/铜鼎",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "e6d9514: epang四帧昼夜天+蜀山视差剪影+三prop+splash"
   },
   {
    "path": "ROOT/EPANG/E3-wordchain",
    "type": "UNIT",
    "why": "六件套+chip12",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "e6d9514: 六件套+chip12"
   },
   {
    "path": "ROOT/EPANG/E4-quotes-wading",
    "type": "UNIT",
    "why": "入区賦文打字机+splash",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "并入E1: RMETA原文逐字/入区打字机/双河splash一次性"
   },
   {
    "path": "ROOT/EPANG/E5-courts",
    "type": "UNIT",
    "why": "八点支撑/穿墙/引言/涉水/天算子/零NaN/词",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 830->845首跑全绿(七点支撑+涉水着床+穿墙+賦文≥5句+splash+天算子+双点零NaN+词触发)"
   },
   {
    "path": "ROOT/EPANG/E6-feel",
