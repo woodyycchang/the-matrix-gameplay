@@ -74,9 +74,35 @@ function paint(pose,out,sceneWord){
       for(let dy=-SR;dy<=SR;dy++)for(let dx=-SR;dx<=SR;dx++)if(dx*dx+dy*dy<=SR*SR)put(sx+dx,sy+dy,scc,0.9);}
   } else if (sop && sop.mode==='erebus'){
     for(let i=0;i<W*H;i++){png.data[i*4]=bgD[0];png.data[i*4+1]=bgD[1];png.data[i*4+2]=bgD[2];png.data[i*4+3]=255;}
+    const wrap=(x)=>{while(x>Math.PI)x-=Math.PI*2;while(x<-Math.PI)x+=Math.PI*2;return x;};
     for(let si=0;si<110;si++){let h1=Math.sin(si*12.9898)*43758.5453;h1-=Math.floor(h1);let h2=Math.sin(si*78.233)*12543.21;h2-=Math.floor(h2);
-      let sd=h1*Math.PI*2-g.player.yaw;while(sd>Math.PI)sd-=Math.PI*2;while(sd<-Math.PI)sd+=Math.PI*2;
+      let sd=wrap(h1*Math.PI*2-g.player.yaw);
       if(Math.abs(sd)<1.25)put(W*0.5+sd/1.25*W*0.62,h2*H*0.9,[220,230,255],0.5);}
+    const sunAz=(sop.time||0)*(Math.PI*2/240), sunEl=Math.sin(sunAz)*0.45+0.12;
+    const GAZ=2.4, GEL=0.18;
+    const ddv=Math.hypot(wrap(sunAz-GAZ),sunEl-GEL);
+    const vis=Math.max(0,Math.min(1,(ddv-0.18)/(0.55-0.18)));
+    const sdx=wrap(sunAz-g.player.yaw);
+    const flood=Math.max(0,1-Math.abs(sunEl-0.18)/0.32)*vis;
+    if(flood>0.02){
+      const f0=Math.max(0,hor-H*0.55), f1=Math.min(H,hor+H*0.1);
+      for(let y=0;y<H;y++){const u=Math.max(0,Math.min(1,(y-f0)/Math.max(1,f1-f0)));
+        const a1=u<0.7? (u/0.7)*0.40*flood : 0.40*flood + (u-0.7)/0.3*(0.29-0.40)*flood;
+        const cB=u<0.7? [70,150,180] : mix([70,150,180],[255,190,120],(u-0.7)/0.3);
+        if(a1>0.004)for(let x=0;x<W;x++)put(x,y,cB,a1);} }
+    if(Math.abs(sdx)<1.55){
+      const sx=W*0.5+sdx/1.25*W*0.62, sy=hor-sunEl*H*0.9;
+      const R2=90;
+      for(let dy=-R2;dy<=R2;dy++)for(let dx=-R2;dx<=R2;dx++){const rr2=Math.sqrt(dx*dx+dy*dy);if(rr2>R2)continue;
+        const a2=rr2<2?0.85*vis+0.05:(rr2<R2*0.25? (0.85*vis)*(1-rr2/(R2*0.25))+0.35*vis*(rr2/(R2*0.25)) : 0.35*vis*(1-(rr2-R2*0.25)/(R2*0.75)));
+        if(a2>0.01)put(sx+dx,sy+dy,rr2<R2*0.25?[255,236,200]:[255,180,110],a2);}
+      const SR=13+6*vis;
+      for(let dy=-SR;dy<=SR;dy++)for(let dx=-SR;dx<=SR;dx++)if(dx*dx+dy*dy<=SR*SR)put(sx+dx,sy+dy,[255,246,224],0.55+0.45*vis);}
+    const gdx=wrap(GAZ-g.player.yaw);
+    if(Math.abs(gdx)<1.75){const gx=W*0.5+gdx/1.25*W*0.62, gy=hor-GEL*H*0.9, gr=120;
+      for(let dy=-gr;dy<=gr;dy++)for(let dx=-gr;dx<=gr;dx++){const rr3=Math.sqrt(dx*dx+dy*dy);if(rr3>gr)continue;
+        const t4=rr3/gr; const cG=t4<0.7?mix([34,48,74],[16,26,44],t4/0.7):mix([16,26,44],[6,11,22],(t4-0.7)/0.3);
+        put(gx+dx,gy+dy,cG,1);}}
   } else {
     for(let i=0;i<W*H;i++){png.data[i*4]=bgD[0];png.data[i*4+1]=bgD[1];png.data[i*4+2]=bgD[2];png.data[i*4+3]=255;}
   }
@@ -108,7 +134,7 @@ paint([4,0.02,30, -0.35, 0.06], '/tmp/shot_dock'+SUF+'.png', 'erebus');
 paint([0,0.02,10.5, 0, 0.10], '/tmp/shot_rotunda'+SUF+'.png', 'erebus');
 paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png', 'erebus');
 paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png', 'erebus');
-paint([-4,12.62,9.5, 0.6, 0.30], '/tmp/shot_dome'+SUF+'.png', 'erebus');
+paint([-4,12.62,9.5, 0.13, 0.42, 5], '/tmp/shot_dome'+SUF+'.png', 'erebus');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1170], '/tmp/shot_empire_dusk'+SUF+'.png', 'empire');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
 paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');

@@ -84,3 +84,38 @@ log now carries numeric receipts.
   end light panel; log console.
 - Verdict: dock warm-family coverage and color count judged post-shot (receipts in commit);
   other rooms regression-checked same shot batch.
+
+
+## VISUAL LOOP, REOPENED (owner report 2026-07-05: 'quite different from the branch')
+
+### Pass 6 - KEPT (the light rig is baked)
+- The branch runs 27 mkLight point lights + hemisphere + exposure 1.24; this renderer has none.
+  All lights measured verbatim (color/intensity/range) and mapped onto the port's coordinates,
+  then BAKED per face (centroid falloff + hemisphere ambient by normal, emissive faces exempt).
+- Receipts: rotunda lum 39->32 (BR 31), reactor gains the missing red family (#240000 20%),
+  bridge/dock regressions surfaced honestly.
+
+### Pass 7 - KEPT + one canon restored
+- The dock had been hand-baked in the old Pass-4; the new rig double-lit it (lum 64). Region
+  exemption restores canon exactly (42==42). Bridge gains its ceiling-field lights; reactor core
+  trimmed (2.3/25 -> 1.55/18). selfshot's erebus sky finally learns what the live painter knew:
+  sun disc + glow + SUNRISE FLOOD + ringed giant; the dome pose takes t=5 (sun low, vis 1).
+  Dome: lum 8 (void) -> 23 (a sunrise exists in headless court for the first time).
+
+### Pass 8 - KEPT (the falloff was the flood)
+- three r128 decay=2 is ~1/d^2; my (1-d/R)^2 window was lighting whole halls. New law:
+  I*k*(1-d/R)^2/(1+0.22 d^2). Rotunda black depth lands EXACTLY: blk 40% vs BR 39%.
+
+### Pass 9 (+9b) - KEPT (global gain convergence)
+- Gain 3.2->4.6, ambient x1.35, dome skylight up, bridge field trimmed.
+- FINAL vs branch pixels: rotunda {26/blk29/cyan10/colors27} vs {31/39/14/38};
+  reactor {47/blk26/warm24} vs {54/30/32}; dome void->sunrise {27+, flood teal 16%} vs {40};
+  dock canon held {41~42}; bridge blacks/texture up (colors 15->32).
+
+### Honest remaining deltas (renderer-native, logged)
+- Bridge cyan share (69% vs 33%) is COMPOSITION: the emissive ceiling field fills this pose's
+  frame; their camera sits lower among grey consoles. The field itself is their feature.
+- Dome lum 27 vs 40: their glass dome glows on every pixel (material transmission); ours is
+  sky + skylight bake. The sunrise now exists where a void used to be.
+- Color-count ceiling (~27-32 vs 38-67): MeshStandard micro-variance vs flat faces; panel
+  jitter narrows but cannot close it.

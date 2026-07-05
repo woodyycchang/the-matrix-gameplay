@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1736</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1809</span></div>
 </div>
 
 <script>
@@ -1732,7 +1732,7 @@
     // Three decks on one groundY=-7 basement: every floor is a collider top,
     // stairs are 0.28 risers, the walker's support scan does the rest.
     var s = {
-      name: 'erebus station', sky: 'erebus', fog: { near: 7, far: 58, col: '#070b16' },   // matches their FogExp2 .023 falloff at hall scale
+      name: 'erebus station', sky: 'erebus', fog: { near: 7, far: 58, col: '#0b0f18' },   // matches their FogExp2 .023 falloff at hall scale
       groundY: -7, ambience: 'station', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 27], yaw: 0 },
       label: 'EREBUS STATION'
@@ -2007,6 +2007,53 @@
     C.addQuadY(m,-7.0,-25.2,-5.8,-24.4,1.02,'#0e2f3f'); C.addQuadY(m,5.8,-25.2,7.0,-24.4,1.02,'#0e2f3f');
     // med bay: IV stand
     C.addBox(m,17.2,1.05,-4.9,0.08,2.1,0.08,TR,{noBottom:true}); C.addBox(m,17.2,2.05,-4.62,0.08,0.06,0.5,TR,{noBottom:true});
+    // PASS-6 (visual loop, reopened by the owner): the branch runs 27 point lights
+    // + a hemisphere through exposure 1.24; this renderer has none, so the light
+    // rig is BAKED per face - their intensities/ranges/colors verbatim, positions
+    // mapped onto this port's coordinates. Emissive-reading faces keep voltage.
+    var LTS = [
+      [-4,5.2,29, 1,0.75,0.45, 1.05,20], [5,5.2,22, 1,0.75,0.45, 0.95,18], [0,4.6,31.4, 1,0.75,0.45, 0.7,9],
+      [0,2.7,13.4, 0.87,0.93,0.93, 0.5,8],
+      [0,2.9,15.7, 1,0.25,0.22, 0.8,11], [0,2.9,-15.7, 1,0.25,0.22, 0.75,11],
+      [0,2.4,0, 0.30,0.89,1, 1.25,17], [0,10.2,5, 0.75,0.85,1, 0.55,26],
+      [0,6.7,12.4, 1,0.69,0.34, 0.45,9], [0,6.7,-12.4, 1,0.69,0.34, 0.45,9],
+      [12.4,6.7,0, 1,0.69,0.34, 0.45,9], [-12.4,6.7,0, 1,0.69,0.34, 0.45,9],
+      [0,16,0, 0.44,0.62,0.87, 0.5,24],
+      [0,3.8,-30.6, 1,0.25,0.22, 0.9,15], [0,1.9,-27, 0.30,0.89,1, 0.95,13], [0,3.2,-25.5, 1,0.69,0.34, 0.6,12],
+      [-3,3.7,-21.5, 0.30,0.89,1, 0.22,9], [3,3.7,-21.5, 0.30,0.89,1, 0.22,9], [-3,3.7,-26, 0.30,0.89,1, 0.22,9], [3,3.7,-26, 0.30,0.89,1, 0.22,9],
+      [-3.5,3.85,-27.4, 0.85,0.9,1, 0.4,6], [3.5,3.85,-27.4, 0.85,0.9,1, 0.4,6],
+      [22,2.9,-6, 0.87,0.93,1, 0.85,13], [26,3.3,-3, 0.18,0.72,0.78, 0.35,10], [27,1.8,-6, 0.35,1,0.61, 0.3,6],
+      [22,2.6,8, 1,0.69,0.34, 0.8,14],
+      [-22,3.6,0, 1,0.37,0.82, 0.85,20], [-26,2.6,5, 0.35,1,0.69, 0.55,12],
+      [20,6.8,-9, 0.30,0.89,1, 0.9,17], [17,6.4,-12, 0.30,0.89,1, 0.7,10], [24,6.2,-6, 1,0.69,0.34, 0.4,7],
+      [0,-3.0,25, 1,0.48,0.16, 1.55,18], [-6,-6.2,7, 0.30,0.89,1, 1.2,13], [8,-6.2,17, 0.30,0.89,1, 0.8,11],
+      [11,-2.4,24, 1,0.69,0.34, 0.55,6], [-7,-4.6,5, 1,0.25,0.22, 0.5,9], [-5.5,-4.9,13.5, 1,0.25,0.22, 0.45,9],
+      [8,-3.4,35, 0.56,0.46,1, 0.75,9]
+    ];
+    for (var bf2 = 0; bf2 < m.f.length; bf2++) {
+      var ff = m.f[bf2], fc3 = ff.c;
+      if (typeof fc3 !== 'string' || fc3.charAt(0) !== '#') continue;
+      var r4 = parseInt(fc3.slice(1, 3), 16), g4 = parseInt(fc3.slice(3, 5), 16), b4 = parseInt(fc3.slice(5, 7), 16);
+      var mx3 = Math.max(r4, g4, b4), mn3 = Math.min(r4, g4, b4);
+      if ((mx3 > 0 && (mx3 - mn3) / mx3 > 0.42 && mx3 > 140) || mn3 > 150) continue;   // emissive keeps voltage
+      var cx4 = 0, cy4 = 0, cz4 = 0, nvp2 = ff.i.length;
+      for (var vv2 = 0; vv2 < nvp2; vv2++) { var vt = m.v[ff.i[vv2]]; cx4 += vt[0]; cy4 += vt[1]; cz4 += vt[2]; }
+      cx4 /= nvp2; cy4 /= nvp2; cz4 /= nvp2;
+      if (cx4 > -8.2 && cx4 < 8.2 && cz4 > 17.7 && cz4 < 32.2 && cy4 < 5.7) continue;   // the dock was hand-baked in the old Pass-4; no double light
+      var ny2 = (ff.n && ff.n[1]) || 0, ha = (ny2 + 1) * 0.5;
+      var er = (0.0235 + (0.149 - 0.0235) * ha) * 0.675, eg = (0.0314 + (0.263 - 0.0314) * ha) * 0.675, eb = (0.0627 + (0.416 - 0.0627) * ha) * 0.675;
+      if (cy4 > 12.2) { er += 0.42; eg += 0.52; eb += 0.66; }   // skylight through the glass dome
+      for (var li2 = 0; li2 < LTS.length; li2++) { var L2 = LTS[li2];
+        var ddx = cx4 - L2[0], ddy = cy4 - L2[1], ddz = cz4 - L2[2];
+        var dd3 = Math.sqrt(ddx * ddx + ddy * ddy + ddz * ddz);
+        if (dd3 >= L2[7]) continue;
+        var wnd = (1 - dd3 / L2[7]); wnd *= wnd;
+        var ee = L2[6] * 4.6 * wnd / (1 + dd3 * dd3 * 0.22);   // three r128 decay-2 character: hot near, black far
+        er += ee * L2[3]; eg += ee * L2[4]; eb += ee * L2[5];
+      }
+      var oR = Math.min(255, Math.round(r4 * er * 1.24)), oG = Math.min(255, Math.round(g4 * eg * 1.24)), oB = Math.min(255, Math.round(b4 * eb * 1.24));
+      ff.c = '#' + ((1 << 24) + (oR << 16) + (oG << 8) + oB).toString(16).slice(1);
+    }
     C.meshBounds(m); C.anchorize(m, 0.05, 61, 8);
     s.insts.unshift(inst(m, [0,0,0], 0, { label: 'station', kind: 'static' }));
     // ---------------- director (once-each ghost beats) ----------------

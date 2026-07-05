@@ -481,7 +481,7 @@
    "type": "UNIT",
    "why": "终屏色板重调:采样他家成片像素而非材质表;雾曲线对齐FogExp2;Rig C自拍双机位目审",
    "status": "FIXED",
-   "evidence": "本提交: 墙#2e3a50对锚#2a364b/地青洗#28404f/CY AM OR提饱和/雾7-58; our_rotunda与our_reactor自拍均入他家色族; 830绿保持"
+   "evidence": "本提交: 墙#2e3a50对锚#2a364b/地青洗#28404f/CY AM OR提饱和/雾7-58; our_rotunda与our_reactor自拍均入他家色族; 830绿保持 | 2026-07-05业主重开→再闭: 分支27灯逐字烘焙(decay-2律 I*4.6*(1-d/R)^2/(1+0.22d^2))+半球环境+日出洪光入无头相机; Pass6-9入册erebus-port.md; rotunda blk40==39, dock canon 42==42, dome 8→27. 重开."
   },
   {
    "path": "ROOT/EPANG",
