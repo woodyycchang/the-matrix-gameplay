@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/color:#0d7a3a/.test(tplT) && !/color:#21d95e/.test(tplT) && !/#log\{[^}]*mix-blend-mode/.test(tplT), 'the voice is DEEP Matrix green (#0d7a3a family) with a whisper of glow');
+  ok(/#log\{[^}]*mix-blend-mode:difference/.test(tplT) && /color:#b8b8b4/.test(tplT) && !/#log \.line\{[^}]*#0d7a3a/.test(tplT), 'ORIGINAL palette: ink-grey under difference blend - automatic contrast over any scene');
 }
 
 
@@ -1543,7 +1543,7 @@ section('EXO transmission UI');
   ok(/#log \.line\{[^}]*text-align:left/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL) && /border-top:1px dashed/.test(tplL), 'picture anatomy: left-aligned telemetry between dashed rules, lines evaporate');
   ok(/classList\.add\('in'\)/.test(appL) && /classList\.add\('faded'\)/.test(appL) && /\/\^you: \//.test(appL), 'lifecycle wired: fade-in, evaporate, faint player echoes');
   ok(/classList\.add\('con'\)/.test(appL) && /classList\.remove\('con'\)/.test(appL), 'Esc reveals the console; play hides every app control');
-  ok(/\.chip\{[^}]*border:0/.test(tplL) && /text-transform:lowercase/.test(tplL) && /color:#0d7a3a/.test(tplL), 'chips are borderless lowercase ghost text in dark green');
+  ok(/\.chip\{[^}]*border:0/.test(tplL) && /\.chip\{[^}]*mix-blend-mode:difference/.test(tplL), 'chips are borderless ghost text in the original blend palette');
 }
 
 
