@@ -425,6 +425,7 @@
     }
     if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
     if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
+    document.body.classList.toggle('dark', /NEON|ARMORY/i.test(String(game.sceneName || '')));   // dark scenes speak in code-green
     var a = game.aim, label = '';
     if (game.bike) {
       if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';

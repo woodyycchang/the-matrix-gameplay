@@ -35,6 +35,10 @@
   #log .line.sys{font-size:.85em;text-transform:uppercase;letter-spacing:.16em}
   #log .line.you{font-size:.8em;letter-spacing:.12em}
   #log .line.you.in{opacity:.5}
+  body.dark #log{border-top-color:rgba(154,255,192,.45);border-bottom-color:rgba(154,255,192,.45)}
+  body.dark #log .line{color:#9affc0;text-shadow:0 0 3px rgba(3,24,10,.8),0 0 12px rgba(154,255,192,.28)}
+  body.dark .chip{color:#9affc0;text-shadow:0 0 3px rgba(3,24,10,.7)}
+  body.dark #inrow input{color:#9affc0;caret-color:#9affc0;border-bottom-color:rgba(154,255,192,.4)}
   #inrow{display:flex;gap:8px;align-items:center;justify-content:flex-start;pointer-events:none;opacity:0;transition:opacity .35s;width:min(46ch,72vw)}
   body.con #inrow{opacity:1;pointer-events:auto}
   #chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin-top:8px;pointer-events:none;opacity:0;transition:opacity .35s;width:min(46ch,72vw)}
