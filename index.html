@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0427</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0436</span></div>
 </div>
 
 <script>
@@ -1910,7 +1910,7 @@
   // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
   // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
   //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 2.0, TURBO_STEER: 1.2, EYE: 1.34,
+  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 1.15, TURBO_STEER: 0.8, EYE: 1.34,
              TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
 
   Game.prototype.mountBike = function (it) {
@@ -1963,12 +1963,20 @@
     // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
     // BRANCH FEEL (ported): steering authority GROWS with speed - you carve
     // at pace and can barely wrench it at a standstill.
+    // INPUT PIPELINE (industry-standard, scale-calibrated): ease the steer
+    // state in (9/s) and let it release crisper (12/s); rate halved for our
+    // 3.4 m lanes vs the branch's 10 m. Hands off -> gentle self-straighten.
+    var sTgt = C.clamp(steerIn, -1.4, 1.4);
+    bk.sSm = (bk.sSm || 0) + (sTgt - (bk.sSm || 0)) * Math.min(1, (Math.abs(sTgt) > Math.abs(bk.sSm || 0) ? 9 : 12) * dt);
     var steerCouple = 0.5 + 0.5 * C.clamp(bk.speed / (B.MAX * 0.55), 0, 1);
     var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * steerCouple;
-    p.yaw += steerIn * steerRate * dt;
-    if (sc.infinite) p.yaw = C.clamp(p.yaw, -1.15, 1.15);   // arcade clamp: you ride DOWN the street
-    var leanT = C.clamp(steerIn, -1, 1) * 0.95 * Math.min(1, bk.speed / (B.MAX * 0.85));
-    bk.lean += (leanT - bk.lean) * Math.min(1, (Math.abs(steerIn) > 0.05 ? 8 : 4) * dt);   // snap in, ease out
+    p.yaw += bk.sSm * steerRate * dt;
+    if (sc.infinite) {
+      p.yaw = C.clamp(p.yaw, -1.15, 1.15);   // arcade clamp: you ride DOWN the street
+      if (Math.abs(steerIn) < 0.04) p.yaw += -p.yaw * Math.min(1, 0.8 * dt);   // hands off: drift back to the axis
+    }
+    var leanT = C.clamp(bk.sSm, -1, 1) * 0.95 * Math.min(1, bk.speed / (B.MAX * 0.85));
+    bk.lean += (leanT - bk.lean) * Math.min(1, (Math.abs(bk.sSm) > 0.05 ? 8 : 4) * dt);   // snap in, ease out
     // longitudinal — roll-on with diminishing accel near vmax; turbo lifts the cap and boosts accel
     var maxv = bk.boosting ? B.BOOST : B.MAX;
     if (thr) {

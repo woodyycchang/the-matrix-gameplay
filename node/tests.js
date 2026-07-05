@@ -1581,8 +1581,8 @@ section('N1 ride-feel: the branch equations live natively');
   const fsN1 = require('fs');
   const gmN = fsN1.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
   ok(/steerCouple = 0\.5 \+ 0\.5 \* C\.clamp\(bk\.speed/.test(gmN), 'steering authority grows with speed (branch shape), not the inverse');
-  ok(/if \(sc\.infinite\) p\.yaw = C\.clamp\(p\.yaw, -1\.15, 1\.15\)/.test(gmN), 'the arcade clamp: you ride DOWN the street');
-  ok(/Math\.abs\(steerIn\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4, exactly the branch rhythm');
+  ok(/p\.yaw = C\.clamp\(p\.yaw, -1\.15, 1\.15\)/.test(gmN), 'the arcade clamp: you ride DOWN the street');
+  ok(/Math\.abs\(bk\.sSm\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4 on the SMOOTHED steer state');
   ok(/function crashHit\(strength\)/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /self\.shake = Math\.max\(self\.shake \|\| 0, strength\)/.test(gmN), 'crashHit is one shared unit: cooldown, hard cut, shake');
 }
 
@@ -1639,6 +1639,16 @@ section('N4: a quarter hour down the mile - endless, bounded, finite');
   ok(Object.keys(g.scene.chunks).length <= 7, 'the chunk window stays within its seven-slot budget');
   const ops = C.render(g, 640, 360, g.time);
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'a far-out frame renders with zero NaN polys');
+}
+
+
+section('steering calibrated: half the rate, smoothed, self-centering');
+{
+  const fsSC = require('fs');
+  const gmS = fsSC.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  ok(/STEER: 1\.15, TURBO_STEER: 0\.8/.test(gmS), 'the rate is scale-calibrated to our 3.4 m lanes (branch 1.85 served 10 m lanes)');
+  ok(/bk\.sSm = \(bk\.sSm \|\| 0\) \+/.test(gmS) && /\? 9 : 12/.test(gmS), 'input eases in at 9/s and releases crisper at 12/s - the industry pipeline');
+  ok(/p\.yaw \+= -p\.yaw \* Math\.min\(1, 0\.8 \* dt\)/.test(gmS), 'hands off: the bike drifts gently back to the street axis');
 }
 
 // ---------------------------------------------------------------- summary
