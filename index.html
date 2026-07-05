@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0915</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0920</span></div>
 </div>
 
 <script>
@@ -1602,6 +1602,7 @@
     function wallX(x,z0,z1,y0,y1,cc){ col(x-0.18,y0,z0,x+0.18,y1,z1); C.addQuadX(m,z0,y0,z1,y1,x,(cc||ST), x<0); }
     function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.18,x1,y1,z+0.18); C.addQuadZ(m,x0,y0,x1,y1,z,(cc||ST), z>0); }
     function stripY(x0,z0,x1,z1,y,ccc){ C.addQuadY(m,x0,z0,x1,z1,y,ccc); }
+    function quad4(p0,p1,p2,p3,cc){ var b=m.v.length; m.v.push(p0,p1,p2,p3); C.addFace(m,[b,b+1,b+2,b+3],cc); }
     function stair(x0,x1,z0,dz,steps,yA,yB){
       var rise=(yB-yA)/steps;
       for(var i=0;i<steps;i++){ var zz=z0+dz*i*0.55, yy=yA+rise*(i+1);
@@ -1644,9 +1645,9 @@
     s.insts.push(inst(P.hallDoor(false), [13-0.3, 0, 7], -Math.PI/2, { label: 'DATA ARCHIVE', kind: 'door', state: 'sealed' }));
     // stairs DOWN (SW shaft) to reactor deck: two flights + landing
     stair(-9,-6.6,2.2,+1,13,0,-3.64);
-    floor(-9,9.35,-5,10,-3.64,'#10151f');
+    floor(-9,8.8,-5,10,-3.64,'#10151f');
     stair(-7.4,-5,9.35,-1,12,-3.64,-7);
-    wallX(-9,2,10,-7,0.2); wallX(-5,2,10,-7,-0.2); wallZ(10,-9,-5,-7,0.2);
+    wallX(-9,2,10,-7,0.2); wallX(-5,2,10,-7,-0.2); wallZ(10.35,-9,-5,-7,-0.55);
     // stairs UP (east) to dome deck: two flights + landing at y6
     stair(11,12.8,-6,+1,22,0,6);
     floor(10.5,6.1,13,8,6,'#10151f');
@@ -1658,7 +1659,7 @@
     C.addBox(m,8.85,12.55,0,0.1,1.1,13.2,TR,{noBottom:true});
     for (var dr=0; dr<8; dr++){ var da=dr*Math.PI/4;
       var bx=Math.cos(da)*12.4, bz=Math.sin(da)*12.4, tx=Math.cos(da)*3.6, tz=Math.sin(da)*3.6;
-      C.addFace(m,[bx,12,bz],[tx,18,tz],[Math.cos(da+0.06)*3.6,18,Math.sin(da+0.06)*3.6],[Math.cos(da+0.06)*12.4,12,Math.sin(da+0.06)*12.4],'#26405c'); }
+      quad4([bx,12,bz],[tx,18,tz],[Math.cos(da+0.06)*3.6,18,Math.sin(da+0.06)*3.6],[Math.cos(da+0.06)*12.4,12,Math.sin(da+0.06)*12.4],'#26405c'); }
     col(-13,12,-13.4,13,13.4,-12.9); col(-13,12,12.9,13,13.4,13.4); col(-13.4,12,-13,-12.9,13.4,13); col(12.9,12,-13,13.4,13.4,13);   // rim rails
     // ---------------- north corridor + COMMAND BRIDGE ----------------
     floor(-2,-18,2,-13,0,'#141a26'); wallX(-2,-18,-13,0,3.1); wallX(2,-18,-13,0,3.1);
@@ -1668,8 +1669,8 @@
     wallZ(-30,-5.2,-3.8,0,1.4); wallZ(-30,-5.2,-3.8,2.3,4); wallZ(-30,3.8,5.2,0,1.4); wallZ(-30,3.8,5.2,2.3,4);   // two viewport slits
     C.addBox(m,0,0.55,-25,5.6,1.1,1.6,SD,{noBottom:true}); col(-2.8,0,-25.8,2.8,1.1,-24.2);   // console dais
     C.addQuadY(m,-2.4,-25.7,2.4,-24.3,1.12,'#0e2f3f');
-    C.addFace(m,[-4.5,1.4,-29.9],[-4.5,2.3,-29.9],[-1.2,0.2,-23.4],[-1.2,0.05,-23.4],'#2a2417');   // sun shafts
-    C.addFace(m,[4.5,1.4,-29.9],[4.5,2.3,-29.9],[1.2,0.2,-23.4],[1.2,0.05,-23.4],'#2a2417');
+    quad4([-4.5,1.4,-29.9],[-4.5,2.3,-29.9],[-1.2,0.2,-23.4],[-1.2,0.05,-23.4],'#2a2417');   // sun shafts
+    quad4([4.5,1.4,-29.9],[4.5,2.3,-29.9],[1.2,0.2,-23.4],[1.2,0.05,-23.4],'#2a2417');
     // ---------------- REACTOR deck (y=-7) ----------------
     floor(-12,16,12,34,-7,'#12161f');
     wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
@@ -1679,7 +1680,7 @@
     // the core: octagon prism + orange glow slots + pedestal
     var CR=2.7, CX=0, CZ=25.0;
     for (var oc=0; oc<8; oc++){ var a0=oc*Math.PI/4, a1=(oc+1)*Math.PI/4;
-      C.addFace(m,[CX+Math.cos(a0)*CR,-6.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a0)*CR,-0.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a1)*CR,-0.9,CZ+Math.sin(a1)*CR],[CX+Math.cos(a1)*CR,-6.9,CZ+Math.sin(a1)*CR],SD); }
+      quad4([CX+Math.cos(a0)*CR,-6.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a0)*CR,-0.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a1)*CR,-0.9,CZ+Math.sin(a1)*CR],[CX+Math.cos(a1)*CR,-6.9,CZ+Math.sin(a1)*CR],SD); }
     col(CX-2.2,-7,CZ-2.2,CX+2.2,-0.8,CZ+2.2);
     C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ-CR-0.03,OR,false); C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ+CR+0.03,OR,true);
     C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX-CR-0.03,OR,false); C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX+CR+0.03,OR,true);
@@ -1687,7 +1688,7 @@
     // emergency strips (director swaps their state)
     s.emg = [];
     var EPOS=[[-11.8,22],[-11.8,30],[11.8,26]];
-    for (var ei=0; ei<3; ei++){ var it=inst(P.emgStrip('off'), [EPOS[ei][0],-5.4,EPOS[ei][1]], EPOS[ei][0]<0?Math.PI/2:-Math.PI/2, { label:'emg', kind:'emg', state:'off' }); s.insts.push(it); s.emg.push(it); }
+    for (var ei=0; ei<3; ei++){ var it=inst(P.emgStrip('off'), [EPOS[ei][0],-5.4,EPOS[ei][1]], EPOS[ei][0]<0?Math.PI/2:-Math.PI/2, { label:'emg', kind:'emg' }); it.state='off'; s.insts.push(it); s.emg.push(it); }
     // the alcove + the figure
     floor(6,34,10,36.5,-7,'#0e1219'); wallZ(36.5,6,10,-7,-3.4); wallX(6,34,36.5,-7,-3.4); wallX(10,34,36.5,-7,-3.4);
     C.addQuadZ(m,6.6,-6.6,9.4,-3.8,36.3,'#141033',false);   // violet backlight

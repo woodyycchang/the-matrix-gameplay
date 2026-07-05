@@ -406,7 +406,7 @@
    "type": "BRANCH",
    "why": "賽博龐克巨塔站体: erebus分支跨引擎移植为关键词主题",
    "status": "PENDING",
-   "evidence": "E0勘测完毕(eval/erebus-port.md); E1-E5排程",
+   "evidence": "E0-E4机器侧全FIXED(817绿); 待E5手感",
    "priors": [
     "ROOT/EREBUS/E1-skeleton",
     "ROOT/EREBUS/E2-atmosphere",
@@ -419,29 +419,29 @@
    "path": "ROOT/EREBUS/E1-skeleton",
    "type": "UNIT",
    "why": "五空间骨架+封门四挂牌+colliders+双向楼梯",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "660ba9f: 五空间三甲板/双向梯0.28升距/四封门(hallDoor复用)/圆厅按勘测(细壁柱+青线+琥珀壁灯+八辐)"
   },
   {
    "path": "ROOT/EREBUS/E2-atmosphere",
    "type": "UNIT",
    "why": "erebus天模式(日轨/巨行星掩蚀)+人影prop+导演节拍+三音",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "660ba9f+bf7a457: erebus天(星野视差/240s日轨/环带巨行星掩蚀)/P.figure+P.emgStrip四态/导演三拍(断电→红→半功率)复用glyphEpoch重生机/三音效/双日志原文"
   },
   {
    "path": "ROOT/EREBUS/E3-wordchain",
    "type": "UNIT",
    "why": "六件套词链",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "bf7a457: 六件套齐"
   },
   {
    "path": "ROOT/EREBUS/E4-courts",
    "type": "UNIT",
    "why": "自建法庭全套",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 五探支撑+穿墙+导演相位与三音在案+人影消散普查+日志打字+erebus天算子+双点零NaN — 799->817全绿"
   },
   {
    "path": "ROOT/EREBUS/E5-feel",

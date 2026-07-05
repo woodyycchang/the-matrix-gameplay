@@ -1935,6 +1935,58 @@ section('déjà vu: infinite hallway');
   ok(g.sceneName === 'hallway', 'and the corridor is still the corridor');
 }
 
+section('EREBUS: three decks stand on stock physics');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('take me to the tower');
+  step(g, null, 1.4);
+  ok(g.scene.name === 'erebus station', "the word chain docks you: 'tower' -> erebus station");
+  const probes = [[0, 0, 27, 0, 'docking bay'], [0, 0, -5, 0, 'rotunda'], [-7, -3.64, 9.4, -3.64, 'stair landing'], [0, 12, -10, 12, 'dome deck'], [11.7, 6, 7, 6, 'balcony landing']];
+  for (const [x, y, z, want, name] of probes) {
+    g.player.pos = [x, y + 0.9, z]; g.player.vel = [0, 0, 0];
+    step(g, null, 0.9);
+    ok(g.player.grounded && Math.abs(g.player.pos[1] - want) < 0.07, name + ' supports at ' + want + ' (got ' + g.player.pos[1].toFixed(2) + ')');
+  }
+  g.player.pos = [0, 0.02, 0]; g.player.vel = [0, 0, 0];
+  for (let i = 0; i < 120; i++) step(g, { strafe: 1 }, 1 / 60);
+  ok(g.player.pos[0] < 13.4, 'the rotunda east wall does not pierce (' + g.player.pos[0].toFixed(2) + ')');
+}
+
+section('EREBUS: the director runs its beats once');
+{
+  const g = new C.Game();
+  step(g, null, 0.2);
+  g.request('erebus');
+  step(g, null, 1.4);
+  const s = g.scene;
+  ok(s.emg && s.emg.length === 3 && s.emg.every(e => e.state === 'off'), 'three emergency strips wait in the off state');
+  g.player.pos = [-6, -6.1, 20]; g.player.vel = [0, 0, 0];
+  let evs = [];
+  for (let i = 0; i < 20; i++) evs = evs.concat(step(g, null, 1 / 20));
+  ok(s._dir.black === true && s.emg.every(e => e.state === 'dead') || s.emg.every(e => e.state === 'red'), 'first reactor entry kills the power');
+  ok(has(evs, 'powerdown'), 'the powerdown thrum fired');
+  for (let i = 0; i < 80; i++) evs = evs.concat(step(g, null, 1 / 20));
+  ok(s.emg.every(e => e.state === 'half'), 'power settles at half (' + s.emg[0].state + ')');
+  ok(has(evs, 'alarm') && has(evs, 'whisper'), 'alarm and whisper both spoke');
+  const census0 = s.insts.length;
+  g.player.pos = [8, -6.1, 33.8]; g.player.vel = [0, 0, 0];
+  let evs2 = [];
+  for (let i = 0; i < 30; i++) evs2 = evs2.concat(step(g, null, 1 / 20));
+  ok(s._dir.fig === true && s.fig === null && s.insts.length === census0 - 1, 'the figure dissolves on approach and leaves the census');
+  ok(has(evs2, 'whisper'), 'it whispers as it goes');
+  g.player.pos = [3.2, 0.02, 27.2]; g.player.vel = [0, 0, 0];
+  let evs3 = [];
+  for (let i = 0; i < 30; i++) evs3 = evs3.concat(step(g, null, 1 / 20));
+  ok(has(evs3, 'say') && s.logs[0].shown, 'the crew log typewrites on approach');
+  const ops = C.render(g, 480, 270, g.time);
+  ok(ops[0].t === 'sky' && ops[0].mode === 'erebus' && Number.isFinite(ops[0].yaw) && Number.isFinite(ops[0].time), "the sky op carries mode 'erebus' with yaw and time");
+  ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the station renders with zero NaN polys');
+  g.player.pos = [0, 12.02, -10];
+  const ops2 = C.render(g, 480, 270, g.time);
+  ok(ops2.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the dome deck under the erebus sky renders clean');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
