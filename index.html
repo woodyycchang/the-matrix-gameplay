@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0914</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0915</span></div>
 </div>
 
 <script>
@@ -2029,6 +2029,7 @@
     rooftop: 'Jump program. You cannot be hurt here. run, jump, fly.',
     city: 'Crowd simulation, lunch hour. Eyes forward.',
     hallway: 'Loading a corridor. Third floor of nowhere. Watch the doorway.',
+    erebus: 'Docking at Erebus station. Three decks. Mind the reactor deck.',
     clear: 'Wiping the room.',
     codeOn: 'Dropping the render layer. This is what it really looks like.',
     codeOff: 'Restoring the skin.',
@@ -2047,7 +2048,7 @@
     bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -2074,6 +2075,7 @@
     [/\b(clear|dismiss|empty|reset|nothing|wipe)\b/, 'clear'],
     [/\b(gun|guns|weapon|weapons|armory|arsenal|rifle|rifles|pistols)\b/, 'weapons'],
     [/\b(hallway|corridor|dejavu|deja|vu|doors)\b/, 'hallway'],
+    [/\b(erebus|station|tower)\b/, 'erebus'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
     [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
@@ -2181,7 +2183,7 @@
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus }[a.scene];
       this.transition(a.scene, line);
       return a;
     }
@@ -4421,7 +4423,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
@@ -4506,6 +4508,7 @@
   var INTENTS = [
     { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks'] },
     { word: 'hallway', anchors: ['the endless corridor of doors', 'the backdoor hallway', 'deja vu, something changed', 'the infinite door'] },
+    { word: 'erebus', anchors: ['a derelict space station', 'the cyberpunk mega tower station', 'the orbital station with a reactor', 'erebus'] },
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
@@ -4645,6 +4648,8 @@
       { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
       { role: 'user', content: 'the backdoor corridor with all the doors' },
       { role: 'assistant', content: 'WORD: hallway | SAY: The corridor. Watch the doorway.' },
+      { role: 'user', content: 'take me to that derelict orbital station' },
+      { role: 'assistant', content: 'WORD: erebus | SAY: Docking at Erebus. Mind the reactor deck.' },
       { role: 'user', content: 'motor' },
       { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
       { role: 'user', content: 'a fast ride through the night' },

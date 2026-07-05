@@ -12,6 +12,7 @@
   var INTENTS = [
     { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks'] },
     { word: 'hallway', anchors: ['the endless corridor of doors', 'the backdoor hallway', 'deja vu, something changed', 'the infinite door'] },
+    { word: 'erebus', anchors: ['a derelict space station', 'the cyberpunk mega tower station', 'the orbital station with a reactor', 'erebus'] },
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
@@ -151,6 +152,8 @@
       { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
       { role: 'user', content: 'the backdoor corridor with all the doors' },
       { role: 'assistant', content: 'WORD: hallway | SAY: The corridor. Watch the doorway.' },
+      { role: 'user', content: 'take me to that derelict orbital station' },
+      { role: 'assistant', content: 'WORD: erebus | SAY: Docking at Erebus. Mind the reactor deck.' },
       { role: 'user', content: 'motor' },
       { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
       { role: 'user', content: 'a fast ride through the night' },
