@@ -1652,6 +1652,289 @@ section('steering calibrated: half the rate, smoothed, self-centering');
   ok(/\|\| bk\.speed < 1\.2\) p\.yaw \+= -p\.yaw \* Math\.min\(1, 1\.2 \* dt\)/.test(gmS), 'hands off: the bike drifts gently back to the street axis');
 }
 
+
+const FIXCAM = { pos: [8.2, 1.62, 0], yaw: -Math.PI / 2, pitch: -0.02, roll: 0 };
+const HALL = C.HALL;
+function snapCat(cat) {
+  return [cat.pos[0], cat.pos[1], cat.pos[2], cat.yaw, cat.pose[1], cat.pose[2], cat.pose[3], cat.pose[4], cat.pose[5]];
+}
+function snapScene(g) {
+  // persistent state only; render/load transients excluded on purpose
+  return g.scene.insts.map(it => JSON.stringify({
+    id: it.id, kind: it.kind, label: it.label, state: it.state || null,
+    pos: it.pos, yaw: it.yaw, scale: it.scale, glyphEpoch: it.glyphEpoch | 0,
+    mesh: [it.mesh.v.length, it.mesh.f.length],
+    pose: it.pose ? it.pose.slice() : null
+  })).sort();
+}
+function renderWith(g, mode, cb) {
+  const cam0 = g.cam; g.cam = FIXCAM;
+  const mode0 = g.mode; g.mode = mode;
+  const ops = C.render(g, 400, 225, 77.77);   // fixed t: glyph buckets identical across calls
+  g.cam = cam0; g.mode = mode0;
+  if (cb) cb(ops);
+  return ops;
+}
+function catDrawSig(g, catId) {
+  const ops = renderWith(g, 'normal');
+  return JSON.stringify(ops.filter(o => o.t === 'poly' && o.id === catId)
+    .map(o => ({ p: o.p, c: o.c, a: o.a, d: o.d })));
+}
+function glyphSig(g, id) {
+  const ops = renderWith(g, 'code');
+  return JSON.stringify(ops.filter(o => o.t === 'g' && o.id === id)
+    .map(o => [o.ch, Math.round(o.x * 10), Math.round(o.y * 10)]).sort());
+}
+function runTo(g, phase, maxSec) {
+  let guard = 0;
+  while (!(g.scene.dv && g.scene.dv.phase === phase) && guard++ < (maxSec || 40) * 60) { g.update({}, 1 / 60); g.drain(); }
+  return !!(g.scene.dv && g.scene.dv.phase === phase);
+}
+
+// (a) the replay IS the recording — proven at state level and at draw level
+section('déjà vu: true replay');
+{
+  const g = new C.Game();
+  g.request('a hallway');
+  eq(g.trans && g.trans.name, 'hallway', 'request stages the hallway');
+  ok(runTo(g, 'pass1'), 'reaches pass 1');
+  const dv = g.scene.dv, cat = dv.cat;
+  const K = 210;
+  const seen1 = [], seen2 = [];
+  let draw1 = null, draw2 = null, scene1 = null, scene2 = null;
+  dv.tap = (phase, p, c) => {
+    if (phase === 'pass1') {
+      seen1.push(snapCat(c));
+      if (p === K) { draw1 = catDrawSig(g, c.id); scene1 = snapScene(g); }
+    } else {
+      seen2.push(snapCat(c));
+      if (p === K) { draw2 = catDrawSig(g, c.id); scene2 = snapScene(g); }
+    }
+  };
+  ok(runTo(g, 'after', 60), 'arc completes');
+  eq(dv.rec.length, HALL.N, 'recording holds one tuple per tick');
+  eq(seen1.length, HALL.N, 'pass 1 applied every tick');
+  eq(seen2.length, HALL.N, 'pass 2 applied every tick');
+  let stateEq = 0;
+  for (let i = 0; i < HALL.N; i++) {
+    let same = true;
+    for (let k = 0; k < 9; k++) if (seen1[i][k] !== seen2[i][k]) same = false;
+    if (same) stateEq++;
+  }
+  eq(stateEq, HALL.N, 'replay equals recording, frame for frame, exactly (proof 1: state)');
+  let recEq = 0;
+  for (let i = 0; i < HALL.N; i++) if (JSON.stringify(dv.rec[i]) === JSON.stringify(seen2[i])) recEq++;
+  eq(recEq, HALL.N, 'pass 2 applied the stored record verbatim');
+  ok(draw1 && draw1.length > 60, 'cat draws at tick K');
+  eq(draw1 === draw2, true, 'replay equals recording at the draw list (proof 2: pixels-in-waiting)');
+
+  // (b) exactly one thing changed between the passes — proven by diff and by census
+  section('déjà vu: one genuine change');
+  const scan = g.scene.insts.filter(it => it.mut);
+  eq(scan.length, 3, 'three mutable fixtures live in the scene graph');
+  ok(dv.cands.length === scan.length && dv.cands.every(c => scan.includes(c)), 'the pick pool IS the scene graph scan');
+  ok(scene1 && scene2, 'tick-matched snapshots taken');
+  const s1 = new Set(scene1);
+  const diff = scene2.filter(x => !s1.has(x));
+  eq(diff.length, 1, 'exactly one object differs between the passes (proof 1: diff)');
+  const chosen = dv.chosen;
+  ok(!!chosen && JSON.parse(diff[0]).id === chosen.id, 'the differing object is the chosen fixture');
+  eq(chosen.state, chosen.mut.alt, 'its state really flipped');
+  let untouched = 0;
+  for (const c of dv.cands) if (c !== chosen && c.state !== c.mut.alt) untouched++;
+  eq(untouched, dv.cands.length - 1, 'every other candidate kept its state (proof 2: census)');
+  ok(chosen.glyphEpoch === 1 && chosen.reResolve !== undefined, 'the change re-seeded its code');
+
+  // way back gone + the only exit forward
+  section('déjà vu: the way back is gone');
+  ok(dv.sealed && g.scene.dv.way.state === 'bricked', 'the archway bricked itself');
+  g.player.pos = [8.2, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = Math.PI / 2;
+  step(g, { fwd: 1, sprint: true }, 2.0);
+  ok(g.player.pos[0] < HALL.HL - 0.3, 'walking back hits a wall now (' + g.player.pos[0].toFixed(2) + ')');
+  step(g, null, 6.0);   // the ring is held back until the operator's line lands
+  const booth = g.scene.insts.find(i => i.kind === 'booth');
+  ok(!!booth, 'a booth rang in at the far end');
+  g.player.pos = [booth.pos[0], 0, 0.3]; g.player.vel = [0, 0, 0];
+  g.player.yaw = Math.atan2(booth.pos[0] - g.player.pos[0], -(booth.pos[2] - g.player.pos[2]));
+  step(g, { fwd: 1 }, 1.6);
+  step(g, null, 1.0);
+  eq(g.sceneName, 'construct', 'walking into the booth hangs up to the void: end to end');
+}
+
+// pre-seal the arch is genuinely open (walk out and back), and the corridor holds
+section('déjà vu: open before, walls always');
+{
+  const g = new C.Game();
+  g.request('deja vu');
+  step(g, null, 1.2);   // settle: fixtures materializing, cat not yet walking
+  g.player.pos = [8.2, 0, 0]; g.player.yaw = Math.PI / 2;
+  step(g, { fwd: 1 }, 1.6);
+  ok(g.player.pos[0] > HALL.HL + 0.3, 'before the glitch you can step out onto the landing');
+  g.player.yaw = -Math.PI / 2;
+  step(g, { fwd: 1 }, 1.8);
+  ok(g.player.pos[0] < HALL.HL - 0.5, 'and walk back in');
+  g.player.pos = [6, 0, 0]; g.player.yaw = 0;
+  step(g, { fwd: 1, sprint: true }, 1.6);
+  ok(Math.abs(g.player.pos[2]) < HALL.HW, 'the corridor walls contain the player');
+}
+
+// the glitch is visible in code vision: chars re-roll in place, neighbors hold still
+section('déjà vu: glyphs re-resolve');
+{
+  const g = new C.Game();
+  g.request('a hallway');
+  ok(runTo(g, 'pass1'), 'in pass 1');
+  const dv = g.scene.dv;
+  const control = g.scene.insts.find(it => it.kind === 'fixture' && !it.mut);
+  // proof 1: epoch alone re-rolls an object's characters at the same anchors, same t
+  // (measured on a fixture beyond the 7 m label-spelling range)
+  const before = glyphSig(g, control.id);
+  control.glyphEpoch = 1;
+  const flipped = glyphSig(g, control.id);
+  control.glyphEpoch = 0;
+  ok(before.length > 40, 'far fixture carries glyphs');
+  ok(before !== flipped, 'epoch bump re-resolves the same anchors to new characters');
+  eq(glyphSig(g, control.id), before, 'epoch restored, characters restored (pure)');
+  const sameXY = (a, b) => JSON.stringify(JSON.parse(a).map(v => [v[1], v[2]]).sort()) === JSON.stringify(JSON.parse(b).map(v => [v[1], v[2]]).sort());
+  ok(sameXY(before, flipped), 'the re-roll is characters, not geometry: anchors held still');
+  // proof 2: the real mutation re-resolves the chosen fixture; a bystander is untouched
+  const preChosen = {}; for (const c of dv.cands) preChosen[c.id] = glyphSig(g, c.id);
+  const preControl = glyphSig(g, control.id);
+  ok(runTo(g, 'pass2'), 'past the glitch');
+  step(g, null, 1.2);   // let the swapped mesh finish materializing
+  const chosen = dv.chosen;
+  chosen.reResolve = 0;  // compare the settled field, not the churn
+  ok(glyphSig(g, chosen.id) !== preChosen[chosen.id], 'the changed fixture reads as different code');
+  eq(chosen.label, chosen.mut.label, 'up close, the code now spells what it became');
+  eq(glyphSig(g, control.id), preControl, 'an unchanged fixture reads as the same code');
+  // the churn itself is visible: same instant, scramble on vs settled
+  chosen.reResolve = 1;
+  const churn = glyphSig(g, chosen.id);
+  chosen.reResolve = 0;
+  const settled = glyphSig(g, chosen.id);
+  ok(churn !== settled, 'the re-resolve is animated, not a silent swap');
+}
+
+// same script, same walk, same record — the sim is deterministic
+section('déjà vu: determinism');
+{
+  const runs = [];
+  for (let r = 0; r < 2; r++) {
+    const g = new C.Game();
+    g.request('a hallway');
+    runTo(g, 'after', 60);
+    runs.push({ rec: JSON.stringify(g.scene.dv.rec), pick: g.scene.dv.chosen.label });
+  }
+  eq(runs[0].rec, runs[1].rec, 'identical scripts record identical walks');
+  eq(runs[0].pick, runs[1].pick, 'identical scripts pick the same fixture');
+  ok(['brick', 'bars', 'dead'].includes(runs[0].pick), 'the pick is a real fixture, wearing its new name');
+}
+
+// the corridor with no end: shut before the seal, endless after it
+section('déjà vu: infinite hallway');
+{
+  const gPre = new C.Game();
+  gPre.request('a hallway');
+  step(gPre, null, 1.0);   // settle: the cat has not even entered yet
+  gPre.player.pos = [-7, 0, 0]; gPre.player.vel = [0, 0, 0]; gPre.player.yaw = -Math.PI / 2;
+  step(gPre, { fwd: 1, sprint: true }, 2.0);
+  ok(gPre.player.pos[0] < -HALL.HL - 2, 'the far door opens for you from the very first minute (' + gPre.player.pos[0].toFixed(2) + ')');
+  ok(gPre.scene.dv.doors[0].a > 0.4 || gPre.scene.dv.doorA > 0.4, 'its leaves really swung');
+  step(gPre, { fwd: 1, sprint: true }, 4.0);
+  ok(gPre.scene.dv.loop.laps >= 2, 'the loop runs before the déjà vu is even over');
+
+  const g = new C.Game();
+  g.request('a hallway');
+  ok(runTo(g, 'after', 60), 'arc completes');
+  const dv = g.scene.dv;
+  const fe = g.scene.insts.find(i => i.kind === 'farend');
+  eq(fe.state, 'armed', 'the door that never opens is armed: it opens when you come to it');
+  eq(fe.label, 'corridor', 'up close its code now spells where it leads');
+  ok(fe.glyphEpoch === 1, 'and its code re-seeded');
+  eq(dv.doors.length, 4, 'four doors hang in the loop: the far door and one per period');
+  ok(dv.doors.every(d => d.a === 0 && d.blocked), 'all shut and solid before anyone walks up');
+  ok(dv.doors.every(d => g.scene.colliders.includes(d.col)), 'every shut door blocks');
+  eq(g.scene.insts.filter(i => i.kind === 'leaf').length, 8, 'eight leaves, two per door');
+
+  // a door opens for you, only for you, and creaks once
+  g.player.pos = [-19.0, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = -Math.PI / 2;
+  let creaks = 0;
+  for (let i = 0; i < 48; i++) { g.update({}, 1 / 60); for (const e of g.drain()) if (e.name === 'creak') creaks++; }
+  const dNear = dv.doors.find(d => Math.abs(d.x + 20.3) < 0.01);
+  const dFar2 = dv.doors.find(d => Math.abs(d.x + 13.1) < 0.01);
+  ok(dNear.a > 1.5 && !dNear.blocked, 'the near door swings open and lets you pass');
+  ok(!g.scene.colliders.includes(dNear.col), 'its collider lifted');
+  ok(dFar2.a === 0 && dFar2.blocked, 'the next door down stays shut: it opens for proximity, not for the scene');
+  eq(creaks, 1, 'one creak per opening');
+  near(dNear.leaves[0].pose[5], -dNear.leaves[1].pose[5], 1e-9, 'the leaves mirror each other');
+
+  // walk away and it shuts behind you
+  g.player.pos = [-17.0, 0, 0]; g.player.vel = [0, 0, 0];
+  for (let i = 0; i < 80; i++) { g.update({}, 1 / 60); g.drain(); }
+  ok(dv.doors.every(d => d.a < 0.05 && d.blocked), 'left alone, every door eases shut and blocks again');
+  const segs = g.scene.insts.filter(i => i.kind === 'segment');
+  eq(segs.length, 6, 'three corridor segments and three lamps laid down');
+  const segMeshes = segs.filter(i => i.label === 'corridor');
+  ok(segMeshes.length === 3 && segMeshes[0].mesh === segMeshes[1].mesh && segMeshes[1].mesh === segMeshes[2].mesh, 'segments share one mesh: the repeat is literal');
+  ok(!!dv.loop && dv.loop.laps === 0, 'the loop is armed, untriggered');
+
+  // proof 1 the door lifted: the same sprint that was blocked now leaves the corridor
+  g.player.pos = [-8, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = -Math.PI / 2;
+  step(g, { fwd: 1, sprint: true }, 2.0);
+  ok(g.player.pos[0] < -HALL.HL - 2, 'after the seal the same sprint passes through');
+
+  // proof 2 the loop is a pure translation: every discontinuity in the track equals one period
+  const lapsStart = dv.loop.laps;
+  const track = [g.player.pos[0]];
+  let seamShutAhead = 0, seamCarriedBehind = 0;
+  for (let i = 0; i < 60 * 6; i++) {
+    g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain();
+    const x = g.player.pos[0];
+    if (x - track[track.length - 1] > 1) {   // a wrap landed this tick
+      const ahead = dv.doors.filter(d => d.x < x).sort((a, b) => b.x - a.x)[0];
+      const behind = dv.doors.filter(d => d.x > x && d.x < -HALL.HL).sort((a, b) => a.x - b.x)[0];
+      if (ahead && ahead.a < 0.1) seamShutAhead++;
+      if (behind && behind.a > 0.9) seamCarriedBehind++;
+    }
+    track.push(x);
+  }
+  const jumps = [];
+  for (let i = 1; i < track.length; i++) if (Math.abs(track[i] - track[i - 1]) > 1) jumps.push(track[i] - track[i - 1]);
+  const lapsRun = dv.loop.laps - lapsStart;
+  ok(lapsRun >= 4, 'six seconds of running: ' + lapsRun + ' laps');
+  eq(jumps.length, lapsRun, 'every lap is one discontinuity, nothing else moved the player');
+  ok(jumps.every(j => Math.abs(j - HALL.SEGP) < 0.25), 'each wrap is one period, give or take a tick of motion');
+  ok(g.player.pos[0] > dv.loop.at - 0.7 && g.player.pos[0] < dv.loop.at + HALL.SEGP + 0.7, 'the runner never actually gets anywhere');
+  eq(seamShutAhead, lapsRun, 'at every seam the door ahead reads shut');
+  eq(seamCarriedBehind, lapsRun, 'and the one easing shut behind you crossed the seam with you');
+  ok(finiteDeep(g.player.pos) && finiteDeep(g.player.vel), 'player state stays finite through the wraps');
+
+  // the endless stretch renders clean in both sights
+  step(g, null, 0.1);
+  for (const md of ['normal', 'code']) {
+    const m0 = g.mode; g.mode = md;
+    const ops = C.render(g, 400, 225, g.time);
+    const bad = ops.filter(o => o.t === 'poly' && !o.p.every(Number.isFinite)).length;
+    ok(bad === 0 && ops.length > 40, 'loop zone renders (' + md + '): ' + ops.length + ' ops, no NaN');
+    g.mode = m0;
+  }
+
+  // the seam is hidden behind your back: facing the phone, no wrap fires
+  g.player.pos = [dv.loop.at + 0.05, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = Math.PI / 2;
+  const lapsBefore = dv.loop.laps;
+  step(g, { fwd: -1 }, 0.7);
+  ok(dv.loop.laps === lapsBefore && g.player.pos[0] < dv.loop.at, 'facing back, the wrap line lets you cross');
+  step(g, { fwd: -1 }, 4.0);
+  ok(dv.loop.laps > lapsBefore, 'but the corridor still refuses to end (hard wrap)');
+
+  // and the way to the phone is always finite (stop at the doorway; walking into the booth would answer it)
+  g.player.pos = [dv.loop.at + 1, 0, 0]; g.player.vel = [0, 0, 0]; g.player.yaw = Math.PI / 2;
+  let homeTicks = 0;
+  while (g.player.pos[0] <= -HALL.HL + 0.05 && homeTicks++ < 60 * 6) { g.update({ fwd: 1, sprint: true }, 1 / 60); g.drain(); }
+  ok(g.player.pos[0] > -HALL.HL, 'turning around, the doorway home is a real distance away (' + (homeTicks / 60).toFixed(1) + 's)');
+  ok(g.sceneName === 'hallway', 'and the corridor is still the corridor');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

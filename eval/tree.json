@@ -351,6 +351,55 @@
    "why": "模拟5km长跑:insts有界/车数恒定+手感清单",
    "status": "FIXED",
    "evidence": "本提交: 250游戏秒实况长跑(带车流+周期打把), 断言=里程累积/实体数稳态/车口普查恒14且环内/坐标有限/钳制全程守住/chunk窗≤7/远端渲染零NaN"
+  },
+  {
+   "path": "ROOT/HALLWAY",
+   "type": "BRANCH",
+   "why": "无限门/黑猫走廊: deja-vu分支主模型并入主线为关键词主题",
+   "status": "PENDING",
+   "priors": [
+    "ROOT/HALLWAY/H1-substrate",
+    "ROOT/HALLWAY/H2-machine",
+    "ROOT/HALLWAY/H3-wordchain",
+    "ROOT/HALLWAY/H4-courts",
+    "ROOT/HALLWAY/H5-feel"
+   ],
+   "evidence": "H1-H4机器侧全FIXED(799绿); 待H5手感判决后转PASS"
+  },
+  {
+   "path": "ROOT/HALLWAY/H1-substrate",
+   "type": "UNIT",
+   "why": "6props+catPose+引擎epoch/reResolve/gseed/id",
+   "status": "FIXED",
+   "evidence": "d532e8d: 量体块换针,前像白名单校验,727绿"
+  },
+  {
+   "path": "ROOT/HALLWAY/H2-machine",
+   "type": "UNIT",
+   "why": "sceneHallway整机+分发+三音色",
+   "status": "FIXED",
+   "evidence": "074f383: 327行自含机+creak/dejavu/seal并针,727绿"
+  },
+  {
+   "path": "ROOT/HALLWAY/H3-wordchain",
+   "type": "UNIT",
+   "why": "词表/台词/标题/help/chip/意图条目+范例",
+   "status": "FIXED",
+   "evidence": "943f5ca+ff34c67(矫正:错针入weapons锚已拔,正名INTENT条目)"
+  },
+  {
+   "path": "ROOT/HALLWAY/H4-courts",
+   "type": "UNIT",
+   "why": "五庭连体器官+FIXCAM/HALL长老+场景亲戚团",
+   "status": "FIXED",
+   "evidence": "本提交: 727->799全绿, 真回放/门先开/字码重排/决定性/无限普查"
+  },
+  {
+   "path": "ROOT/HALLWAY/H5-feel",
+   "type": "UNIT",
+   "why": "猫的走姿/门的时机/二过哪里不对劲/砌封瞬间",
+   "status": "USER",
+   "evidence": "清单: 进hallway等猫过门洞->二过找变化->按C验字码->回头看砌墙"
   }
  ]
 }

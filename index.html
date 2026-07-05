@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0855</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0900</span></div>
 </div>
 
 <script>
@@ -1210,6 +1210,30 @@
     // seed the first window immediately so the road exists on the first frame
     s.update({ player: { pos: s.spawn.pos } });
     return s;
+  }
+
+
+  // ---- hallway shared constants (ported) ----
+  var HALL = C.HALL = {
+    HL: 9.5, HW: 1.25, H: 2.7,
+    TICK: 1 / 60, SETTLE: 150, N: 420, GLITCH: 52, GLITCH_AT: 20, SEAL_AT: 30, SEGP: 7.2,
+    CAT_X0: -3.72, CAT_X1: 3.72, CAT_Z: -1.08
+  };
+
+  function applyCat(it, st) {
+    it.pos[0] = st[0]; it.pos[1] = st[1]; it.pos[2] = st[2];
+    it.yaw = st[3];
+    it.pose[1] = st[4]; it.pose[2] = st[5]; it.pose[3] = st[6]; it.pose[4] = st[7]; it.pose[5] = st[8];
+  }
+
+  function mutateFixture(it) {
+    it.mesh = it.mut.make();
+    it.state = it.mut.alt;
+    if (it.mut.label) it.label = it.mut.label;
+    it._wv = null;
+    it.glyphEpoch = (it.glyphEpoch | 0) + 1;
+    it.reResolve = 1;
+    it.loadT = 0; it.loadDir = 1; it._delay = 0.1;
   }
 
   function sceneHallway() {

@@ -359,6 +359,30 @@
     return s;
   }
 
+
+  // ---- hallway shared constants (ported) ----
+  var HALL = C.HALL = {
+    HL: 9.5, HW: 1.25, H: 2.7,
+    TICK: 1 / 60, SETTLE: 150, N: 420, GLITCH: 52, GLITCH_AT: 20, SEAL_AT: 30, SEGP: 7.2,
+    CAT_X0: -3.72, CAT_X1: 3.72, CAT_Z: -1.08
+  };
+
+  function applyCat(it, st) {
+    it.pos[0] = st[0]; it.pos[1] = st[1]; it.pos[2] = st[2];
+    it.yaw = st[3];
+    it.pose[1] = st[4]; it.pose[2] = st[5]; it.pose[3] = st[6]; it.pose[4] = st[7]; it.pose[5] = st[8];
+  }
+
+  function mutateFixture(it) {
+    it.mesh = it.mut.make();
+    it.state = it.mut.alt;
+    if (it.mut.label) it.label = it.mut.label;
+    it._wv = null;
+    it.glyphEpoch = (it.glyphEpoch | 0) + 1;
+    it.reResolve = 1;
+    it.loadT = 0; it.loadDir = 1; it._delay = 0.1;
+  }
+
   function sceneHallway() {
     var HL = HALL.HL, HW = HALL.HW, H = HALL.H;
     var s = {
