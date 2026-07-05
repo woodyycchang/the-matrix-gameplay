@@ -863,6 +863,7 @@ section('wall-grind does not roar (scrape throttled at the boundary)');
   step(g, null, 0.05); aimAt(g, bike.pos, 0.4); step(g, null, 0.05);
   step(g, { actionEdge: true }, 0.1);
   // grind the right wall at full speed for ~3s, counting scrape events
+  g.player.pos[0] = 8.6;   // start pressed near the wall: kinematic drift needs runway it does not have here
   let scrapes = 0; const frames = 180;
   for (let i = 0; i < frames; i++) {
     const evs = step(g, { fwd: 1, sprint: true, strafe: 1 }, 1 / 60);
@@ -1581,7 +1582,7 @@ section('N1 ride-feel: the branch equations live natively');
   const fsN1 = require('fs');
   const gmN = fsN1.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
   ok(/p\.yaw \+= \(bk\.speed \/ 30\) \* Math\.tan\(steerAng\) \* dt/.test(gmN), 'kinematic carve: yaw rate is v/L * tan(steer) - zero at a standstill, an arc at pace');
-  ok(/p\.yaw = C\.clamp\(p\.yaw, -0\.26, 0\.26\)/.test(gmN) && /rollT = -this\.bike\.lean \* 0\.32/.test(gmN), 'lean-carve: the nose caps at ~20 deg while the bank shows at ~23 - a held turn arcs, never pivots');
+  ok(/p\.yaw = C\.clamp\(p\.yaw, -0\.17, 0\.17\)/.test(gmN) && /rollT = -this\.bike\.lean \* 0\.24/.test(gmN), 'lean-carve: the nose caps at ~20 deg while the bank shows at ~23 - a held turn arcs, never pivots');
   ok(/Math\.abs\(bk\.sSm\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4 on the SMOOTHED steer state');
   ok(/function crashHit\(strength\)/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /self\.shake = Math\.max\(self\.shake \|\| 0, strength\)/.test(gmN), 'crashHit is one shared unit: cooldown, hard cut, shake');
 }
@@ -1635,7 +1636,7 @@ section('N4: a quarter hour down the mile - endless, bounded, finite');
   ok(g.scene.traffic.length === 14, 'the traffic census stays exactly fourteen');
   const pz = g.player.pos[2];
   ok(g.scene.traffic.every(v => v.it.pos[2] > pz - 195 && v.it.pos[2] < pz + 78 && Number.isFinite(v.it.pos[2])), 'every car rides inside its ring around the rider, finite');
-  ok(g.player.pos.every(Number.isFinite) && Number.isFinite(g.bike.speed) && Math.abs(g.player.yaw) <= 0.2600001, 'rider state finite; the arcade clamp held for the whole ride');
+  ok(g.player.pos.every(Number.isFinite) && Number.isFinite(g.bike.speed) && Math.abs(g.player.yaw) <= 0.1700001, 'rider state finite; the arcade clamp held for the whole ride');
   ok(Object.keys(g.scene.chunks).length <= 7, 'the chunk window stays within its seven-slot budget');
   const ops = C.render(g, 640, 360, g.time);
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'a far-out frame renders with zero NaN polys');
@@ -1648,7 +1649,7 @@ section('steering calibrated: half the rate, smoothed, self-centering');
   const gmS = fsSC.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
   ok(/STEER: 0\.24, TURBO_STEER: 0\.17/.test(gmS), 'STEER is now the MAX FRONT-WHEEL ANGLE (0.24 rad; turbo narrows the line)');
   ok(/bk\.sSm = \(bk\.sSm \|\| 0\) \+/.test(gmS) && /\? 9 : 12/.test(gmS), 'input eases in at 9/s and releases crisper at 12/s - the industry pipeline');
-  ok(/p\.yaw \+= -p\.yaw \* Math\.min\(1, 0\.8 \* dt\)/.test(gmS), 'hands off: the bike drifts gently back to the street axis');
+  ok(/\|\| bk\.speed < 1\.2\) p\.yaw \+= -p\.yaw \* Math\.min\(1, 1\.2 \* dt\)/.test(gmS), 'hands off: the bike drifts gently back to the street axis');
 }
 
 // ---------------------------------------------------------------- summary
