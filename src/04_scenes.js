@@ -1062,7 +1062,7 @@
     // ---------------- courtyard ground + perimeter red walls ----------------
     floor(-16,17.5,16,38,0,OCH);
     for (var ct=0; ct<40; ct++){ var cg=C.rng((ct*131)>>>0);
-      C.addQuadY(m,-15+cg()*29,18+cg()*18,-15+cg()*29+1.6,18+cg()*18+1.6,0.006,C.scaleHex(OCH,0.86+cg()*0.26)); }
+      C.addQuadY(m,-15+cg()*29,18+cg()*18,-15+cg()*29+1.6,18+cg()*18+1.6,0.006+ct*0.00004,C.scaleHex(OCH,0.86+cg()*0.26)); }   // epsilon ladder kills coplanar shimmer
     wallX(-16,17.5,38,0,3.5); wallX(16,17.5,38,0,3.5);
     C.addQuadX(m,17.5,3.4,38,3.62,-16.02,STONE,true); C.addQuadX(m,17.5,3.4,38,3.62,16.02,STONE,false);   // white coping
     // ---------------- GATE (spawn, dawn hero) ----------------

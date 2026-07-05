@@ -27,3 +27,11 @@ Props: P.dragonHead, P.lantern(2-state night), P.ding. Word chain: epang|palace 
 support probes: gate/courtyard/hall/skyway@5/treasury/bridge-crest/ghat step/river bed wading;
 east-wall pierce; region quote says once each; splash once per river; sky op mode 'epang' with
 finite yaw/time; near+far zero-NaN; word trigger via 'palace'.
+
+### Pass 5 - KEPT (the instrument grows skies; the palace shoots its own dawn)
+- tools/selfshot.js: full sky painters ported (epang 4-key day cycle + stars + sun + Shu ridge;
+  erebus starfield), per-pose TIME override, and per-pose SCENE switching (the epang pose had been
+  photographing the erebus station - caught by the corner-pixel probe #02030a + stray starfield).
+- Receipts: epang dawn lum194 colors51 warm97%, top #ccaa88/#cc9977/#bb8866 - squarely in their
+  #aa8855 gate_dawn family. All five erebus poses re-verified post scene-word fix.
+- Scene fix: courtyard random tiles gain an epsilon ladder (coplanar shimmer killed).
