@@ -400,6 +400,55 @@
    "why": "猫的走姿/门的时机/二过哪里不对劲/砌封瞬间",
    "status": "USER",
    "evidence": "清单: 进hallway等猫过门洞->二过找变化->按C验字码->回头看砌墙"
+  },
+  {
+   "path": "ROOT/EREBUS",
+   "type": "BRANCH",
+   "why": "賽博龐克巨塔站体: erebus分支跨引擎移植为关键词主题",
+   "status": "PENDING",
+   "evidence": "E0勘测完毕(eval/erebus-port.md); E1-E5排程",
+   "priors": [
+    "ROOT/EREBUS/E1-skeleton",
+    "ROOT/EREBUS/E2-atmosphere",
+    "ROOT/EREBUS/E3-wordchain",
+    "ROOT/EREBUS/E4-courts",
+    "ROOT/EREBUS/E5-feel"
+   ]
+  },
+  {
+   "path": "ROOT/EREBUS/E1-skeleton",
+   "type": "UNIT",
+   "why": "五空间骨架+封门四挂牌+colliders+双向楼梯",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EREBUS/E2-atmosphere",
+   "type": "UNIT",
+   "why": "erebus天模式(日轨/巨行星掩蚀)+人影prop+导演节拍+三音",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EREBUS/E3-wordchain",
+   "type": "UNIT",
+   "why": "六件套词链",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EREBUS/E4-courts",
+   "type": "UNIT",
+   "why": "自建法庭全套",
+   "status": "PENDING",
+   "evidence": ""
+  },
+  {
+   "path": "ROOT/EREBUS/E5-feel",
+   "type": "UNIT",
+   "why": "手感叶",
+   "status": "PENDING",
+   "evidence": ""
   }
  ]
 }
