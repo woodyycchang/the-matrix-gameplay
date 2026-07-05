@@ -583,4 +583,62 @@
     return fin(m, 5, bricked ? 99 : 98, 6);
   };
 
+  // ---- ORANGE EMPIRE 1937 props (branch port, native re-forge) ----
+  P.sedan = function (hue) { // 1937 sedan out of boxes; nose at +z like every prop front
+    var m = C.newMesh();
+    var body = hue || '#3a3a34', dark = '#14120f', chrome = '#9aa0a8', glass = '#1c2630';
+    C.addBox(m, 0, 0.42, 0, 1.95, 0.16, 4.2, dark);                 // running boards + frame
+    C.addBox(m, 0, 0.95, -0.25, 1.7, 0.78, 3.0, body);              // main body
+    C.addBox(m, 0, 0.93, 1.75, 1.25, 0.62, 1.5, body);              // narrow hood, forward
+    C.addBox(m, 0, 1.66, -0.35, 1.55, 0.72, 1.9, body);             // cab / roof
+    C.addQuadZ(m, -0.62, 1.45, 0.62, 1.9, 0.62, glass, true);       // windshield
+    C.addQuadX(m, -1.1, 1.45, 0.4, 1.9, -0.79, glass, true);        // side glass
+    C.addQuadX(m, -1.1, 1.45, 0.4, 1.9, 0.79, glass, false);
+    C.addBox(m, 0, 1.05, -1.85, 1.6, 0.6, 0.8, body);               // trunk slope mass
+    C.addBox(m, 0, 0.93, 2.52, 1.0, 0.55, 0.1, chrome);             // grille
+    C.addBox(m, 0, 0.5, 2.62, 1.9, 0.14, 0.1, chrome);              // bumpers
+    C.addBox(m, 0, 0.5, -2.35, 1.9, 0.14, 0.1, chrome);
+    for (var s = -1; s <= 1; s += 2) {                              // fenders + wheels + headlamps
+      C.addBox(m, s * 0.86, 0.62, 1.55, 0.3, 0.5, 1.15, body);
+      C.addBox(m, s * 0.86, 0.62, -1.45, 0.3, 0.5, 1.15, body);
+      C.addBox(m, s * 0.86, 0.44, 1.55, 0.24, 0.62, 0.88, dark);
+      C.addBox(m, s * 0.86, 0.44, -1.45, 0.24, 0.62, 0.88, dark);
+      C.addBox(m, s * 0.62, 1.18, 2.45, 0.2, 0.2, 0.14, '#c8bf9a');
+    }
+    C.addBox(m, 0, 1.0, -2.32, 0.26, 0.86, 0.86, dark);             // spare on the back
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.barricade37 = function (kind, broken) { // sawhorse barricade, plank spans x; faces +z driver
+    var m = C.newMesh();
+    var W = kind === 3 ? 4.6 : 7.2, H = kind === 3 ? 1.5 : 1.0;
+    var py = kind === 3 ? 1.5 : 1.15;
+    var base = kind === 1 ? '#d8d2c2' : kind === 2 ? '#cfc4a4' : '#7d6b50';
+    if (!broken) {
+      C.addBox(m, 0, py, 0, W, H, 0.1, base);
+      if (kind === 1) { for (var st = 0; st < 5; st++) C.addQuadZ(m, -W/2 + 0.3 + st * 1.45, py - H/2 + 0.1, -W/2 + 0.85 + st * 1.45, py + H/2 - 0.1, 0.07, '#c8541e', true);
+        C.addBox(m, 0, py + H/2 + 0.28, 0, 0.24, 0.24, 0.24, '#ff5520'); }   // the lantern
+      if (kind === 2) { C.addBox(m, -4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); C.addBox(m, 4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); }
+      if (kind === 3) { C.addQuadZ(m, -1.6, py - 0.35, 1.6, py + 0.42, 0.06, '#e8e2d2', true); }   // the hand-paint field
+      for (var lg = -1; lg <= 1; lg += 2) { C.addBox(m, lg * (W/2 - 0.5), 0.8, 0.28, 0.12, 1.7, 0.12, '#6a5436'); C.addBox(m, lg * (W/2 - 0.5), 0.8, -0.28, 0.12, 1.7, 0.12, '#6a5436'); }
+    } else {
+      C.addBox(m, -W * 0.22, 0.09, 0.9, W * 0.55, 0.1, 0.34, base);   // planks thrown past, flat
+      C.addBox(m, W * 0.18, 0.14, 1.9, W * 0.5, 0.1, 0.3, base);
+      C.addBox(m, 0.4, 0.06, 2.8, 1.6, 0.1, 0.2, '#6a5436');
+      if (kind === 2) { C.addBox(m, -4.6, 0.3, 1.2, 0.64, 0.6, 0.64, '#6a3c2a'); C.addBox(m, 4.7, 0.24, 0.8, 0.64, 0.48, 0.64, '#6a3c2a'); }
+      if (kind === 1) C.addBox(m, -1.2, 0.1, 1.4, 0.24, 0.2, 0.24, '#7a2a12');   // the lantern, dark, on its side
+    }
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.shackDoor37 = function (open) { // the packing shack door, hinge on the left edge
+    var m = C.newMesh();
+    if (open) { C.addBox(m, 0.38, 1.08, 0.42, 0.07, 2.15, 1.05, '#3a2c1e'); }
+    else { C.addBox(m, 0.52, 1.08, 0, 1.05, 2.15, 0.07, '#3a2c1e'); }
+    C.meshBounds(m);
+    return m;
+  };
+
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -326,6 +326,12 @@
         o1.start(); o2.start(); ambNodes.push(o1, o2, of2, og2);
         loopNoise('bandpass', 2100, 2.0, 0.035, 0.19, 260);
       }
+      else if (name === 'empire') {
+        // a 1937 valley at dusk: warm night air + a faint insect band; the wind is elsewhere
+        loopNoise('lowpass', 130, 0.5, 0.11, 0.16, 40);
+        loopNoise('bandpass', 4400, 6.0, 0.028, 4.6, 900);
+        loopNoise('bandpass', 620, 1.2, 0.045, 0.09, 180);
+      }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
       ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : AMB_LEVEL, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
     }, 220);
@@ -369,6 +375,9 @@
       case 'splash': hiss(0.35, 0.3, 1400, 500, 1.1); thump(140, 0.22, 0.16); blip(320, 0.18, 0.06, 'sine', 0.05); break;
       case 'clank': thump(240, 0.14, 0.1); blip(1240, 0.35, 0.028, 'triangle', 0.02); hiss(0.22, 0.05, 700, 300, 2); break;
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
+      case 'thud': thump(84, 0.22, 0.4); hiss(0.2, 0.16, 500, 140, 1.2); break;
+      case 'sting': thump(120, 0.1, 0.22); thump(96, 0.09, 0.18, 0.11); break;
+      case 'crackle': hiss(0.03, 0.16, 3400, 2600, 1); hiss(0.03, 0.12, 2800, 2200, 1, 0.09); hiss(0.03, 0.1, 3000, 2400, 1, 0.16); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
       case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;
       case 'heartSoft': thump(64, 0.12, 0.16); thump(58, 0.1, 0.12, 0.16); break;

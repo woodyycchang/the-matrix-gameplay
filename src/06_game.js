@@ -32,7 +32,9 @@
     bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    empire: 'Angel City, June 1937, 7:24 in the evening. The road east is closed. That is the point.',
+    sedan: 'Four doors, June plates. She starts on the first crank.',
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city 1937 \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -61,6 +63,7 @@
     [/\b(hallway|corridor|dejavu|deja|vu|doors)\b/, 'hallway'],
     [/\b(erebus|station|tower)\b/, 'erebus'],
     [/\b(epang|palace)\b/, 'epang'],
+    [/\b(orange empire|empire|1937|angel city|citrus|nostalgia|nostalgic)\b/, 'empire'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
     [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
@@ -162,13 +165,15 @@
 
   // ----- requests -----
   Game.prototype.request = function (text) {
+    // scene-local console hook: an armed scene may claim the raw word (the empire terminal)
+    if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     var a = C.parse(text);
     if (a.type === 'none') return a;
     if (a.type === 'help') { this.say(L.help); return a; }
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus, epang: L.epang }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus, epang: L.epang, empire: L.empire }[a.scene];
       this.transition(a.scene, line);
       return a;
     }
@@ -201,6 +206,7 @@
     p.yaw = sc.spawn.yaw; p.pitch = 0; p.grounded = true; p.coyote = 0;
     this.held = null;
     this.bike = null;
+    this.car = null;
     this.state = 'play';
     this._fallFromRoof = false; this._airFromA = false;
     this.flags.successDone = false;
@@ -469,11 +475,11 @@
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
-      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'sedan' && it.kind !== 'katana') continue;
+      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : (it.kind === 'sedan' ? 1.0 : 1.1)));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'sedan' ? 3.4 : (it.kind === 'katana' ? 2.4 : 2.8))));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -484,6 +490,7 @@
 
   Game.prototype.doAction = function () {
     if (this.bike) { this.dismountBike(); return; }
+    if (this.car) { this.dismountCar(); return; }
     var it = this.aim;
     if (!it) return;
     if (it.kind === 'gun') {
@@ -495,6 +502,8 @@
       this.enterBooth();
     } else if (it.kind === 'bike') {
       this.mountBike(it);
+    } else if (it.kind === 'sedan') {
+      this.mountCar(it);
     } else if (it.kind === 'katana') {
       it.loadDir = -1;
       if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
@@ -716,6 +725,114 @@
     p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
   };
 
+  // 1937 sedan physics, ported verbatim from the ORANGE EMPIRE branch CFG:
+  // no lean; steering authority scales with speed (clamp(v/9)) and relaxes
+  // toward the top end (1 - 0.45*ss(11,26,|v|)). Barricades break past 5.5 m/s.
+  C.CAR = { VMAX: 26, VREV: -6.5, ACC: 9.5, BRAKE: 16, DRAG: 0.35, ROLL: 0.9, STEER: 2.0, EYE: 1.5, BREAK_V: 5.5 };
+
+  Game.prototype.mountCar = function (it) {
+    this.car = { it: it, speed: 0, dist: 0, crashCd: 0, sSm: 0 };
+    it.loadDir = 0;
+    if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
+    this.held = null;
+    var p = this.player;
+    p.pos = it.pos.slice(); p.vel = [0, 0, 0]; p.grounded = true;
+    p.yaw = it.yaw;
+    this.emit('mount');
+    this.say(L.sedan, 0.2);
+  };
+  Game.prototype.dismountCar = function () {
+    if (!this.car) return;
+    var ck = this.car, p = this.player, it = ck.it;
+    it.pos = [p.pos[0], this.scene.groundY, p.pos[2]];
+    it.yaw = p.yaw;
+    var lx = Math.cos(p.yaw), lz = Math.sin(p.yaw);
+    p.pos = [p.pos[0] - lx * 1.5, this.scene.groundY, p.pos[2] - lz * 1.5];
+    p.vel = [0, 0, 0];
+    var col = { min: [it.pos[0] - 1.1, it.pos[1], it.pos[2] - 1.1], max: [it.pos[0] + 1.1, it.pos[1] + 1.6, it.pos[2] + 1.1] };
+    it._col = col; this.scene.colliders.push(col);
+    this.car = null;
+    this.emit('dismount');
+  };
+
+  Game.prototype.moveCar = function (input, dt) {
+    var p = this.player, sc = this.scene, cols = sc.colliders, K = C.CAR, ck = this.car;
+    var self = this;
+    function ss(a, b, x) { var u = C.clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }
+    p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
+    var throttle = (input.fwd || 0);
+    if (sc._dismiss) throttle = 0;   // the engine isn't killed - it's dismissed
+    var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26;
+    var sTgt = C.clamp(steerIn, -1.4, 1.4);
+    ck.sSm = (ck.sSm || 0) + (sTgt - (ck.sSm || 0)) * Math.min(1, (Math.abs(sTgt) > Math.abs(ck.sSm || 0) ? 9 : 12) * dt);
+    // longitudinal: their exact envelope
+    if (throttle > 0.01) ck.speed += K.ACC * throttle * dt;
+    else if (throttle < -0.01) {
+      if (ck.speed > 0.4) ck.speed += K.BRAKE * throttle * dt;      // brake
+      else ck.speed += K.ACC * 0.55 * throttle * dt;                 // reverse crawl
+    } else {
+      var r = K.ROLL * dt;
+      if (Math.abs(ck.speed) <= r) ck.speed = 0; else ck.speed -= Math.sign(ck.speed) * r;
+    }
+    ck.speed -= ck.speed * K.DRAG * dt;
+    if (sc._dismiss) ck.speed -= ck.speed * Math.min(1, 1.6 * dt);   // coast to nothing over ~2.4 s
+    ck.speed = C.clamp(ck.speed, K.VREV, K.VMAX);
+    // their steering law: authority grows with speed, relaxes near the top
+    var turn = K.STEER * C.clamp(ck.speed / 9, -1, 1) * (1 - 0.45 * ss(11, 26, Math.abs(ck.speed)));
+    p.yaw += C.clamp(ck.sSm, -1, 1) * turn * dt;
+    var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
+    // barricades break at speed (scene-owned; collider dies with them)
+    if (sc.barricades) {
+      for (var bi = 0; bi < sc.barricades.length; bi++) {
+        var b = sc.barricades[bi];
+        if (b.broken) continue;
+        for (var oi = 0; oi < 2; oi++) {
+          var off = oi === 0 ? 1.9 : 0.4;
+          var bx = p.pos[0] + dirx * off, bz = p.pos[2] + dirz * off;
+          if (bx > b.col.min[0] - 0.95 && bx < b.col.max[0] + 0.95 && bz > b.col.min[2] - 0.95 && bz < b.col.max[2] + 0.95) {
+            if (Math.abs(ck.speed) > K.BREAK_V && sc.breakBarricade) { sc.breakBarricade(self, b, dirx, dirz, Math.abs(ck.speed)); ck.speed *= 0.82; }
+            break;
+          }
+        }
+      }
+    }
+    var step = ck.speed * dt;
+    var subs = Math.max(1, Math.ceil(Math.abs(step) / 0.4));
+    var ds = step / subs;
+    function blocked(nx, nz) {
+      for (var i = 0; i < cols.length; i++) {
+        var bb = cols[i];
+        if (bb.max[1] <= p.pos[1] + 0.2) continue;
+        if (bb.min[1] >= p.pos[1] + 1.6) continue;
+        if (nx > bb.min[0] - 0.8 && nx < bb.max[0] + 0.8 && nz > bb.min[2] - 0.8 && nz < bb.max[2] + 0.8) return bb;
+      }
+      return null;
+    }
+    var hitWall = false;
+    for (var sgi = 0; sgi < subs; sgi++) {
+      var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
+      if (blocked(nx, p.pos[2])) { hitWall = true; }
+      else p.pos[0] = nx;
+      if (blocked(p.pos[0], nz)) { hitWall = true; }
+      else p.pos[2] = nz;
+    }
+    ck.crashCd = Math.max(0, (ck.crashCd || 0) - dt);
+    if (hitWall) {
+      if (ck.crashCd <= 0) { ck.crashCd = 0.45; ck.speed *= 0.22; self.shake = Math.max(self.shake || 0, 0.4); this.emit('thud'); }
+      else ck.speed *= 0.985;
+    }
+    p.pos[1] = sc.groundY;
+    ck.dist += Math.abs(ck.speed) * dt;
+    p.vel = [dirx * ck.speed, 0, dirz * ck.speed];
+    var it = ck.it;
+    var fx0 = Math.sin(p.yaw) * 1.1, fz0 = -Math.cos(p.yaw) * 1.1;
+    it.pos = [p.pos[0] + fx0, sc.groundY, p.pos[2] + fz0];
+    it.yaw = p.yaw;
+    this.emit('engine', { speed: Math.abs(ck.speed), throttle: Math.max(0, throttle),
+                          speedFrac: C.clamp(Math.abs(ck.speed) / K.VMAX, 0, 1), turbo: 0, boosting: false });
+    p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
+  };
+
   Game.prototype.doSlash = function () {
     if (!this.held) return;
     this.held.kick = 1;
@@ -742,6 +859,7 @@
 
   Game.prototype.movePlayer = function (input, dt) {
     if (this.bike) { this.moveBike(input, dt); return; }
+    if (this.car) { this.moveCar(input, dt); return; }
     var p = this.player, sc = this.scene, cols = sc.colliders;
     // look
     p.yaw += input.dyaw || 0;

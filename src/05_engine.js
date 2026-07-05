@@ -36,7 +36,7 @@
     }
 
     // sky
-    ops.push({ t: 'sky', mode: mode === 'code' ? 'code' : scene.sky, w: w, h: h, pitch: cam.pitch, yaw: cam.yaw, time: t, fogCol: fogCol });
+    ops.push({ t: 'sky', mode: mode === 'code' ? 'code' : scene.sky, w: w, h: h, pitch: cam.pitch, yaw: cam.yaw, time: (scene.skyT != null ? scene.skyT : t), fogCol: fogCol });
     if (mode === 'code') C.rainOps(ops, w, h, t, 0.55);
 
     var sceneOps = [];

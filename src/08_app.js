@@ -329,6 +329,45 @@
                 ctx.lineTo(wx, hor3 - (12 + mh * 16) * (H / 540));
               }
               ctx.lineTo(W, hor3); ctx.closePath(); ctx.fill();
+            } else if (op.mode === 'empire') {
+              // Angel City, June 1937: the branch's three-palette day (their EDGE.PAL,
+              // verbatim hexes) blended by nightF/duskF; sun rises 6:00 east (+x),
+              // sets 20:00 west (-x); stars and a moon own the night. op.time is the
+              // scene's day clock in MINUTES (loop-resettable via scene.skyT).
+              var mm = ((op.time || 0) % 1440 + 1440) % 1440;
+              var nf2 = C.empNightF ? C.empNightF(mm) : 0, df2 = C.empDuskF ? C.empDuskF(mm) : 0;
+              function bl2(a1, b1, c1) { return C.mixHex(C.mixHex(a1, b1, df2), c1, nf2); }
+              var topC = bl2('#4a76b8', '#1c2a52', '#04060e');
+              var midC = bl2('#a6c4e6', '#7a5a8a', '#0a101f');
+              var horC = bl2('#e9eef0', '#e8843c', '#131a26');
+              var hor4 = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
+              var g4 = ctx.createLinearGradient(0, 0, 0, Math.max(1, hor4));
+              g4.addColorStop(0, topC); g4.addColorStop(0.62, midC); g4.addColorStop(1, horC);
+              ctx.fillStyle = g4; ctx.fillRect(0, 0, W, Math.max(1, hor4));
+              ctx.fillStyle = op.fogCol; ctx.fillRect(0, Math.max(0, hor4), W, H);
+              if (nf2 > 0.08) {
+                for (var si4 = 0; si4 < 80; si4++) {
+                  var h14 = Math.sin(si4 * 12.9898) * 43758.5453; h14 -= Math.floor(h14);
+                  var h24 = Math.sin(si4 * 78.233) * 12543.21; h24 -= Math.floor(h24);
+                  var sd4 = h14 * Math.PI * 2 - op.yaw; while (sd4 > Math.PI) sd4 -= Math.PI * 2; while (sd4 < -Math.PI) sd4 += Math.PI * 2;
+                  if (Math.abs(sd4) > 1.3) continue;
+                  ctx.fillStyle = 'rgba(207,216,255,' + (nf2 * (0.25 + 0.5 * ((si4 * 29) % 5) / 5)).toFixed(2) + ')';
+                  ctx.fillRect(W * 0.5 + sd4 / 1.3 * W * 0.62, h24 * hor4 * 0.85, 1, 1);
+                }
+                var mdx = ((2.6 - op.yaw) % (Math.PI * 2)); if (mdx > Math.PI) mdx -= Math.PI * 2; if (mdx < -Math.PI) mdx += Math.PI * 2;
+                if (Math.abs(mdx) < 1.4) {
+                  ctx.fillStyle = 'rgba(220,228,255,' + (nf2 * 0.9).toFixed(2) + ')';
+                  ctx.beginPath(); ctx.arc(W * 0.5 + mdx / 1.25 * W * 0.62, hor4 * 0.22, 9, 0, Math.PI * 2); ctx.fill();
+                }
+              }
+              var sa4 = C.clamp(((mm - 360) / 840), -0.2, 1.2) * Math.PI;
+              var sunEl4 = Math.sin(sa4), sunAz = Math.cos(sa4) > 0 ? 1.5708 : -1.5708;
+              var sdx4 = ((sunAz - op.yaw) % (Math.PI * 2)); if (sdx4 > Math.PI) sdx4 -= Math.PI * 2; if (sdx4 < -Math.PI) sdx4 += Math.PI * 2;
+              if (sunEl4 > -0.05 && nf2 < 0.85 && Math.abs(sdx4) < 1.5) {
+                var sx4 = W * 0.5 + sdx4 / 1.25 * W * 0.62, sy4 = hor4 - sunEl4 * H * 0.75;
+                ctx.fillStyle = df2 > 0.35 ? 'rgba(255,164,90,0.92)' : 'rgba(255,242,221,0.9)';
+                ctx.beginPath(); ctx.arc(sx4, sy4, df2 > 0.35 ? 19 : 12, 0, Math.PI * 2); ctx.fill();
+              }
             } else if (op.mode === 'erebus') {
               // deep space: starfield pans with yaw; a ringed gas giant sits at a
               // fixed azimuth; the sun orbits (their 240 s period) and slips into
@@ -1011,7 +1050,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city 1937', 'orange empire'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');

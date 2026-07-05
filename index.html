@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1608</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1727</span></div>
 </div>
 
 <script>
@@ -952,6 +952,64 @@
       }
     }
     return fin(m, 5, bricked ? 99 : 98, 6);
+  };
+
+  // ---- ORANGE EMPIRE 1937 props (branch port, native re-forge) ----
+  P.sedan = function (hue) { // 1937 sedan out of boxes; nose at +z like every prop front
+    var m = C.newMesh();
+    var body = hue || '#3a3a34', dark = '#14120f', chrome = '#9aa0a8', glass = '#1c2630';
+    C.addBox(m, 0, 0.42, 0, 1.95, 0.16, 4.2, dark);                 // running boards + frame
+    C.addBox(m, 0, 0.95, -0.25, 1.7, 0.78, 3.0, body);              // main body
+    C.addBox(m, 0, 0.93, 1.75, 1.25, 0.62, 1.5, body);              // narrow hood, forward
+    C.addBox(m, 0, 1.66, -0.35, 1.55, 0.72, 1.9, body);             // cab / roof
+    C.addQuadZ(m, -0.62, 1.45, 0.62, 1.9, 0.62, glass, true);       // windshield
+    C.addQuadX(m, -1.1, 1.45, 0.4, 1.9, -0.79, glass, true);        // side glass
+    C.addQuadX(m, -1.1, 1.45, 0.4, 1.9, 0.79, glass, false);
+    C.addBox(m, 0, 1.05, -1.85, 1.6, 0.6, 0.8, body);               // trunk slope mass
+    C.addBox(m, 0, 0.93, 2.52, 1.0, 0.55, 0.1, chrome);             // grille
+    C.addBox(m, 0, 0.5, 2.62, 1.9, 0.14, 0.1, chrome);              // bumpers
+    C.addBox(m, 0, 0.5, -2.35, 1.9, 0.14, 0.1, chrome);
+    for (var s = -1; s <= 1; s += 2) {                              // fenders + wheels + headlamps
+      C.addBox(m, s * 0.86, 0.62, 1.55, 0.3, 0.5, 1.15, body);
+      C.addBox(m, s * 0.86, 0.62, -1.45, 0.3, 0.5, 1.15, body);
+      C.addBox(m, s * 0.86, 0.44, 1.55, 0.24, 0.62, 0.88, dark);
+      C.addBox(m, s * 0.86, 0.44, -1.45, 0.24, 0.62, 0.88, dark);
+      C.addBox(m, s * 0.62, 1.18, 2.45, 0.2, 0.2, 0.14, '#c8bf9a');
+    }
+    C.addBox(m, 0, 1.0, -2.32, 0.26, 0.86, 0.86, dark);             // spare on the back
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.barricade37 = function (kind, broken) { // sawhorse barricade, plank spans x; faces +z driver
+    var m = C.newMesh();
+    var W = kind === 3 ? 4.6 : 7.2, H = kind === 3 ? 1.5 : 1.0;
+    var py = kind === 3 ? 1.5 : 1.15;
+    var base = kind === 1 ? '#d8d2c2' : kind === 2 ? '#cfc4a4' : '#7d6b50';
+    if (!broken) {
+      C.addBox(m, 0, py, 0, W, H, 0.1, base);
+      if (kind === 1) { for (var st = 0; st < 5; st++) C.addQuadZ(m, -W/2 + 0.3 + st * 1.45, py - H/2 + 0.1, -W/2 + 0.85 + st * 1.45, py + H/2 - 0.1, 0.07, '#c8541e', true);
+        C.addBox(m, 0, py + H/2 + 0.28, 0, 0.24, 0.24, 0.24, '#ff5520'); }   // the lantern
+      if (kind === 2) { C.addBox(m, -4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); C.addBox(m, 4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); }
+      if (kind === 3) { C.addQuadZ(m, -1.6, py - 0.35, 1.6, py + 0.42, 0.06, '#e8e2d2', true); }   // the hand-paint field
+      for (var lg = -1; lg <= 1; lg += 2) { C.addBox(m, lg * (W/2 - 0.5), 0.8, 0.28, 0.12, 1.7, 0.12, '#6a5436'); C.addBox(m, lg * (W/2 - 0.5), 0.8, -0.28, 0.12, 1.7, 0.12, '#6a5436'); }
+    } else {
+      C.addBox(m, -W * 0.22, 0.09, 0.9, W * 0.55, 0.1, 0.34, base);   // planks thrown past, flat
+      C.addBox(m, W * 0.18, 0.14, 1.9, W * 0.5, 0.1, 0.3, base);
+      C.addBox(m, 0.4, 0.06, 2.8, 1.6, 0.1, 0.2, '#6a5436');
+      if (kind === 2) { C.addBox(m, -4.6, 0.3, 1.2, 0.64, 0.6, 0.64, '#6a3c2a'); C.addBox(m, 4.7, 0.24, 0.8, 0.64, 0.48, 0.64, '#6a3c2a'); }
+      if (kind === 1) C.addBox(m, -1.2, 0.1, 1.4, 0.24, 0.2, 0.24, '#7a2a12');   // the lantern, dark, on its side
+    }
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.shackDoor37 = function (open) { // the packing shack door, hinge on the left edge
+    var m = C.newMesh();
+    if (open) { C.addBox(m, 0.38, 1.08, 0.42, 0.07, 2.15, 1.05, '#3a2c1e'); }
+    else { C.addBox(m, 0.52, 1.08, 0, 1.05, 2.15, 0.07, '#3a2c1e'); }
+    C.meshBounds(m);
+    return m;
   };
 
 })(typeof globalThis !== 'undefined' ? globalThis : this);
@@ -2116,6 +2174,601 @@
     return s;
   }
 
+  // ============ ORANGE EMPIRE 1937 (branch port, native re-forge) ============
+  // Angel City at dusk; six seams; a road east that ends in green wire at 965.
+  // Distances are the branch's, 1:1. Colors are its rendered pixels, decay-baked.
+  var EMP = C.EMP = { X0: 160, CH: 32, N: 28, AHEAD: 6, BEHIND: 3,
+    DESAT0: 460, DESAT1: 660, DARK0: 600, DARK1: 830, GRID0: 615, GRID1: 800,
+    TREEWIRE: 665, BOUNDARY: 965, WALL: 1000, BREAK_V: 5.5, START_MIN: 1164 };
+  function empSS(a, b, x) { var t = C.clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function empDecay(d) { return (1 - 0.38 * empSS(EMP.DESAT0, EMP.DESAT1, d)) * (1 - 0.92 * empSS(EMP.DARK0, EMP.DARK1, d)); }
+  function empNightF(mm) { mm = ((mm % 1440) + 1440) % 1440;
+    var eve = empSS(1190, 1238, mm), morn = 1 - empSS(308, 382, mm);
+    return Math.max(eve, mm < 720 ? morn : 0); }
+  function empDuskF(mm) { mm = ((mm % 1440) + 1440) % 1440;
+    var e = empSS(1085, 1165, mm) * (1 - empSS(1185, 1240, mm));
+    var dd = empSS(300, 345, mm) * (1 - empSS(370, 420, mm));
+    return Math.max(e, dd); }
+  C.empNightF = empNightF; C.empDuskF = empDuskF;
+
+  function empChunkMesh(ci) {
+    var m = C.newMesh();
+    var ccols = [];
+    var x0 = EMP.X0 + ci * EMP.CH, x1 = x0 + EMP.CH, xm = (x0 + x1) / 2;
+    var dm = Math.abs(xm), sc0 = empDecay(dm);
+    var g = empSS(EMP.GRID0, EMP.GRID1, dm);
+    C.addQuadY(m, x0, -6.5, x1, 6.5, 0.006, C.scaleHex('#3a3a36', sc0), 'floor');
+    for (var dx0 = x0; dx0 < x1; dx0 += 8) C.addQuadY(m, dx0 + 2, -0.14, dx0 + 5.2, 0.14, 0.012, C.scaleHex('#b8a86a', sc0));
+    var shoulder = C.mixHex(C.scaleHex('#5c5240', sc0), '#02120a', g * 0.85);
+    C.addQuadY(m, x0, -60, x1, -6.5, 0.002, shoulder, 'floor');
+    C.addQuadY(m, x0, 6.5, x1, 60, 0.002, shoulder, 'floor');
+    if (g > 0.03) {
+      var gl = C.mixHex('#0a2a16', '#26d468', g);
+      for (var gz = -48; gz <= 48; gz += 12) C.addQuadY(m, x0, gz - 0.06, x1, gz + 0.06, 0.02, gl);
+      for (var gx = x0; gx <= x1; gx += 8) C.addQuadY(m, gx - 0.06, -54, gx + 0.06, 54, 0.02, gl);
+    }
+    if (x0 >= 168 && x0 <= 470) {
+      for (var px2 = x0 + 7; px2 < Math.min(x1, 470); px2 += 26) {
+        C.addBox(m, px2, 0.3, -15.5, 0.42, 0.6, 0.42, '#1f1c18', { noBottom: true });
+        C.addBox(m, px2, 0.3, 15.5, 0.42, 0.6, 0.42, '#1f1c18', { noBottom: true });
+        C.addQuadY(m, px2 - 0.1, -15.6, px2 + 0.1, -15.4, 0.62, '#b45a18');
+        C.addQuadY(m, px2 - 0.1, 15.4, px2 + 0.1, 15.6, 0.62, '#b45a18');
+      }
+    }
+    function wireTree(x, z, sscale, fade) {
+      var wc = C.mixHex('#0c3a1e', '#2aff70', fade);
+      var h = 1.5 * sscale, cy = 2.4 * sscale, cr = 1.45 * sscale;
+      C.addQuadZ(m, x - 0.05, 0, x + 0.05, h, z, wc, true); C.addQuadZ(m, x - 0.05, 0, x + 0.05, h, z, wc, false);
+      var b0 = m.v.length;
+      m.v.push([x, cy + cr, z], [x + cr, cy, z], [x, cy - cr * 0.7, z], [x - cr, cy, z]);
+      C.addFace(m, [b0, b0 + 1, b0 + 2, b0 + 3], wc); C.addFace(m, [b0 + 3, b0 + 2, b0 + 1, b0], wc);
+      var b1 = m.v.length;
+      m.v.push([x, cy + cr, z], [x, cy, z + cr], [x, cy - cr * 0.7, z], [x, cy, z - cr]);
+      C.addFace(m, [b1, b1 + 1, b1 + 2, b1 + 3], wc); C.addFace(m, [b1 + 3, b1 + 2, b1 + 1, b1], wc);
+    }
+    function solidTree(x, z, sscale, dd, rj) {
+      var k2 = empDecay(dd) * (0.85 + rj * 0.3);
+      var trunk = C.scaleHex('#6b5236', k2), can = C.scaleHex('#44602c', k2);
+      C.addBox(m, x, 0.75 * sscale, z, 0.3 * sscale, 1.5 * sscale, 0.3 * sscale, trunk, { noBottom: true });
+      var cy = 2.35 * sscale, ch = 1.05 * sscale, cw = 1.5 * sscale;
+      C.addQuadZ(m, x - cw, cy - ch, x + cw, cy + ch, z, can, true); C.addQuadZ(m, x - cw, cy - ch, x + cw, cy + ch, z, can, false);
+      C.addQuadX(m, z - cw, cy - ch, z + cw, cy + ch, x, can, true); C.addQuadX(m, z - cw, cy - ch, z + cw, cy + ch, x, can, false);
+    }
+    var gx0 = Math.ceil(x0 / 13) * 13;
+    for (var tx = gx0; tx < x1; tx += 13) {
+      for (var tz = -46; tz <= 46; tz += 13) {
+        var rg2 = C.rng(((ci * 131 + tx * 7 + tz * 13) ^ 0x1937) >>> 0);
+        var jx = tx + (rg2() - 0.5) * 3.2, jz = tz + (rg2() - 0.5) * 3.2;
+        if (Math.abs(jz) < 13.5) continue;
+        if ((jx - 335) * (jx - 335) + (jz - 26) * (jz - 26) < 196) continue;
+        if ((jx - 240) * (jx - 240) + (jz + 42) * (jz + 42) < 121) continue;
+        if ((jx - 760) * (jx - 760) + (jz + 4.6) * (jz + 4.6) < 81) continue;
+        var dd2 = Math.sqrt(jx * jx + jz * jz);
+        if (dd2 < 165 || dd2 > 832) continue;
+        var keep = 1 - empSS(480, 810, dd2) * 0.88;
+        if (rg2() > keep) continue;
+        var sscale = 0.85 + rg2() * 0.4;
+        if (dd2 > EMP.TREEWIRE) wireTree(jx, jz, sscale, 0.45 + 0.55 * (1 - empSS(EMP.TREEWIRE, 832, dd2)));
+        else { solidTree(jx, jz, sscale, dd2, rg2()); ccols.push({ min: [jx - 0.5, 0, jz - 0.5], max: [jx + 0.5, 2.6, jz + 0.5] }); }
+      }
+    }
+    C.meshBounds(m); C.anchorize(m, 0.05, 90 + ci, 6);
+    m._ccols = ccols;
+    return m;
+  }
+
+  function sceneEmpire() {
+    var s = {
+      name: 'angel city 1937', sky: 'empire', fog: { near: 55, far: 200, col: '#4a3a4e' },
+      groundY: 0, ambience: 'empire', colliders: [], insts: [],
+      spawn: { pos: [-4, 0.02, -3.4], yaw: Math.PI / 2 },
+      label: 'ANGEL CITY 1937', barricades: [], chunks: {}
+    };
+    var m = C.newMesh(), mg = C.newMesh();
+    function col(x0, y0, z0, x1, y1, z1) { s.colliders.push(box([x0, y0, z0], [x1, y1, z1])); }
+    function quad4(p0, p1, p2, p3, cc) { var b = m.v.length; m.v.push(p0, p1, p2, p3); C.addFace(m, [b, b + 1, b + 2, b + 3], cc); }
+    function ceilQ(x0, z0, x1, z1, y, cc) { quad4([x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1], cc); }
+    // ---------------- ground (kind ground: never culled, never staggered) ----------------
+    C.addQuadY(mg, -420, -320, 1060, 360, -0.02, '#4c4436', 'floor');
+    C.addQuadY(mg, -170, -62, 162, 120, 0.002, '#5a5440', 'floor');
+    C.addQuadY(mg, -150, -6, 160, 6, 0.006, '#3a3a36', 'floor');
+    for (var dsx = -146; dsx < 156; dsx += 8) C.addQuadY(mg, dsx, -0.14, dsx + 3.2, 0.14, 0.012, '#b8a86a');
+    C.addQuadY(mg, -150, -9.4, 160, -6, 0.008, '#8a8474', 'floor');
+    C.addQuadY(mg, -150, 6, 160, 9.4, 0.008, '#8a8474', 'floor');
+    // ---------------- buildings (identity by measured color; words arrive by wire) ----------------
+    function building(x, side, w, h, d, base, opts) {
+      opts = opts || {};
+      var z = side * (9.6 + d / 2), frontZ = z - side * (d / 2);
+      C.addBox(m, x, h / 2, z, w, h, d, C.scaleHex(base, 0.78), { noBottom: true });
+      C.addBox(m, x, h + 0.32, z, w + 0.3, 0.64, d + 0.3, opts.trim || '#6e5a40', { noBottom: true });
+      var fz = frontZ - side * 0.03, flip = side > 0;
+      C.addQuadZ(m, x - w / 2, 0, x + w / 2, h, fz, base, flip);
+      var floors = opts.floors || Math.max(1, Math.round(h / 4.6)), cols2 = opts.cols || Math.max(2, Math.round(w / 5));
+      var rgw = C.rng((Math.abs(x) * 31 + w * 7) >>> 0);
+      for (var fr = 0; fr < floors; fr++) {
+        for (var cw2 = 0; cw2 < cols2; cw2++) {
+          var wx = x - w / 2 + (cw2 + 0.5) * (w / cols2), wy = 1.4 + fr * (h - 1.8) / floors;
+          var lit = rgw() < (opts.litChance != null ? opts.litChance : 0.55);
+          C.addQuadZ(m, wx - 0.55, wy, wx + 0.55, wy + 1.15, fz - side * 0.015, lit ? '#e8c27a' : '#252e38', flip);
+        }
+      }
+      if (opts.sign) {
+        var sy = opts.signY || (h - 1.3), sw = Math.min(w * 0.82, 9);
+        C.addQuadZ(m, x - sw / 2, sy - 0.7, x + sw / 2, sy + 0.7, fz - side * 0.02, opts.sign, flip);
+        if (opts.glow) {
+          C.addQuadZ(m, x - sw / 2 + 0.3, sy - 0.28, x + sw / 2 - 0.3, sy + 0.28, fz - side * 0.035, opts.glow, flip);
+        }
+      }
+      if (opts.awning) C.addBox(m, x, 2.9, frontZ - side * 0.5, w * 0.8, 0.12, 1.1, opts.awning, { noBottom: true });
+      col(x - w / 2, 0, z - d / 2, x + w / 2, h, z + d / 2);
+      return frontZ;
+    }
+    // north side (side -1, fronts face +z)
+    building(-82, -1, 16, 6.5, 13, '#c9b896', { floors: 1, cols: 3, sign: '#1c1a17' });
+    building(-70, -1, 9, 11.5, 13, '#8a5a44', { floors: 3, cols: 2 });
+    building(-40, -1, 18, 9.5, 14, '#96604a', { floors: 2, cols: 4, awning: '#7a3a2e', sign: '#15211c', glow: '#6edcaa' });
+    building(-22, -1, 14, 8.5, 14, '#ddd2b4', { floors: 2, cols: 3, awning: '#3c5a44', sign: '#1c1a17' });
+    var rialtoF = building(-2, -1, 20, 14, 16, '#c49a84', { floors: 3, cols: 4, litChance: 0.35, sign: '#e8d9a8', glow: '#ffd478', signY: 5.6 });
+    C.addQuadZ(m, -3.05, 6.2, -0.95, 14.6, rialtoF + 0.05, '#5a1c1c', true);
+    for (var bl = 0; bl < 6; bl++) C.addQuadZ(m, -2.6, 13.6 - bl * 1.28, -1.4, 14.3 - bl * 1.28, rialtoF + 0.08, '#ffd9a0', true);
+    building(20, -1, 14, 7.5, 13, '#9aa382', { floors: 1, cols: 3, sign: '#101a26', glow: '#86b4ff' });
+    building(44, -1, 20, 10.5, 14, '#cfc4a4', { trim: '#4a4234', floors: 2, cols: 5, litChance: 0.25, sign: '#1c1a17' });
+    building(80, -1, 22, 6, 14, '#b8ad94', { floors: 1, cols: 4, sign: '#1c1a17' });
+    // south side (side +1, fronts face -z)
+    building(-84, 1, 12, 7, 13, '#ddd2b4', { floors: 1, cols: 3, sign: '#1c1a17' });
+    building(-70, 1, 12, 8.5, 13, '#8a5a44', { floors: 2, cols: 3, sign: '#1c1a17' });
+    building(4, 1, 10, 7, 13, '#c9b896', { floors: 1, cols: 2, sign: '#1c1a17' });
+    for (var bp = 0; bp < 3; bp++) C.addBox(m, 9.6, 2.15 + bp * 0.36, 9.35, 0.3, 0.3, 0.3, bp % 2 ? '#b03030' : '#3050a0', { noBottom: true });
+    building(30, 1, 22, 13.5, 15, '#bcae8e', { trim: '#5a4c38', floors: 3, cols: 5, litChance: 0.6, sign: '#221012', glow: '#ff7060' });
+    building(56, 1, 16, 6.5, 13, '#9aa382', { floors: 1, cols: 3, awning: '#7a5a2e', sign: '#1c1a17' });
+    building(80, 1, 18, 7, 13, '#ddd2b4', { floors: 1, cols: 4, sign: '#1c1a17' });
+    // ---------------- THE BLUE PACIFIC: hollow, walk in ----------------
+    var BPB = '#39506a', BPT = '#1f2c3a';
+    (function () {
+      var x = -16, w = 18, h = 9, d = 14, z0 = 9.6, z1 = 23.6;
+      C.addQuadZ(m, x - w / 2, 2.6, x + w / 2, h, z0 - 0.03, BPB, false);
+      C.addQuadZ(m, x - w / 2, 0, -17.2, 2.6, z0 - 0.03, BPB, false);
+      C.addQuadZ(m, -14.8, 0, x + w / 2, 2.6, z0 - 0.03, BPB, false);
+      col(x - w / 2, 0, z0 - 0.2, -17.2, h, z0 + 0.2); col(-14.8, 0, z0 - 0.2, x + w / 2, h, z0 + 0.2);
+      col(x - w / 2, 2.6, z0 - 0.2, x + w / 2, h, z0 + 0.2);
+      C.addQuadZ(m, x - w / 2, 0, x + w / 2, h, z1 + 0.03, C.scaleHex(BPB, 0.8), true);
+      col(x - w / 2, 0, z1 - 0.2, x + w / 2, h, z1 + 0.2);
+      C.addQuadX(m, z0, 0, z1, h, x - w / 2 - 0.03, C.scaleHex(BPB, 0.72), true);
+      C.addQuadX(m, z0, 0, z1, h, x + w / 2 + 0.03, C.scaleHex(BPB, 0.72), false);
+      col(x - w / 2 - 0.2, 0, z0, x - w / 2 + 0.2, h, z1); col(x + w / 2 - 0.2, 0, z0, x + w / 2 + 0.2, h, z1);
+      ceilQ(x - w / 2, z0, x + w / 2, z1, h + 0.02, BPT);
+      C.addBox(m, x, h + 0.32, (z0 + z1) / 2, w + 0.3, 0.64, d + 0.3, BPT, { noBottom: true });
+      C.addQuadZ(m, x - 4.5, 6.3, x + 4.5, 7.7, z0 - 0.06, '#0c1622', false);
+      C.addQuadZ(m, x - 4.1, 6.55, x + 4.1, 7.45, z0 - 0.09, '#5ac8ff', false);
+      C.addQuadZ(m, -22.4, 2.9, -21.4, 3.5, z0 - 0.06, '#0c1622', false);
+      C.addQuadZ(m, -22.25, 3.32, -21.55, 3.44, z0 - 0.09, '#7fe7ff', false);
+      C.addQuadZ(m, -21.98, 2.98, -21.82, 3.34, z0 - 0.09, '#7fe7ff', false);
+      // interior: wood floor, wainscot, the bar
+      C.addQuadY(m, x - w / 2, z0, x + w / 2, z1, 0.02, '#5a4632', 'floor');
+      var iw = function (zq, flip2) {
+        C.addQuadZ(m, x - w / 2, 0, x + w / 2, 1.15, zq, '#4a3a2a', flip2);
+        C.addQuadZ(m, x - w / 2, 1.15, x + w / 2, 3.4, zq, '#39525a', flip2);
+      };
+      iw(z0 + 0.03, true); iw(z1 - 0.03, false);
+      C.addQuadX(m, z0, 0, z1, 1.15, x - w / 2 + 0.03, '#4a3a2a', false); C.addQuadX(m, z0, 1.15, z1, 3.4, x - w / 2 + 0.03, '#39525a', false);
+      C.addQuadX(m, z0, 0, z1, 1.15, x + w / 2 - 0.03, '#4a3a2a', true); C.addQuadX(m, z0, 1.15, z1, 3.4, x + w / 2 - 0.03, '#39525a', true);
+      ceilQ(x + w / 2, z1, x - w / 2, z0, 3.4, '#453e34');
+      C.addBox(m, -16.5, 0.55, 19.5, 13, 1.1, 0.85, '#4a3424', { noBottom: true });
+      C.addBox(m, -16.5, 1.14, 19.5, 13.2, 0.07, 1.05, '#6e5034', { noBottom: true });
+      col(-23.1, 0, 19.05, -9.9, 1.15, 19.95);
+      C.addBox(m, -16.5, 1.75, 22.9, 13, 2.1, 0.14, '#2c2018', { noBottom: true });
+      C.addQuadZ(m, -20.3, 1.6, -12.7, 2.7, 22.8, '#6a7a82', false);
+      var rgb2 = C.rng(1937);
+      var bcols = ['#7a4a2a', '#3a6a4a', '#6a3040', '#9a7a30', '#405a78', '#6e6e58'];
+      for (var bt = 0; bt < 16; bt++) {
+        var bx2 = -22.6 + (bt % 8) * 1.6 + rgb2() * 0.3, by2 = 1.35 + ((bt / 8) | 0) * 0.62;
+        C.addBox(m, bx2, by2 + 0.17, 22.6, 0.12, 0.34, 0.12, bcols[bt % 6], { noBottom: true });
+      }
+      C.addBox(m, -22.9, 1.55, 22.62, 8.2, 0.05, 0.34, '#3a2c1e', { noBottom: true });
+      for (var st2 = 0; st2 < 5; st2++) {
+        var sx2 = -21 + st2 * 2.2;
+        C.addBox(m, sx2, 0.38, 17.9, 0.14, 0.76, 0.14, '#2c2620', { noBottom: true });
+        C.addBox(m, sx2, 0.79, 17.9, 0.52, 0.09, 0.52, '#6a2c2c', { noBottom: true });
+        col(sx2 - 0.28, 0, 17.62, sx2 + 0.28, 0.85, 18.18);
+      }
+      for (var bo = 0; bo < 3; bo++) {
+        var bz2 = 11.6 + bo * 3.0;
+        C.addBox(m, -23.6, 0.42, bz2, 1.3, 0.84, 1.0, '#4a2a2a', { noBottom: true });
+        C.addBox(m, -23.9, 0.9, bz2 + 0.62, 1.3, 0.9, 0.14, '#4a2a2a', { noBottom: true });
+        col(-24.3, 0, bz2 - 0.6, -22.9, 1.0, bz2 + 0.7);
+      }
+      C.addBox(m, -8.6, 0.85, 22.2, 0.9, 1.7, 0.7, '#3a2c1e', { noBottom: true });
+      C.addQuadX(m, 21.9, 1.6, 22.5, 2.2, -9.06, '#b8a06a', true);
+      col(-9.1, 0, 21.8, -8.1, 1.7, 22.6);
+      C.addBox(m, -10.4, 1.31, 19.4, 0.66, 0.34, 0.3, '#2c241c', { noBottom: true });
+      C.addQuadZ(m, -10.6, 1.28, -10.2, 1.44, 19.24, '#e8a83c', false);
+      C.addBox(m, -15.6, 1.25, 19.35, 0.09, 0.16, 0.09, '#c9862e', { noBottom: true });
+    })();
+    // ---------------- street furniture ----------------
+    function lamp(x, z) {
+      C.addBox(m, x, 2.3, z, 0.18, 4.6, 0.18, '#2c2c30', { noBottom: true });
+      var ax = z > 0 ? -0.42 : 0.42;
+      C.addBox(m, x + ax, 4.5, z, 0.84, 0.1, 0.1, '#2c2c30', { noBottom: true });
+      C.addBox(m, x + ax * 2, 4.42, z, 0.34, 0.3, 0.34, '#c9a05a', { noBottom: true });
+      col(x - 0.2, 0, z - 0.2, x + 0.2, 4.4, z + 0.2);
+    }
+    for (var lx0 = 0; lx0 < 6; lx0++) { var LXA = [-90, -50, -14, 24, 64, 100][lx0]; lamp(LXA, -6.4); lamp(LXA + 18, 6.4); }
+    function palm(x, z, sc2) {
+      sc2 = sc2 || 1; var rgp = C.rng((x * 13 + z * 7) >>> 0), h2 = (5.5 + rgp() * 2.5) * sc2;
+      C.addBox(m, x, h2 / 2, z, 0.34 * sc2, h2, 0.34 * sc2, '#6a5638', { noBottom: true });
+      for (var fi = 0; fi < 6; fi++) {
+        var fa = fi / 6 * Math.PI * 2 + rgp() * 0.5, fx = Math.cos(fa), fz = Math.sin(fa);
+        var p0 = [x + fx * 0.3, h2 + 0.1, z + fz * 0.3], p1 = [x + fx * 2.5 * sc2, h2 - 0.75 * sc2, z + fz * 2.5 * sc2];
+        var sdx = -fz * 0.24, sdz = fx * 0.24;
+        quad4([p0[0] - sdx, p0[1], p0[2] - sdz], [p0[0] + sdx, p0[1], p0[2] + sdz], [p1[0] + sdx, p1[1], p1[2] + sdz], [p1[0] - sdx, p1[1], p1[2] - sdz], '#3c5230');
+        quad4([p1[0] - sdx, p1[1], p1[2] - sdz], [p1[0] + sdx, p1[1], p1[2] + sdz], [p0[0] + sdx, p0[1], p0[2] + sdz], [p0[0] - sdx, p0[1], p0[2] - sdz], '#31452a');
+      }
+      col(x - 0.3, 0, z - 0.3, x + 0.3, h2, z + 0.3);
+    }
+    for (var pxi = 0; pxi < 4; pxi++) { var PXA = [-96, -36, 36, 96][pxi]; palm(PXA, -8.9); palm(PXA + 14, 8.9); }
+    var prevP = null;
+    for (var pp = -140; pp <= 150; pp += 29) {
+      C.addBox(m, pp, 3.7, -9.2, 0.24, 7.4, 0.24, '#4a3e30', { noBottom: true });
+      C.addBox(m, pp, 6.7, -9.2, 2.0, 0.1, 0.1, '#4a3e30', { noBottom: true });
+      col(pp - 0.2, 0, -9.4, pp + 0.2, 7.2, -9.0);
+      if (prevP != null) { C.addBox(m, (prevP + pp) / 2, 6.42, -9.2, pp - prevP, 0.05, 0.04, '#1c1a18', { noBottom: true }); C.addBox(m, (prevP + pp) / 2, 6.1, -9.2, pp - prevP, 0.05, 0.04, '#1c1a18', { noBottom: true }); }
+      prevP = pp;
+    }
+    C.addBox(m, -33, 1.15, 7.6, 2.4, 2.3, 1.4, '#28342a', { noBottom: true });
+    C.addBox(m, -33, 2.42, 7.6, 2.8, 0.1, 1.9, '#3a2c1e', { noBottom: true });
+    C.addBox(m, -33.5, 1.42, 8.15, 0.8, 0.18, 0.6, '#d8d2c2', { noBottom: true });
+    C.addBox(m, -32.55, 1.42, 8.15, 0.8, 0.18, 0.6, '#cfc8b6', { noBottom: true });
+    col(-34.3, 0, 6.8, -31.7, 2.3, 8.4);
+    for (var bxi = 0; bxi < 2; bxi++) {
+      var BXA = [-26, 40][bxi], BZA = [-7.4, 7.4][bxi];
+      C.addBox(m, BXA, 0.55, BZA, 1.9, 0.1, 0.5, '#6a5436', { noBottom: true });
+      C.addBox(m, BXA, 0.3, BZA + (BZA > 0 ? 0.24 : -0.24), 1.9, 0.5, 0.08, '#6a5436', { noBottom: true });
+      col(BXA - 0.95, 0, BZA - 0.3, BXA + 0.95, 0.6, BZA + 0.3);
+    }
+    C.addBox(m, -44, 0.41, 6.8, 0.4, 0.7, 0.4, '#a03020', { noBottom: true }); col(-44.25, 0, 6.55, -43.75, 0.7, 7.05);
+    // billboard at the east edge
+    C.addQuadX(m, -30, 2.3, -14, 7.3, 131.9, '#e8d9b0', true);
+    C.addQuadX(m, -30, 6.9, -14, 7.3, 131.85, '#d4641e', true);
+    C.addQuadX(m, -30, 2.3, -14, 2.7, 131.85, '#d4641e', true);
+    C.addQuadX(m, -28, 4.4, -16, 5.6, 131.85, '#b8541a', true);
+    for (var lg2 = 0; lg2 < 3; lg2++) C.addBox(m, 132, 1.2, -28 + lg2 * 6, 0.22, 2.4, 0.22, '#4a3e30', { noBottom: true });
+    col(131.4, 0, -30.5, 132.6, 7.3, -13.5);
+    // bungalow hints on the residential stub
+    for (var bg2 = 0; bg2 < 4; bg2++) {
+      var hx = -58 + bg2 * 30, hz = 47, rgh = C.rng((hx * 5) >>> 0);
+      var hb = ['#cfc0a4', '#9aa382', '#b8988a', '#c9b896'][bg2];
+      C.addBox(m, hx, 1.6, hz, 8, 3.2, 6.5, hb, { noBottom: true });
+      quad4([hx - 4.4, 3.2, hz - 3.6], [hx, 5.0, hz - 3.6], [hx, 5.0, hz + 3.6], [hx - 4.4, 3.2, hz + 3.6], '#5a3c30');
+      quad4([hx + 4.4, 3.2, hz + 3.6], [hx, 5.0, hz + 3.6], [hx, 5.0, hz - 3.6], [hx + 4.4, 3.2, hz - 3.6], '#5a3c30');
+      C.addQuadZ(m, hx - 2.2, 1.35, hx - 1.1, 2.55, hz - 3.28, rgh() < 0.7 ? '#ffd98a' : '#121826', true);
+      C.addQuadZ(m, hx + 1.1, 1.35, hx + 2.2, 2.55, hz - 3.28, rgh() < 0.7 ? '#ffd98a' : '#121826', true);
+      C.addBox(m, hx + 2.4, 4.0, hz + 1.2, 0.5, 1.8, 0.5, '#7a4a3a', { noBottom: true });
+      col(hx - 4, 0, hz - 3.25, hx + 4, 3.2, hz + 3.25);
+    }
+    C.addBox(m, 0, 0.4, 43.4, 176, 0.8, 0.08, '#d8d4c8', { noBottom: true });
+    // windmill
+    for (var wl = 0; wl < 4; wl++) { var WDX = wl % 2 ? 0.9 : -0.9, WDZ = wl < 2 ? -0.9 : 0.9;
+      C.addBox(m, 240 + WDX, 4.7, -42 + WDZ, 0.14, 9.5, 0.14, '#4a3e30', { noBottom: true }); }
+    C.addBox(m, 240, 9.6, -42, 0.6, 0.5, 0.8, '#3a3c40', { noBottom: true });
+    for (var fb = 0; fb < 8; fb++) { var fba = fb / 8 * Math.PI * 2;
+      var f0 = [240 + Math.cos(fba) * 0.35, 9.6 + Math.sin(fba) * 0.35, -42.55], f1 = [240 + Math.cos(fba) * 1.5, 9.6 + Math.sin(fba) * 1.5, -42.55];
+      var fdx = -Math.sin(fba) * 0.18, fdy = Math.cos(fba) * 0.18;
+      quad4([f0[0] - fdx, f0[1] - fdy, f0[2]], [f0[0] + fdx, f0[1] + fdy, f0[2]], [f1[0] + fdx, f1[1] + fdy, f1[2]], [f1[0] - fdx, f1[1] - fdy, f1[2]], '#c8c4b8');
+    }
+    C.addBox(m, 242.8, 0.8, -41.6, 2.8, 1.6, 2.8, '#6a5436', { noBottom: true });
+    col(238.8, 0, -43.2, 241.2, 9.5, -40.8); col(241.4, 0, -43.0, 244.2, 1.6, -40.2);
+    // ---------------- Whitmore's packing shack (335, 26) ----------------
+    (function () {
+      var X = 335, Z = 26, W = 5.4, D = 4.4, H = 2.7, WD = '#6a5a40';
+      C.addBox(m, X, H / 2, Z + D / 2, W, H, 0.18, WD, { noBottom: true }); col(X - W / 2, 0, Z + D / 2 - 0.15, X + W / 2, H, Z + D / 2 + 0.15);
+      C.addBox(m, X - W / 2, H / 2, Z, 0.18, H, D, WD, { noBottom: true }); col(X - W / 2 - 0.15, 0, Z - D / 2, X - W / 2 + 0.15, H, Z + D / 2);
+      C.addBox(m, X + W / 2, H / 2, Z, 0.18, H, D, WD, { noBottom: true }); col(X + W / 2 - 0.15, 0, Z - D / 2, X + W / 2 + 0.15, H, Z + D / 2);
+      C.addBox(m, X - W / 4 - 0.28, H / 2, Z - D / 2, W / 2 - 0.55, H, 0.18, WD, { noBottom: true }); col(X - W / 2, 0, Z - D / 2 - 0.15, X - 0.55, H, Z - D / 2 + 0.15);
+      C.addBox(m, X + W / 4 + 0.28, H / 2, Z - D / 2, W / 2 - 0.55, H, 0.18, WD, { noBottom: true }); col(X + 0.55, 0, Z - D / 2 - 0.15, X + W / 2, H, Z - D / 2 + 0.15);
+      C.addBox(m, X, H - 0.25, Z - D / 2, 1.3, 0.5, 0.18, WD, { noBottom: true });
+      C.addBox(m, X, H + 0.22, Z, W + 0.7, 0.14, D + 0.9, '#3c342a', { noBottom: true });
+      C.addQuadY(m, X - W / 2 + 0.05, Z - D / 2 + 0.05, X + W / 2 - 0.05, Z + D / 2 - 0.05, 0.06, '#5c4a34', 'floor');
+      C.addBox(m, X - W / 2 + 1.1, 0.3, Z + D / 2 - 0.65, 1.9, 0.4, 0.85, '#5a6248', { noBottom: true }); col(X - W / 2 + 0.15, 0, Z + D / 2 - 1.1, X - W / 2 + 2.05, 0.5, Z + D / 2 - 0.2);
+      C.addBox(m, X + W / 2 - 0.7, 0.55, Z + D / 2 - 0.7, 0.62, 0.9, 0.62, '#2c2c30', { noBottom: true });
+      C.addBox(m, X + W / 2 - 0.7, 2.0, Z + D / 2 - 0.7, 0.16, 2.2, 0.16, '#2c2c30', { noBottom: true });
+      C.addBox(m, X + W / 2 - 0.9, 0.78, Z - D / 2 + 0.85, 1.2, 0.08, 0.8, '#3a2c1e', { noBottom: true }); col(X + W / 2 - 1.5, 0, Z - D / 2 + 0.45, X + W / 2 - 0.3, 0.85, Z - D / 2 + 1.25);
+      C.addBox(m, X + W / 2 - 0.9, 0.85, Z - D / 2 + 0.85, 0.42, 0.06, 0.3, '#4a3a2c', { noBottom: true });
+      C.addBox(m, X - W / 2 + 1.15, 0.14, Z + D / 2 - 1.35, 0.95, 0.07, 0.24, '#8a7456', { noBottom: true });
+      C.addQuadZ(m, X - 1.7, H + 0.05, X + 1.7, H + 0.68, Z - D / 2 - 0.12, '#6a5a40', true);
+      var CR = '#a08858';
+      C.addBox(m, X - 3.4, 0.45, Z - 1.2, 0.9, 0.9, 0.9, CR, { noBottom: true });
+      C.addBox(m, X - 3.4, 1.35, Z - 1.2, 0.9, 0.9, 0.9, CR, { noBottom: true });
+      C.addBox(m, X - 2.4, 0.45, Z - 1.6, 0.9, 0.9, 0.9, CR, { noBottom: true });
+      C.addBox(m, X + 3.5, 0.45, Z + 0.4, 0.9, 0.9, 0.9, CR, { noBottom: true });
+      col(X - 4.1, 0, Z - 2.2, X - 2.1, 1.8, Z - 0.6); col(X + 2.95, 0, Z - 0.15, X + 4.05, 0.95, Z + 0.95);
+      C.addQuadY(mg, X - 2.5, 3, X + 0.5, Z - D / 2, 0.014, '#7a6646', 'floor');
+    })();
+    // dead truck at 760: the last real object, half-claimed
+    (function () {
+      var X = 760, Z = -4.6, DK = '#2e2a26', WIRE = '#2aff70';
+      C.addBox(m, X + 1.2, 1.35, Z, 1.9, 1.5, 1.8, DK, { noBottom: true });
+      C.addBox(m, X + 2.75, 1.0, Z, 1.4, 0.85, 1.5, DK, { noBottom: true });
+      C.addBox(m, X - 1.3, 0.95, Z, 2.9, 0.7, 1.9, DK, { noBottom: true });
+      for (var wj = 0; wj < 4; wj++) { var WWX = [2.7, 2.7, -0.6, -2.2][wj], WWZ = wj % 2 ? -0.95 : 0.95;
+        C.addBox(m, X + WWX, 0.42, Z + WWZ, 0.6, 0.84, 0.3, '#141210', { noBottom: true }); }
+      C.addBox(m, X + 1.2, 2.13, Z, 1.94, 0.06, 1.84, WIRE, { noBottom: true });
+      C.addBox(m, X - 1.3, 1.33, Z, 2.94, 0.06, 1.94, WIRE, { noBottom: true });
+      C.addBox(m, X + 2.75, 1.46, Z, 1.44, 0.06, 1.54, WIRE, { noBottom: true });
+      col(X - 2.9, 0, Z - 1.7, X + 3.6, 2.1, Z + 1.7);
+    })();
+    // road signs (the words arrive on approach)
+    function roadSign(x, z, sm) {
+      var sw2 = sm ? 1.1 : 1.5;
+      C.addBox(m, x, 0.95, z, 0.13, 1.9, 0.13, '#4a3e30', { noBottom: true });
+      C.addQuadX(m, z - sw2, 1.55, z + sw2, 2.45, x - 0.09, '#d8d2c2', true);
+      C.addQuadX(m, z + sw2, 1.55, z - sw2, 2.45, x + 0.09, '#d8d2c2', false);
+      col(x - 0.15, 0, z - 0.15, x + 0.15, 1.9, z + 0.15);
+    }
+    roadSign(288, -8.4, false); roadSign(512, 8.4, true);
+    // ---------------- the boundary wall at 1000 ----------------
+    for (var sg2 = 0; sg2 < 15; sg2++) {
+      var a0 = -0.5 + sg2 / 15, a1 = -0.5 + (sg2 + 1) / 15;
+      var q0 = [Math.cos(a0) * EMP.WALL, 0, Math.sin(a0) * EMP.WALL], q1 = [Math.cos(a1) * EMP.WALL, 0, Math.sin(a1) * EMP.WALL];
+      quad4([q0[0], 0, q0[2]], [q0[0], 60, q0[2]], [q1[0], 60, q1[2]], [q1[0], 0, q1[2]], '#03120a');
+      quad4([q0[0], 0, q0[2]], [q0[0], 60, q0[2]], [q0[0] * 1.0005, 60, q0[2] * 1.0005], [q0[0] * 1.0005, 0, q0[2] * 1.0005], '#1e9a52');
+      for (var hb2 = 0; hb2 < 4; hb2++) { var hy2 = [3, 10, 22, 40][hb2];
+        quad4([q0[0], hy2, q0[2]], [q0[0], hy2 + 0.7, q0[2]], [q1[0], hy2 + 0.7, q1[2]], [q1[0], hy2, q1[2]], '#17703c'); }
+      quad4([q0[0], 0, q0[2]], [q0[0], 1.2, q0[2]], [q1[0], 1.2, q1[2]], [q1[0], 0, q1[2]], '#2aff70');
+      var mnx = Math.min(q0[0], q1[0]) - 2, mxx = Math.max(q0[0], q1[0]) + 2;
+      var mnz = Math.min(q0[2], q1[2]) - 2, mxz = Math.max(q0[2], q1[2]) + 2;
+      col(mnx, 0, mnz, mxx, 60, mxz);
+    }
+    C.meshBounds(m); C.anchorize(m, 0.05, 81, 8);
+    C.meshBounds(mg);
+    s.insts.unshift(inst(m, [0, 0, 0], 0, { label: 'angel city', kind: 'static' }));
+    s.insts.unshift(inst(mg, [0, 0, 0], 0, { label: 'the valley', kind: 'ground' }));
+    // ---------------- moving parts: the sedan, the barricades, the townsfolk ----------------
+    var sed = inst(P.sedan('#3a3e36'), [10, 0, -4.2], Math.PI / 2, { kind: 'sedan', label: '1937 sedan' });
+    sed._col = box([8.9, 0, -5.3], [11.1, 1.6, -3.1]); s.colliders.push(sed._col);
+    s.insts.push(sed); s.sedan = sed;
+    var BARR = [[300, 1], [520, 2], [700, 3]];
+    for (var bri = 0; bri < 3; bri++) {
+      var BW = BARR[bri][1] === 3 ? 4.6 : 7.2;
+      var bit = inst(P.barricade37(BARR[bri][1], false), [BARR[bri][0], 0, 0], Math.PI / 2, { kind: 'barricade', label: 'road closed' });
+      var bcol = box([BARR[bri][0] - 0.35, 0, -BW / 2], [BARR[bri][0] + 0.35, 2.0, BW / 2]);
+      s.colliders.push(bcol); s.insts.push(bit);
+      s.barricades.push({ it: bit, col: bcol, kind: BARR[bri][1], broken: false, fly: null });
+    }
+    var doorIt = inst(P.shackDoor37(false), [334.45, 0, 23.8], 0, { kind: 'door', label: 'shack door' });
+    s.insts.push(doorIt); s.shackDoor = doorIt;
+    var gus = inst(P.human({ tier: 'custom', suit: '#2c3038', skin: '#b8a68e', hair: '#3a3630', shirt: '#e8e4d8', seed: 411 }), [-16, 0, 21.0], Math.PI, { kind: 'ped', label: 'the bartender' });
+    gus.pose = [0, 0, 0, 0, 0, 0]; s.insts.push(gus);
+    var pell = inst(P.human({ tier: 'custom', suit: '#7a5a4a', skin: '#c0a890', hair: '#4a4038', shirt: '#e0d6c0', seed: 512 }), [-30, 0, 7.0], Math.PI / 2, { kind: 'ped', label: 'a woman with oranges' });
+    pell.pose = [0, 0, 0, 0, 0, 0]; s.insts.push(pell);
+    var twinA = inst(P.human({ tier: 'custom', suit: '#565a60', skin: '#b8a890', hair: '#2c2c2e', shirt: '#dddbd4', seed: 777 }), [-95, 0, -7.0], Math.PI / 2, { kind: 'ped', label: 'a man in grey' });
+    var twinB = inst(P.human({ tier: 'custom', suit: '#565a60', skin: '#b8a890', hair: '#2c2c2e', shirt: '#dddbd4', seed: 777 }), [95, 0, -7.0], -Math.PI / 2, { kind: 'ped', label: 'a man in grey' });
+    twinA.pose = [0, 0, 0, 0, 0, 0]; twinB.pose = [0, 0, 0, 0, 0, 0];
+    s.insts.push(twinA); s.insts.push(twinB);
+    var orMesh = C.newMesh(); C.addBox(orMesh, 0, 0.09, 0, 0.18, 0.18, 0.18, '#d07818', { noBottom: true }); C.meshBounds(orMesh);
+    var oranges = [];
+    for (var og = 0; og < 3; og++) { var oi = inst(orMesh, [-999, 0, -999], 0, { kind: 'prop', label: 'oranges' }); oranges.push(oi); s.insts.push(oi); }
+    // ---------------- regions: the town speaks on approach ----------------
+    s.regions = [
+      { x0: -30, x1: 12, z0: -8, z1: 8, head: 'ANGEL CITY', q: 'Evening. Find a drink \u2014 The Blue Pacific is open on Main.', said: false },
+      { x0: -20, x1: -12, z0: 6.4, z1: 9.6, head: 'THE BLUE PACIFIC', q: 'COCKTAILS. MUSIC NIGHTLY. The door gives at a touch.', said: false },
+      { x0: -9, x1: 5, z0: -9.6, z1: -6.4, head: 'THE RIALTO', q: 'SHADOWS OVER SUNSET. PLUS NEWSREEL. 25 CENTS.', said: false },
+      { x0: 24, x1: 36, z0: 6.4, z1: 9.6, head: 'HOTEL MERIDIAN', q: 'STEAM HEAT. WEEKLY RATES.', said: false },
+      { x0: 50, x1: 62, z0: 6.4, z1: 9.6, head: 'ANGEL CITY PRODUCE', q: 'ORANGES, 10 CENTS THE DOZEN.', said: false },
+      { x0: 118, x1: 146, z0: -34, z1: -10, head: 'BILLBOARD', q: 'THE ORANGE EMPIRE. CALIFORNIA\u2019S GOLD \u00b7 SUNSHINE IN EVERY CRATE. VALENCIA GROVES NOW BEARING \u2014 EAST GROVE ROAD.', said: false },
+      { x0: 278, x1: 298, z0: -13, z1: 13, head: 'ROAD SIGN', q: 'EAST GROVE ROAD. NO COUNTY SERVICE BEYOND THIS POINT.', said: false },
+      { x0: 502, x1: 522, z0: -13, z1: 13, head: 'ROAD SIGN', q: 'PRIVATE GROVES. NO TRESPASSING.', said: false },
+      { x0: 327, x1: 343, z0: 17, z1: 23.5, head: 'WHITMORE CITRUS CO.', q: 'PACKING. EST. 1921.', said: false },
+      { x0: 748, x1: 774, z0: -16, z1: 6, head: 'EAST GROVE ROAD', q: 'The last real thing on the road. Half of it already remembers being lines.', said: false }
+    ];
+    // ---------------- the director ----------------
+    var NOTE = ['If you found this, you noticed. Most don\u2019t.',
+      'Watch Mrs. Pell at a quarter past. Any hour. Every hour.',
+      'Charlie\u2019s paper is always fresh. It is always Friday.',
+      'The record at the Pacific stumbles on bar seven. Count.',
+      'I measured the rest of it. It isn\u2019t miles \u2014 it\u2019s a number: nine sixty-five.',
+      'The groves get thin where the world runs out of ideas.',
+      'Drive east. Past every sign. Don\u2019t stop.',
+      '\u2014 J.W., June 11'];
+    var ENDLINES = ['The road doesn\u2019t end. It just stops being a road.',
+      'No crash. No cliff. The engine isn\u2019t killed \u2014 it\u2019s dismissed.',
+      'The groves give up their oranges, then their leaves, then the pretense.',
+      'Lines. Green lines on nothing, holding the shape of a valley out of habit.',
+      'Gus is back there polishing the same glass. Mrs. Pell is gathering the same oranges.',
+      'Somewhere a needle skips. Bar seven. Forever.',
+      'Nine hundred sixty-five. Whitmore counted it too.'];
+    var TERMINAL = ['MERIDIAN CIVIC SYSTEMS', 'UNIT 03 \u2014 \u201cANGEL CITY\u201d', 'CYCLE 14,022 \u00b7 STATUS: NOMINAL',
+      'SUBJECT V-1937-0042 (VOSS, H.) AT WORLD BOUNDARY', 'CONTINUITY BREACH: NONE \u00b7 MEMORY POLICY: RETAIN'];
+    s.NOTE = NOTE; s.ENDLINES = ENDLINES; s.TERMINAL = TERMINAL;
+    s._f = { inBar: false, barT: 0, gusArc: 0, matchbook: false, skip: false, usual: false,
+      paper1: false, paper2: false, paperAway: false, radioT: 0, radioDone: false,
+      pellW: 0, pellHour: -1, pellStop: 0, pellToast: false, clockwork: false,
+      twinsArmed: false, twinsDone: false, shack: false, note: false, knocked: 0, mirror: false,
+      end: false, await: false, loop: false, epi: false, epiSaid: false };
+    s._timers = []; s._beeps = []; s._crk = 0; s._crkN = 0;
+    function at(game, dtAt, fn) { s._timers.push({ at: (game.time || 0) + dtAt, fn: fn }); }
+    s.breakBarricade = function (game, b, dx2, dz2, v) {
+      b.broken = true;
+      var bci = s.colliders.indexOf(b.col); if (bci >= 0) s.colliders.splice(bci, 1);
+      b.it.mesh = P.barricade37(b.kind, true);
+      b.it.glyphEpoch = (b.it.glyphEpoch | 0) + 1; b.it.reResolve = 1; b.it.loadT = 0; b.it.loadDir = 1;
+      b.fly = { vx: dx2 * v * 0.3, vz: dz2 * v * 0.3, t: 0.9 };
+      s._f.knocked++;
+      game.emit('thud'); game.shake = Math.max(game.shake || 0, 0.35);
+      game.say(b.kind === 3 ? 'The sign splinters. Hand-paint and all.' : 'The barricade goes over.', 0.25);
+      if (b.kind === 1) game.say('ROAD CLOSED \u2014 The sawhorse went over easy. Nothing behind it but more road. Why close a road to nowhere?', 2.2);
+      if (b.kind === 3) game.say('TURN BACK \u2014 Hand-painted, the paint still tacky after who knows how long. Somebody wanted this to look desperate.', 2.2);
+    };
+    function seam(game, head, text) { game.emit('sting'); game.say('NOTICED \u2014 ' + head + '. ' + text, 0.3); }
+    function doLoop(game) {
+      s._f.await = false; s._f.loop = true;
+      s._dismiss = false;
+      if (game.car) game.dismountCar();
+      s._c0 = game.time;
+      var p2 = game.player; p2.pos = [-4, 0.02, -3.4]; p2.vel = [0, 0, 0]; p2.yaw = Math.PI / 2; p2.pitch = 0;
+      if (sed._col) { var sci = s.colliders.indexOf(sed._col); if (sci >= 0) s.colliders.splice(sci, 1); }
+      sed.pos = [10, 0, -4.2]; sed.yaw = Math.PI / 2;
+      sed._col = box([8.9, 0, -5.3], [11.1, 1.6, -3.1]); s.colliders.push(sed._col);
+      game.emit('rise');
+      game.say('7:24 PM. Friday, June 11th, 1937.', 1.1);
+    }
+    s.onWord = function (game, raw) {
+      if (!s._f.await) return false;
+      var lw = String(raw).toLowerCase();
+      if (/\b(return|loop|again|stay)\b/.test(lw)) { doLoop(game); return true; }
+      if (/\b(end|wake|exit|leave|session)\b/.test(lw)) { s._f.await = false; game.transition('void', 'Session ended. Back to the white.'); return true; }
+      game.say('The terminal is patient. RETURN, or END.', 0.2);
+      return true;
+    };
+    s.update = function (game) {
+      var p = game.player.pos, t = game.time || 0, F = s._f;
+      var dtv = Math.min(0.06, t - (s._tT === undefined ? t : s._tT)); s._tT = t;
+      if (s._c0 === undefined) s._c0 = t;
+      var dayMin = EMP.START_MIN + (t - s._c0) * 0.5;
+      s.skyT = dayMin;
+      var dEdge = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
+      var nf = empNightF(dayMin), df = empDuskF(dayMin), ef = empSS(EMP.DESAT0, EMP.DARK1, dEdge);
+      var fogC = C.mixHex(C.mixHex('#c9d4dc', '#4a3a4e', df), '#0a0d16', nf);
+      s.fog.col = C.mixHex(fogC, '#020503', ef * 0.75);
+      s.fog.far = (240 - 40 * df - 50 * nf) * (1 - 0.3 * ef);
+      s.fog.near = 40;
+      // timers
+      for (var tiq = s._timers.length - 1; tiq >= 0; tiq--) { if (t >= s._timers[tiq].at) { var fnq = s._timers[tiq].fn; s._timers.splice(tiq, 1); fnq(); } }
+      while (s._beeps.length && t >= s._beeps[0]) { s._beeps.shift(); game.emit('chirp'); }
+      // regions (once each)
+      for (var ri = 0; ri < s.regions.length; ri++) { var rg = s.regions[ri];
+        if (!rg.said && p[0] > rg.x0 && p[0] < rg.x1 && p[2] > rg.z0 && p[2] < rg.z1) { rg.said = true; game.say(rg.head + ' \u2014 ' + rg.q, 0.35); } }
+      // chunk streaming along the east road
+      var cur = Math.max(0, Math.min(EMP.N - 1, Math.floor((p[0] - EMP.X0) / EMP.CH)));
+      var lo = Math.max(0, cur - EMP.BEHIND), hi = Math.min(EMP.N - 1, cur + EMP.AHEAD);
+      for (var ci2 = lo; ci2 <= hi; ci2++) {
+        if (!s.chunks[ci2]) {
+          var cmesh = empChunkMesh(ci2);
+          var cit = inst(cmesh, [0, 0, 0], 0, { shadow: false, kind: 'world', label: 'east grove road' });
+          cit.loadT = 1; cit.loadDir = 0; cit._ccols = cmesh._ccols;
+          for (var cc2 = 0; cc2 < cit._ccols.length; cc2++) s.colliders.push(cit._ccols[cc2]);
+          s.chunks[ci2] = cit; s.insts.push(cit);
+        }
+      }
+      for (var key2 in s.chunks) { var kk = +key2;
+        if (kk < lo || kk > hi) { var ci3 = s.chunks[kk]; var ix2 = s.insts.indexOf(ci3); if (ix2 >= 0) s.insts.splice(ix2, 1);
+          if (ci3._ccols) { for (var cc3 = 0; cc3 < ci3._ccols.length; cc3++) { var cix = s.colliders.indexOf(ci3._ccols[cc3]); if (cix >= 0) s.colliders.splice(cix, 1); } }
+          delete s.chunks[kk]; } }
+      // barricade toss
+      for (var bf = 0; bf < s.barricades.length; bf++) { var bb2 = s.barricades[bf];
+        if (bb2.fly) { bb2.fly.t -= dtv; bb2.it.pos[0] += bb2.fly.vx * dtv; bb2.it.pos[2] += bb2.fly.vz * dtv; bb2.it.yaw += dtv * 2.6;
+          if (bb2.fly.t <= 0) bb2.fly = null; } }
+      // the bar: Gus, the record, the radio
+      var inBar = p[0] > -25 && p[0] < -7 && p[2] > 9.6 && p[2] < 23.6;
+      if (inBar && !F.inBar) {
+        F.inBar = true;
+        if (F.loop && !F.epiSaid) { F.epiSaid = true; F.epi = true;
+          game.say('GUS \u2014 The clock behind him says 7:24. It has said 7:24 before. So. How green was it?', 1.4);
+          at(game, 6.0, function () { game.say('GUS \u2014 There are worse loops, Mr. Voss.', 0); });
+        } else if (!F.usual) { F.usual = true;
+          game.say('GUS \u2014 First one\u2019s on the house. It always is.', 1.4);
+          at(game, 5.0, function () { seam(game, 'THE USUAL', 'You never told Gus your drink. The rye was poured before your hat was off. He knew. He always knows.'); });
+        }
+      }
+      if (!inBar) F.inBar = false;
+      if (inBar) {
+        F.barT += dtv;
+        s._crk -= dtv;
+        if (s._crk <= 0) { s._crkN = (s._crkN + 1) % 7; s._crk = s._crkN === 6 ? 0.55 : 2.1; game.emit('crackle'); }
+        if (F.barT > 22 && F.gusArc === 0) { F.gusArc = 1;
+          game.say('GUS \u2014 Things that happen the same way twice. Then a third time. Then every time.', 0.5);
+          at(game, 5.2, function () { game.say('GUS \u2014 There was a grove man drank here. Jacob Whitmore. Smart. Started writing things down. Times. Faces. Filled half a ledger with quarter-pasts.', 0); });
+          at(game, 11.4, function () { game.say('GUS \u2014 Then one evening his stool\u2019s empty. They say he drove east. They say a lot of things, in the same words, in the same order.', 0); });
+          at(game, 17.6, function () { F.matchbook = true; game.say('He slides something across the bar. A matchbook, soft at the corners. WHITMORE CITRUS CO. \u2014 EAST GROVE ROAD.', 0); game.emit('sting'); });
+          at(game, 23.0, function () { game.say('GUS \u2014 I never went. Got as far as the first sign, once. My legs just walked me home. Maybe you\u2019re built different, Mr. Voss.', 0); });
+        }
+        if (F.barT >= 64 && !F.skip) { F.skip = true;
+          seam(game, 'THE SKIP', 'Bar seven, the record stumbles \u2014 the same stumble, every time around. Nobody else hears it. Or they\u2019ve stopped hearing it.');
+        }
+        var rdx = p[0] + 10.4, rdz = p[2] - 19.4;
+        if (!F.radioDone && rdx * rdx + rdz * rdz < 3.4) {
+          F.radioT += dtv;
+          if (F.radioT >= 6) { F.radioDone = true;
+            var b0 = t + 0.4, seq = [9, 6, 5], acc = 0;
+            for (var dg3 = 0; dg3 < 3; dg3++) { for (var bp2 = 0; bp2 < seq[dg3]; bp2++) { s._beeps.push(b0 + acc); acc += 0.26; } acc += 1.1; }
+            at(game, 0.4 + acc + 0.5, function () { seam(game, 'NINE, SIX, FIVE', 'A voice of beeps between stations: nine, six, five. Not a frequency. A distance.'); });
+          }
+        }
+      }
+      // the newsstand, twice
+      var npx = p[0] + 33, npz = p[2] - 8.6, nd2 = npx * npx + npz * npz;
+      if (!F.paper1) { if (nd2 < 5.5) { F.paper1 = true;
+        game.say('THE EXAMINER \u2014 Friday, June 11th, 1937. Grove futures up. A heat spell that never arrives.', 0.35); } }
+      else if (!F.paperAway) { if (nd2 > 60) F.paperAway = true; }
+      else if (!F.paper2 && nd2 < 5.5) { F.paper2 = true;
+        seam(game, 'EVERGREEN', 'The Examiner is fresh every morning, Charlie swears. It is the same paper. Friday, June 11th, 1937. Every column. Every smudge.'); }
+      // Mrs. Pell: clockwork at a quarter past
+      var hourKey = Math.floor(dayMin / 60), minOf = dayMin - hourKey * 60;
+      if (F.pellStop > 0) {
+        F.pellStop -= dtv;
+        pell.pose[1] = 0; pell.pose[2] = 0; pell.pose[3] = 0; pell.pose[4] = 0;
+      } else {
+        pell._ph = (pell._ph || 0) + dtv * 3.9;
+        pell._dir = pell._dir === undefined ? 1 : pell._dir;
+        pell.pos[0] += pell._dir * 1.15 * dtv;
+        if (pell.pos[0] > 56) pell._dir = -1; if (pell.pos[0] < -44) pell._dir = 1;
+        pell.yaw = pell._dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+        var sph = Math.sin(pell._ph);
+        pell.pose[1] = sph * 0.5; pell.pose[2] = -sph * 0.5; pell.pose[3] = -sph * 0.38; pell.pose[4] = sph * 0.38;
+        pell.pos[1] = Math.abs(Math.cos(pell._ph)) * 0.035;
+      }
+      if (minOf >= 15 && minOf < 16 && F.pellHour !== hourKey) {
+        F.pellHour = hourKey; F.pellStop = 4.2;
+        for (var og2 = 0; og2 < 3; og2++) { var oo = oranges[og2];
+          oo.pos = [pell.pos[0] - 0.5 + og2 * 0.42, 0, pell.pos[2] + 0.55 + (og2 % 2) * 0.3]; oo.loadT = 0; oo.loadDir = 1; }
+        var pdx = p[0] - pell.pos[0], pdz = p[2] - pell.pos[2];
+        if (pdx * pdx + pdz * pdz < 196) {
+          F.pellW++;
+          if (!F.pellToast) { F.pellToast = true; game.say('A woman drops her oranges at the corner.', 0.4); }
+          if (F.pellW >= 2 && !F.clockwork) { F.clockwork = true;
+            seam(game, 'CLOCKWORK', 'Mrs. Pell drops her oranges at a quarter past. Every hour. Same oranges. Same words. Same spill.'); }
+        }
+      }
+      // the twins
+      if (!F.twinsArmed && t - s._c0 > 25 && Math.abs(p[2]) < 10 && p[0] > -70 && p[0] < 70) F.twinsArmed = true;
+      if (F.twinsArmed && !F.twinsDone) {
+        twinA._ph = (twinA._ph || 0) + dtv * 4.4; twinB._ph = (twinB._ph || 0) + dtv * 4.4;
+        twinA.pos[0] += 1.3 * dtv; twinB.pos[0] -= 1.3 * dtv;
+        var tphA = Math.sin(twinA._ph);
+        twinA.pose[1] = tphA * 0.5; twinA.pose[2] = -tphA * 0.5; twinA.pose[3] = -tphA * 0.38; twinA.pose[4] = tphA * 0.38;
+        twinB.pose[1] = tphA * 0.5; twinB.pose[2] = -tphA * 0.5; twinB.pose[3] = -tphA * 0.38; twinB.pose[4] = tphA * 0.38;
+        var tdx = twinA.pos[0] - twinB.pos[0];
+        var pdx2 = p[0] - twinA.pos[0], pdz2 = p[2] - twinA.pos[2];
+        if (Math.abs(tdx) < 1.2 && pdx2 * pdx2 + pdz2 * pdz2 < 900 && !F.mirror) { F.mirror = true;
+          seam(game, 'THE MIRROR', 'Two men in grey pass each other on Main. Same suit. Same face. Same nod. Neither breaks stride.'); }
+        if (twinA.pos[0] > 78) { F.twinsDone = true; twinA.loadDir = -1; twinB.loadDir = -1; }
+      }
+      // the shack: the door, then the floor
+      var sdx2 = p[0] - 335, sdz2 = p[2] - 23.8;
+      if (!F.shack && sdx2 * sdx2 + sdz2 * sdz2 < 4.8) { F.shack = true;
+        game.emit('creak');
+        doorIt.mesh = P.shackDoor37(true); doorIt.state = 'open';
+        doorIt.glyphEpoch = (doorIt.glyphEpoch | 0) + 1; doorIt.reResolve = 1; doorIt.loadT = 0; doorIt.loadDir = 1;
+        game.say('The door gives. Dust, and a cot nobody folded.', 0.4);
+      }
+      var bdx = p[0] - 333.75, bdz = p[2] - 25.75;
+      if (F.shack && !F.note && bdx * bdx + bdz * bdz < 2.0) { F.note = true;
+        game.emit('sting');
+        game.say('Under the loose board, a note in pencil:', 0.3);
+        for (var nl = 0; nl < NOTE.length; nl++) game.say(NOTE[nl], 1.6 + nl * 2.5);
+      }
+      // the boundary at nine sixty-five
+      if (!F.end && dEdge >= EMP.BOUNDARY) { F.end = true;
+        s._dismiss = true;
+        game.emit('powerdown');
+        for (var el = 0; el < ENDLINES.length; el++) { (function (ln, ii) { at(game, 2.6 + ii * 4.4, function () { game.say(ln, 0); }); })(ENDLINES[el], el); }
+        var tBase = 2.6 + ENDLINES.length * 4.4 + 1.4;
+        for (var tl = 0; tl < TERMINAL.length; tl++) { (function (ln, ii) { at(game, tBase + ii * 1.6, function () { game.say(ln, 0); }); })(TERMINAL[tl], tl); }
+        at(game, tBase + TERMINAL.length * 1.6 + 0.8, function () { F.await = true; game.say('SELECT \u2014 say RETURN to loop. Say END to wake.', 0); });
+      }
+    };
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -2126,6 +2779,7 @@
       case 'hallway': return sceneHallway();
       case 'erebus': return sceneErebus();
       case 'epang': return sceneEpang();
+      case 'empire': return sceneEmpire();
       default: return sceneVoid();
     }
   };
@@ -2168,7 +2822,7 @@
     }
 
     // sky
-    ops.push({ t: 'sky', mode: mode === 'code' ? 'code' : scene.sky, w: w, h: h, pitch: cam.pitch, yaw: cam.yaw, time: t, fogCol: fogCol });
+    ops.push({ t: 'sky', mode: mode === 'code' ? 'code' : scene.sky, w: w, h: h, pitch: cam.pitch, yaw: cam.yaw, time: (scene.skyT != null ? scene.skyT : t), fogCol: fogCol });
     if (mode === 'code') C.rainOps(ops, w, h, t, 0.55);
 
     var sceneOps = [];
@@ -2446,7 +3100,9 @@
     bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    empire: 'Angel City, June 1937, 7:24 in the evening. The road east is closed. That is the point.',
+    sedan: 'Four doors, June plates. She starts on the first crank.',
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city 1937 \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -2475,6 +3131,7 @@
     [/\b(hallway|corridor|dejavu|deja|vu|doors)\b/, 'hallway'],
     [/\b(erebus|station|tower)\b/, 'erebus'],
     [/\b(epang|palace)\b/, 'epang'],
+    [/\b(orange empire|empire|1937|angel city|citrus|nostalgia|nostalgic)\b/, 'empire'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
     [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],
@@ -2576,13 +3233,15 @@
 
   // ----- requests -----
   Game.prototype.request = function (text) {
+    // scene-local console hook: an armed scene may claim the raw word (the empire terminal)
+    if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     var a = C.parse(text);
     if (a.type === 'none') return a;
     if (a.type === 'help') { this.say(L.help); return a; }
     if (a.type === 'code') { this.toggleCode(); return a; }
     if (a.type === 'clear') { this.transition('void', L.clear); return a; }
     if (a.type === 'scene') {
-      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus, epang: L.epang }[a.scene];
+      var line = { weapons: L.weapons, dojo: L.dojo, rooftop: L.rooftop, city: L.city, hallway: L.hallway, erebus: L.erebus, epang: L.epang, empire: L.empire }[a.scene];
       this.transition(a.scene, line);
       return a;
     }
@@ -2615,6 +3274,7 @@
     p.yaw = sc.spawn.yaw; p.pitch = 0; p.grounded = true; p.coyote = 0;
     this.held = null;
     this.bike = null;
+    this.car = null;
     this.state = 'play';
     this._fallFromRoof = false; this._airFromA = false;
     this.flags.successDone = false;
@@ -2883,11 +3543,11 @@
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'katana') continue;
-      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : 1.1));
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'sedan' && it.kind !== 'katana') continue;
+      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : (it.kind === 'sedan' ? 1.0 : 1.1)));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'katana' ? 2.4 : 2.8)));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'sedan' ? 3.4 : (it.kind === 'katana' ? 2.4 : 2.8))));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -2898,6 +3558,7 @@
 
   Game.prototype.doAction = function () {
     if (this.bike) { this.dismountBike(); return; }
+    if (this.car) { this.dismountCar(); return; }
     var it = this.aim;
     if (!it) return;
     if (it.kind === 'gun') {
@@ -2909,6 +3570,8 @@
       this.enterBooth();
     } else if (it.kind === 'bike') {
       this.mountBike(it);
+    } else if (it.kind === 'sedan') {
+      this.mountCar(it);
     } else if (it.kind === 'katana') {
       it.loadDir = -1;
       if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
@@ -3130,6 +3793,114 @@
     p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
   };
 
+  // 1937 sedan physics, ported verbatim from the ORANGE EMPIRE branch CFG:
+  // no lean; steering authority scales with speed (clamp(v/9)) and relaxes
+  // toward the top end (1 - 0.45*ss(11,26,|v|)). Barricades break past 5.5 m/s.
+  C.CAR = { VMAX: 26, VREV: -6.5, ACC: 9.5, BRAKE: 16, DRAG: 0.35, ROLL: 0.9, STEER: 2.0, EYE: 1.5, BREAK_V: 5.5 };
+
+  Game.prototype.mountCar = function (it) {
+    this.car = { it: it, speed: 0, dist: 0, crashCd: 0, sSm: 0 };
+    it.loadDir = 0;
+    if (it._col) { var ci = this.scene.colliders.indexOf(it._col); if (ci >= 0) this.scene.colliders.splice(ci, 1); it._col = null; }
+    this.held = null;
+    var p = this.player;
+    p.pos = it.pos.slice(); p.vel = [0, 0, 0]; p.grounded = true;
+    p.yaw = it.yaw;
+    this.emit('mount');
+    this.say(L.sedan, 0.2);
+  };
+  Game.prototype.dismountCar = function () {
+    if (!this.car) return;
+    var ck = this.car, p = this.player, it = ck.it;
+    it.pos = [p.pos[0], this.scene.groundY, p.pos[2]];
+    it.yaw = p.yaw;
+    var lx = Math.cos(p.yaw), lz = Math.sin(p.yaw);
+    p.pos = [p.pos[0] - lx * 1.5, this.scene.groundY, p.pos[2] - lz * 1.5];
+    p.vel = [0, 0, 0];
+    var col = { min: [it.pos[0] - 1.1, it.pos[1], it.pos[2] - 1.1], max: [it.pos[0] + 1.1, it.pos[1] + 1.6, it.pos[2] + 1.1] };
+    it._col = col; this.scene.colliders.push(col);
+    this.car = null;
+    this.emit('dismount');
+  };
+
+  Game.prototype.moveCar = function (input, dt) {
+    var p = this.player, sc = this.scene, cols = sc.colliders, K = C.CAR, ck = this.car;
+    var self = this;
+    function ss(a, b, x) { var u = C.clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }
+    p.pitch = C.clamp(p.pitch + (input.dpitch || 0), -1.0, 1.0);
+    var throttle = (input.fwd || 0);
+    if (sc._dismiss) throttle = 0;   // the engine isn't killed - it's dismissed
+    var steerIn = (input.strafe || 0) + (input.dyaw || 0) * 26;
+    var sTgt = C.clamp(steerIn, -1.4, 1.4);
+    ck.sSm = (ck.sSm || 0) + (sTgt - (ck.sSm || 0)) * Math.min(1, (Math.abs(sTgt) > Math.abs(ck.sSm || 0) ? 9 : 12) * dt);
+    // longitudinal: their exact envelope
+    if (throttle > 0.01) ck.speed += K.ACC * throttle * dt;
+    else if (throttle < -0.01) {
+      if (ck.speed > 0.4) ck.speed += K.BRAKE * throttle * dt;      // brake
+      else ck.speed += K.ACC * 0.55 * throttle * dt;                 // reverse crawl
+    } else {
+      var r = K.ROLL * dt;
+      if (Math.abs(ck.speed) <= r) ck.speed = 0; else ck.speed -= Math.sign(ck.speed) * r;
+    }
+    ck.speed -= ck.speed * K.DRAG * dt;
+    if (sc._dismiss) ck.speed -= ck.speed * Math.min(1, 1.6 * dt);   // coast to nothing over ~2.4 s
+    ck.speed = C.clamp(ck.speed, K.VREV, K.VMAX);
+    // their steering law: authority grows with speed, relaxes near the top
+    var turn = K.STEER * C.clamp(ck.speed / 9, -1, 1) * (1 - 0.45 * ss(11, 26, Math.abs(ck.speed)));
+    p.yaw += C.clamp(ck.sSm, -1, 1) * turn * dt;
+    var dirx = Math.sin(p.yaw), dirz = -Math.cos(p.yaw);
+    // barricades break at speed (scene-owned; collider dies with them)
+    if (sc.barricades) {
+      for (var bi = 0; bi < sc.barricades.length; bi++) {
+        var b = sc.barricades[bi];
+        if (b.broken) continue;
+        for (var oi = 0; oi < 2; oi++) {
+          var off = oi === 0 ? 1.9 : 0.4;
+          var bx = p.pos[0] + dirx * off, bz = p.pos[2] + dirz * off;
+          if (bx > b.col.min[0] - 0.95 && bx < b.col.max[0] + 0.95 && bz > b.col.min[2] - 0.95 && bz < b.col.max[2] + 0.95) {
+            if (Math.abs(ck.speed) > K.BREAK_V && sc.breakBarricade) { sc.breakBarricade(self, b, dirx, dirz, Math.abs(ck.speed)); ck.speed *= 0.82; }
+            break;
+          }
+        }
+      }
+    }
+    var step = ck.speed * dt;
+    var subs = Math.max(1, Math.ceil(Math.abs(step) / 0.4));
+    var ds = step / subs;
+    function blocked(nx, nz) {
+      for (var i = 0; i < cols.length; i++) {
+        var bb = cols[i];
+        if (bb.max[1] <= p.pos[1] + 0.2) continue;
+        if (bb.min[1] >= p.pos[1] + 1.6) continue;
+        if (nx > bb.min[0] - 0.8 && nx < bb.max[0] + 0.8 && nz > bb.min[2] - 0.8 && nz < bb.max[2] + 0.8) return bb;
+      }
+      return null;
+    }
+    var hitWall = false;
+    for (var sgi = 0; sgi < subs; sgi++) {
+      var nx = p.pos[0] + dirx * ds, nz = p.pos[2] + dirz * ds;
+      if (blocked(nx, p.pos[2])) { hitWall = true; }
+      else p.pos[0] = nx;
+      if (blocked(p.pos[0], nz)) { hitWall = true; }
+      else p.pos[2] = nz;
+    }
+    ck.crashCd = Math.max(0, (ck.crashCd || 0) - dt);
+    if (hitWall) {
+      if (ck.crashCd <= 0) { ck.crashCd = 0.45; ck.speed *= 0.22; self.shake = Math.max(self.shake || 0, 0.4); this.emit('thud'); }
+      else ck.speed *= 0.985;
+    }
+    p.pos[1] = sc.groundY;
+    ck.dist += Math.abs(ck.speed) * dt;
+    p.vel = [dirx * ck.speed, 0, dirz * ck.speed];
+    var it = ck.it;
+    var fx0 = Math.sin(p.yaw) * 1.1, fz0 = -Math.cos(p.yaw) * 1.1;
+    it.pos = [p.pos[0] + fx0, sc.groundY, p.pos[2] + fz0];
+    it.yaw = p.yaw;
+    this.emit('engine', { speed: Math.abs(ck.speed), throttle: Math.max(0, throttle),
+                          speedFrac: C.clamp(Math.abs(ck.speed) / K.VMAX, 0, 1), turbo: 0, boosting: false });
+    p.phase = 0; p.grounded = true; p.coyote = C.PHYS.COYOTE;
+  };
+
   Game.prototype.doSlash = function () {
     if (!this.held) return;
     this.held.kick = 1;
@@ -3156,6 +3927,7 @@
 
   Game.prototype.movePlayer = function (input, dt) {
     if (this.bike) { this.moveBike(input, dt); return; }
+    if (this.car) { this.moveCar(input, dt); return; }
     var p = this.player, sc = this.scene, cols = sc.colliders;
     // look
     p.yaw += input.dyaw || 0;
@@ -3759,6 +4531,12 @@
         o1.start(); o2.start(); ambNodes.push(o1, o2, of2, og2);
         loopNoise('bandpass', 2100, 2.0, 0.035, 0.19, 260);
       }
+      else if (name === 'empire') {
+        // a 1937 valley at dusk: warm night air + a faint insect band; the wind is elsewhere
+        loopNoise('lowpass', 130, 0.5, 0.11, 0.16, 40);
+        loopNoise('bandpass', 4400, 6.0, 0.028, 4.6, 900);
+        loopNoise('bandpass', 620, 1.2, 0.045, 0.09, 180);
+      }
       else { loopNoise('lowpass', 90, 0.4, 0.08); } // void hum
       ambGain.gain.linearRampToValueAtTime(name === 'void' ? 0 : AMB_LEVEL, t1 + 1.4);   // the Construct is SILENT - the film's void has no bed
     }, 220);
@@ -3802,6 +4580,9 @@
       case 'splash': hiss(0.35, 0.3, 1400, 500, 1.1); thump(140, 0.22, 0.16); blip(320, 0.18, 0.06, 'sine', 0.05); break;
       case 'clank': thump(240, 0.14, 0.1); blip(1240, 0.35, 0.028, 'triangle', 0.02); hiss(0.22, 0.05, 700, 300, 2); break;
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
+      case 'thud': thump(84, 0.22, 0.4); hiss(0.2, 0.16, 500, 140, 1.2); break;
+      case 'sting': thump(120, 0.1, 0.22); thump(96, 0.09, 0.18, 0.11); break;
+      case 'crackle': hiss(0.03, 0.16, 3400, 2600, 1); hiss(0.03, 0.12, 2800, 2200, 1, 0.09); hiss(0.03, 0.1, 3000, 2400, 1, 0.16); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
       case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;
       case 'heartSoft': thump(64, 0.12, 0.16); thump(58, 0.1, 0.12, 0.16); break;
@@ -4200,6 +4981,45 @@
                 ctx.lineTo(wx, hor3 - (12 + mh * 16) * (H / 540));
               }
               ctx.lineTo(W, hor3); ctx.closePath(); ctx.fill();
+            } else if (op.mode === 'empire') {
+              // Angel City, June 1937: the branch's three-palette day (their EDGE.PAL,
+              // verbatim hexes) blended by nightF/duskF; sun rises 6:00 east (+x),
+              // sets 20:00 west (-x); stars and a moon own the night. op.time is the
+              // scene's day clock in MINUTES (loop-resettable via scene.skyT).
+              var mm = ((op.time || 0) % 1440 + 1440) % 1440;
+              var nf2 = C.empNightF ? C.empNightF(mm) : 0, df2 = C.empDuskF ? C.empDuskF(mm) : 0;
+              function bl2(a1, b1, c1) { return C.mixHex(C.mixHex(a1, b1, df2), c1, nf2); }
+              var topC = bl2('#4a76b8', '#1c2a52', '#04060e');
+              var midC = bl2('#a6c4e6', '#7a5a8a', '#0a101f');
+              var horC = bl2('#e9eef0', '#e8843c', '#131a26');
+              var hor4 = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
+              var g4 = ctx.createLinearGradient(0, 0, 0, Math.max(1, hor4));
+              g4.addColorStop(0, topC); g4.addColorStop(0.62, midC); g4.addColorStop(1, horC);
+              ctx.fillStyle = g4; ctx.fillRect(0, 0, W, Math.max(1, hor4));
+              ctx.fillStyle = op.fogCol; ctx.fillRect(0, Math.max(0, hor4), W, H);
+              if (nf2 > 0.08) {
+                for (var si4 = 0; si4 < 80; si4++) {
+                  var h14 = Math.sin(si4 * 12.9898) * 43758.5453; h14 -= Math.floor(h14);
+                  var h24 = Math.sin(si4 * 78.233) * 12543.21; h24 -= Math.floor(h24);
+                  var sd4 = h14 * Math.PI * 2 - op.yaw; while (sd4 > Math.PI) sd4 -= Math.PI * 2; while (sd4 < -Math.PI) sd4 += Math.PI * 2;
+                  if (Math.abs(sd4) > 1.3) continue;
+                  ctx.fillStyle = 'rgba(207,216,255,' + (nf2 * (0.25 + 0.5 * ((si4 * 29) % 5) / 5)).toFixed(2) + ')';
+                  ctx.fillRect(W * 0.5 + sd4 / 1.3 * W * 0.62, h24 * hor4 * 0.85, 1, 1);
+                }
+                var mdx = ((2.6 - op.yaw) % (Math.PI * 2)); if (mdx > Math.PI) mdx -= Math.PI * 2; if (mdx < -Math.PI) mdx += Math.PI * 2;
+                if (Math.abs(mdx) < 1.4) {
+                  ctx.fillStyle = 'rgba(220,228,255,' + (nf2 * 0.9).toFixed(2) + ')';
+                  ctx.beginPath(); ctx.arc(W * 0.5 + mdx / 1.25 * W * 0.62, hor4 * 0.22, 9, 0, Math.PI * 2); ctx.fill();
+                }
+              }
+              var sa4 = C.clamp(((mm - 360) / 840), -0.2, 1.2) * Math.PI;
+              var sunEl4 = Math.sin(sa4), sunAz = Math.cos(sa4) > 0 ? 1.5708 : -1.5708;
+              var sdx4 = ((sunAz - op.yaw) % (Math.PI * 2)); if (sdx4 > Math.PI) sdx4 -= Math.PI * 2; if (sdx4 < -Math.PI) sdx4 += Math.PI * 2;
+              if (sunEl4 > -0.05 && nf2 < 0.85 && Math.abs(sdx4) < 1.5) {
+                var sx4 = W * 0.5 + sdx4 / 1.25 * W * 0.62, sy4 = hor4 - sunEl4 * H * 0.75;
+                ctx.fillStyle = df2 > 0.35 ? 'rgba(255,164,90,0.92)' : 'rgba(255,242,221,0.9)';
+                ctx.beginPath(); ctx.arc(sx4, sy4, df2 > 0.35 ? 19 : 12, 0, Math.PI * 2); ctx.fill();
+              }
             } else if (op.mode === 'erebus') {
               // deep space: starfield pans with yaw; a ringed gas giant sits at a
               // fixed azimuth; the sun orbits (their 240 s period) and slips into
@@ -4882,7 +5702,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city 1937', 'orange empire'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
@@ -4969,6 +5789,7 @@
     { word: 'hallway', anchors: ['the endless corridor of doors', 'the backdoor hallway', 'deja vu, something changed', 'the infinite door'] },
     { word: 'erebus', anchors: ['a derelict space station', 'the cyberpunk mega tower station', 'the orbital station with a reactor', 'erebus'] },
     { word: 'epang', anchors: ['the epang palace', 'a chinese palace from the rhapsody', 'vermilion halls and two rivers', 'du mu epang gong'] },
+    { word: 'empire', anchors: ['a nostalgic 1937 town at dusk', 'the orange empire', 'drive east past the road closed signs', 'old los angeles citrus town', 'the thirteenth floor world'] },
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },

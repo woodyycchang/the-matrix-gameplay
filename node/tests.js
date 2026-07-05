@@ -2041,6 +2041,255 @@ section('EPANG: the palace stands and the rhapsody speaks');
   ok(ops2.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the skyway view over river B renders clean');
 }
 
+// ------------------------------------------- ORANGE EMPIRE 1937 (branch port)
+section('ORANGE EMPIRE 1937 (Angel City recovered as native scene)');
+{
+  const mkE = () => { const g = new C.Game(); const ev = []; g.emit = (n) => { ev.push(n); };
+    g.update({}, 0.2); g.request('orange empire');
+    for (let i = 0; i < 140; i++) g.update({}, 1 / 30);
+    return { g, ev }; };
+  const mountSedan = (g) => { const sed = g.scene.sedan;
+    g.player.pos = [sed.pos[0] - 2.2, 0, sed.pos[2]]; g.player.yaw = Math.PI / 2; g.player.pitch = 0;
+    g.update({}, 1 / 30); g.update({}, 1 / 30); g.doAction(); return sed; };
+  // -- the word chain
+  eq(C.parse('orange empire').scene, 'empire', "'orange empire' loads the theme");
+  eq(C.parse('1937').scene, 'empire', "'1937' loads the theme");
+  eq(C.parse('give me that nostalgic vibe').scene, 'empire', 'nostalgia routes to Angel City');
+  eq(C.parse('take me to angel city').scene, 'empire', "'angel city' routes");
+  eq(C.parse('an orange chair').type, 'props', "bare 'orange' is still a color: 'orange chair' stays a prop");
+  eq(C.parse('an orange chair').props[0].kind, 'chair', 'and the prop is the chair');
+  ok(C.LINES.empire && C.LINES.empire.indexOf('\u2014') < 0, 'the operator line keeps the JARVIS register (no em-dash)');
+  ok(C.intent.intents.some(it => it.word === 'empire'), 'the neural fallback knows the designated word');
+  // -- census
+  {
+    const { g } = mkE();
+    eq(g.scene.name, 'angel city 1937', 'scene name');
+    eq(g.scene.sky, 'empire', 'sky mode');
+    eq(g.scene.label, 'ANGEL CITY 1937', 'label');
+    eq(g.scene.barricades.length, 3, 'three barricades on the east road');
+    eq(g.scene.barricades.map(b => b.kind).join(','), '1,2,3', 'kinds 1,2,3 in order (300/520/700)');
+    ok(g.scene.sedan && g.scene.sedan.kind === 'sedan', 'a 1937 sedan is parked on Main');
+    ok(g.scene.insts.filter(it => it.kind === 'ped').length >= 4, 'Gus, Mrs. Pell and the twins stand their posts');
+    eq(g.scene.regions.length, 10, 'ten speaking regions');
+    ok(g.scene.colliders.some(b => b.min[0] > 930), 'the boundary wall is solid past 930');
+    ok(Object.keys(g.scene.chunks).length >= 6, 'the east road pre-seeds a chunk window');
+    const ops = C.render(g, 480, 270, g.time);
+    ok(ops[0].t === 'sky' && ops[0].mode === 'empire', "the sky op carries mode 'empire'");
+    near(ops[0].time, 1164, 30, 'the sky clock reads minutes since midnight, starting 7:24 PM');
+    ok(ops.some(o => o.t === 'poly'), 'the town renders polys');
+    ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'zero NaN at the spawn');
+  }
+  // -- the day clock and the fog that follows it
+  {
+    const { g } = mkE();
+    const t0 = g.scene.skyT;
+    for (let i = 0; i < 60 * 30; i++) g.update({}, 1 / 30);
+    near(g.scene.skyT - t0, 30, 2, '60 real seconds = 30 game minutes');
+    const townFog = g.scene.fog.far;
+    g.player.pos = [700, 0, 0]; g.update({}, 1 / 30);
+    ok(g.scene.fog.far < townFog, 'the fog closes in with the edge factor');
+    ok(/^#/.test(g.scene.fog.col), 'fog color stays a hex through the blend');
+  }
+  // -- the sedan: their envelope, verbatim constants
+  {
+    const { g } = mkE();
+    mountSedan(g);
+    ok(!!g.car, 'E mounts the sedan');
+    for (let i = 0; i < 6 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(g.car.speed > 12 && g.car.speed <= 26, '6 s of throttle lands mid-envelope (got ' + g.car.speed.toFixed(1) + ')');
+    for (let i = 0; i < 14 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(g.car.speed > 20 && g.car.speed <= 26, 'she tops out near VMAX 26 (got ' + g.car.speed.toFixed(1) + ')');
+    const yaw0 = g.player.yaw;
+    for (let i = 0; i < 45; i++) g.update({ fwd: 1, strafe: 0.6 }, 1 / 60);
+    ok(Math.abs(g.player.yaw - yaw0) > 0.05 && Math.abs(g.player.yaw - yaw0) < 1.4, 'held steer carves an arc, not a pivot');
+    for (let i = 0; i < 2 * 60; i++) g.update({ fwd: -1 }, 1 / 60);
+    ok(g.car.speed < 12, 'the brake bites');
+    for (let i = 0; i < 6 * 60; i++) g.update({ fwd: -1 }, 1 / 60);
+    ok(g.car.speed < 0 && g.car.speed >= -6.5, 'reverse crawls, capped at VREV (got ' + g.car.speed.toFixed(1) + ')');
+    g.scene._dismiss = true; g.car.speed = 20;
+    for (let i = 0; i < 4 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(Math.abs(g.car.speed) < 0.6, 'a dismissed engine ignores the throttle and coasts to nothing');
+    g.dismountCar();
+    ok(!g.car && g.scene.sedan._col, 'dismount parks her solid again');
+  }
+  // -- barricades: slow is a wall, fast is a doorway
+  {
+    const { g, ev } = mkE();
+    mountSedan(g);
+    g.player.pos = [297.4, 0, 0]; g.player.yaw = Math.PI / 2; g.car.speed = 3;
+    const bcol0 = g.scene.barricades[0].col;
+    for (let i = 0; i < 3 * 60; i++) g.update({}, 1 / 60);
+    ok(!g.scene.barricades[0].broken, 'a 3 m/s nudge does not break ROAD CLOSED');
+    ok(g.player.pos[0] < 300.5, 'the sawhorse holds the line');
+    ok(ev.indexOf('thud') >= 0, 'and it thuds');
+    g.player.pos = [290, 0, 0]; g.car.speed = 14;
+    for (let i = 0; i < 2 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(g.scene.barricades[0].broken, '14 m/s breaks it');
+    ok(g.scene.colliders.indexOf(bcol0) < 0, 'the broken barricade gives up its collider');
+    ok(g.scene._f.knocked === 1, 'the count is kept');
+    ok(g.msgs.some(m => m.text.indexOf('sawhorse went over easy') >= 0), 'the kind-1 note fires verbatim');
+    ok(g.player.pos[0] > 305, 'and the road is open');
+  }
+  // -- the east road streams in chunks, both directions, bounded
+  {
+    const { g } = mkE();
+    g.player.pos = [600, 0, 0]; g.update({}, 1 / 30);
+    const keys1 = Object.keys(g.scene.chunks).map(Number);
+    ok(keys1.indexOf(0) < 0, 'town-end chunks are recycled when you are deep east');
+    ok(keys1.length <= 10, 'the window stays bounded (' + keys1.length + ')');
+    ok(keys1.some(k => k >= 12), 'and the deep-east slabs exist');
+    g.player.pos = [40, 0, 0]; g.update({}, 1 / 30);
+    const keys2 = Object.keys(g.scene.chunks).map(Number);
+    ok(keys2.indexOf(0) >= 0 && keys2.length <= 10, 'walking home re-seeds the town end, still bounded');
+  }
+  // -- six seams under scripted time
+  {
+    const { g, ev } = mkE();
+    g.player.pos = [-16, 0, 14];   // into The Blue Pacific
+    for (let i = 0; i < 8 * 30; i++) g.update({}, 1 / 30);
+    ok(g.msgs.some(m => m.text.indexOf('THE USUAL') >= 0), 'seam 1: THE USUAL pours itself');
+    for (let i = 0; i < 60 * 30; i++) g.update({}, 1 / 30);
+    ok(g.msgs.some(m => m.text.indexOf('WHITMORE CITRUS CO. \u2014 EAST GROVE ROAD') >= 0), 'Gus slides the matchbook, verbatim');
+    ok(g.scene._f.matchbook, 'and the flag is kept');
+    ok(g.msgs.some(m => m.text.indexOf('THE SKIP') >= 0), 'seam 2: bar seven stumbles after 64 s');
+    ok(ev.filter(e => e === 'crackle').length > 8, 'the needle crackles under it (non-musical)');
+    g.player.pos = [-10.4, 0, 18.6];   // by the radio
+    for (let i = 0; i < 16 * 30; i++) g.update({}, 1 / 30);
+    ok(ev.filter(e => e === 'chirp').length >= 20, 'the fourth station counts in beeps: 9, 6, 5');
+    ok(g.msgs.some(m => m.text.indexOf('NINE, SIX, FIVE') >= 0), 'seam 3: not a frequency, a distance');
+    g.player.pos = [-33, 0, 8.6]; g.update({}, 1 / 30);
+    ok(g.msgs.some(m => m.text.indexOf('THE EXAMINER') >= 0), 'the paper reads once');
+    g.player.pos = [-33, 0, 20]; g.update({}, 1 / 30);
+    g.player.pos = [-33, 0, 8.6]; g.update({}, 1 / 30);
+    ok(g.msgs.some(m => m.text.indexOf('EVERGREEN') >= 0), 'seam 4: the same paper, twice');
+  }
+  {
+    const { g } = mkE();
+    const s = g.scene;
+    // force the clock to a quarter past and stand at the corner with Mrs. Pell
+    s._c0 = g.time - 2 * ((15 - (1164 % 60)) >= 0 ? (15 - (1164 % 60)) : (75 - (1164 % 60)));
+    const pell = s.insts.filter(it => it.kind === 'ped')[1];
+    for (let w = 0; w < 2; w++) {
+      g.player.pos = [pell.pos[0], 0, pell.pos[2] - 2]; g.update({}, 1 / 30);
+      for (let i = 0; i < 30; i++) { g.player.pos = [pell.pos[0], 0, pell.pos[2] - 2]; g.update({}, 1 / 30); }
+      s._c0 -= 120;   // the next hour arrives
+    }
+    ok(s._f.pellW >= 2, 'Mrs. Pell witnessed twice (' + s._f.pellW + ')');
+    ok(g.msgs.some(m => m.text.indexOf('CLOCKWORK') >= 0), 'seam 5: quarter past, every hour');
+  }
+  {
+    const { g } = mkE();
+    g.player.pos = [0, 0, -3]; 
+    for (let i = 0; i < 26 * 30; i++) g.update({}, 1 / 30);   // arm the twins
+    for (let i = 0; i < 80 * 30 && !g.scene._f.mirror; i++) { g.player.pos = [0, 0, -3]; g.update({}, 1 / 30); }
+    ok(g.scene._f.mirror, 'seam 6: THE MIRROR crosses Main');
+    ok(g.msgs.some(m => m.text.indexOf('Same suit. Same face. Same nod.') >= 0), 'and speaks verbatim');
+  }
+  // -- the shack gives up the note, verbatim
+  {
+    const { g, ev } = mkE();
+    g.player.pos = [335, 0, 23.2]; g.update({}, 1 / 30); g.update({}, 1 / 30);
+    ok(ev.indexOf('creak') >= 0, 'the door gives with a creak');
+    eq(g.scene.shackDoor.state, 'open', 'and swings open (mutation trick)');
+    g.player.pos = [333.75, 0.02, 25.75]; g.update({}, 1 / 30);
+    const NOTE = g.scene.NOTE;
+    eq(NOTE.length, 8, 'the J.W. note keeps its eight lines');
+    ok(NOTE[4].indexOf('nine sixty-five') >= 0 && NOTE[7] === '\u2014 J.W., June 11', 'the number and the signature are exact');
+    for (let i = 0; i < 24 * 30; i++) g.update({}, 1 / 30);
+    const said = g.msgs.filter(m => m.said).map(m => m.text);
+    ok(NOTE.every(ln => said.indexOf(ln) >= 0), 'every line of the note is typed, word for word');
+  }
+  // -- E2E: drive east, past every sign; the world runs out at 965
+  {
+    const { g, ev } = mkE();
+    mountSedan(g);
+    let tEnd = -1;
+    for (let i = 0; i < 180 * 60; i++) {
+      g.update({ fwd: 1 }, 1 / 60);
+      const x = g.player.pos[0];
+      if (x > 640 && x < 650 && Math.abs(g.player.pos[2]) > 2.5) g.player.pos[2] = 0;
+      if (x > 716 && x < 720) g.player.pos[2] = 3.6;
+      if (g.scene._f.end) { tEnd = i / 60; break; }
+    }
+    ok(g.scene._f.end, 'the boundary fires');
+    near(Math.hypot(g.player.pos[0], g.player.pos[2]), 965, 4, 'at nine hundred sixty-five, as counted');
+    eq(g.scene.barricades.filter(b => b.broken).length, 3, 'all three barricades went over on the way');
+    ok(ev.indexOf('powerdown') >= 0, 'the ending begins with the world drawing breath');
+    for (let i = 0; i < 48 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(Math.abs(g.car.speed) < 0.4, 'the engine is not killed - it is dismissed');
+    const said = g.msgs.filter(m => m.said).map(m => m.text);
+    const EL = g.scene.ENDLINES;
+    ok(EL.length === 7 && EL.every(ln => said.indexOf(ln) >= 0), 'all seven ending lines type out, verbatim');
+    ok(EL.every((ln, i2) => i2 === 0 || said.indexOf(EL[i2 - 1]) < said.indexOf(ln)), 'and in their order');
+    ok(g.scene.TERMINAL.every(ln => said.indexOf(ln) >= 0), 'MERIDIAN CIVIC SYSTEMS reports, verbatim');
+    ok(said.some(t => t.indexOf('SELECT') >= 0), 'and offers the choice');
+    ok(g.scene._f.await, 'the console becomes the terminal');
+    // memory policy: retain
+    g.scene._f.usual = true;
+    const r = g.request('return');
+    eq(r.type, 'sceneword', 'the scene claims the word');
+    g.update({}, 1 / 30);
+    near(g.player.pos[0], -4, 0.5, 'RETURN: back on Main');
+    near(g.scene.skyT, 1164, 1.5, 'RETURN: the clock says 7:24 again');
+    ok(!g.car, 'RETURN: on foot');
+    near(g.scene.sedan.pos[0], 10, 0.5, 'RETURN: the sedan is parked where it always is');
+    ok(g.scene._f.usual, 'MEMORY POLICY: RETAIN - the seams survive the loop');
+    ok(g.scene.barricades[0].broken, 'so does the lumber you knocked over');
+    g.player.pos = [-16, 0, 14];
+    for (let i = 0; i < 9 * 30; i++) g.update({}, 1 / 30);
+    const all2 = g.msgs.map(m => m.text);
+    ok(all2.some(t => t.indexOf('So. How green was it?') >= 0), 'Gus asks the only question left');
+    for (let i = 0; i < 8 * 30; i++) g.update({}, 1 / 30);
+    ok(g.msgs.filter(m => m.said).some(m => m.text.indexOf('There are worse loops, Mr. Voss.') >= 0), 'and answers it');
+  }
+  // -- END SESSION wakes in the white
+  {
+    const { g } = mkE();
+    g.scene._f.end = true; g.scene._f.await = true;
+    g.request('end session');
+    eq(g.trans && g.trans.name, 'void', 'END: the void takes you back');
+  }
+  // -- soak, render sweep, determinism, audio set
+  {
+    const { g, ev } = mkE();
+    mountSedan(g);
+    let bad = 0;
+    for (let i = 0; i < 1200; i++) {
+      g.update({ fwd: i % 3 ? 1 : 0, strafe: Math.sin(i * 0.03) * 0.4 }, 1 / 60);
+      if (!finiteDeep(g.player.pos) || !Number.isFinite(g.player.yaw)) bad++;
+    }
+    eq(bad, 0, '1200-frame drive soak: zero NaN');
+    const opsNear = C.render(g, 480, 270, g.time);
+    ok(opsNear.some(o => o.t === 'poly') && opsNear.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'mid-road renders clean');
+    g.player.pos = [950, 1.62, 0]; g.player.yaw = Math.PI / 2; g.update({}, 1 / 30);
+    const opsFar = C.render(g, 480, 270, g.time);
+    ok(opsFar.some(o => o.t === 'poly') && opsFar.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the wall renders clean at 950');
+    for (const need of ['engine', 'mount']) ok(ev.indexOf(need) >= 0, "audio path '" + need + "' asserted in the stream");
+    // a deterministic wall kiss for the thud path
+    g.player.pos = [-40, 0, -7.5]; g.player.yaw = 0; g.car.speed = 8;   // nose-first into the north row
+    for (let i = 0; i < 60; i++) g.update({}, 1 / 60);
+    ok(ev.indexOf('thud') >= 0, "audio path 'thud' asserted on a wall kiss");
+  }
+  {
+    const run = () => { const g = new C.Game(); g.emit = () => {}; g.update({}, 0.2); g.request('empire');
+      for (let i = 0; i < 140; i++) g.update({}, 1 / 30);
+      const sed = g.scene.sedan; g.player.pos = [sed.pos[0] - 2.2, 0, sed.pos[2]]; g.player.yaw = Math.PI / 2;
+      g.update({}, 1 / 30); g.update({}, 1 / 30); g.doAction();
+      for (let i = 0; i < 600; i++) g.update({ fwd: 1 }, 1 / 60);
+      return g.player.pos.join(',') + '|' + Object.keys(g.scene.chunks).join(','); };
+    eq(run(), run(), 'twin runs agree: the town is deterministic');
+  }
+  // -- perf: the valley fits the painter's budget
+  {
+    const { g } = mkE();
+    g.player.pos = [400, 1.62, 0]; g.player.yaw = Math.PI / 2; g.update({}, 1 / 30);
+    const t0 = Date.now();
+    for (let i = 0; i < 30; i++) C.render(g, 480, 270, g.time + i * 0.03);
+    const ms = (Date.now() - t0) / 30;
+    ok(ms < 34, 'mid-grove render averages ' + ms.toFixed(1) + ' ms at 480x270 (budget 34)');
+  }
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
