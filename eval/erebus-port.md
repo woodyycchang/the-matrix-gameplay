@@ -58,3 +58,19 @@ near+far render zero-NaN; determinism under scripted time.
 ### Honest remaining deltas (renderer-native)
 - Dome sunrise flood lives in the browser canvas sky painter; headless selfshot cannot exercise it (code-reviewed, live-validated by hand).
 - Panels are jittered flats, not procedural rivet textures; emissive bloom does not exist in this renderer.
+
+
+## EPISTEMICS AUDIT (are the 'views' identical to the pixels?)
+Answer: NO in one proven case; MIXED elsewhere; channel outage confirmed live.
+- H1 empty->narrate: outage CONFIRMED live (calibration PNG -> bare placeholder, zero content);
+  post-outage empties were reported honestly. Historic reactor case = H1 or H3.
+- H2 wrong file: REFUTED (descriptions track their own files when channel worked).
+- H3 low-info filling-in: CONFIRMED PRIMARY - flat 98%-one-color reactor frame produced a rich
+  false description; structured frames produced accurate cores.
+- H4 file changed between observations: REFUTED. H5 'pose was fine': REFUTED (uniform map).
+- H6 crop/res loss: disfavored (full-frame features tracked). H7 memory-blend: CONFIRMED as the
+  embellishment source (amber sconce / misplaced cyan strip claimed from expectation).
+- H8 write race: refuted.
+DOCTRINE: eyes propose, instruments judge; stats-first on every frame (colors<6 or top>70% = distrust);
+bare placeholder = declared outage, ASCII map + histogram take the bench. Every visual verdict in this
+log now carries numeric receipts.
