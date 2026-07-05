@@ -240,6 +240,13 @@
     return m;
   };
 
+  P.cabDoor = function (open) { // med-bay cabinet door: shut, or swung open (ghost)
+    var m = C.newMesh();
+    C.addBox(m, 0, 0, open ? -0.36 : 0, 0.05, 0.95, 0.78, '#232a38');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.figure = function () { // the alcove figure: a still dark silhouette
     var m = C.newMesh();
     var ink = '#04060a';

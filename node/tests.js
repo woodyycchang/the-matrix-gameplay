@@ -1942,7 +1942,7 @@ section('EREBUS: three decks stand on stock physics');
   g.request('take me to the tower');
   step(g, null, 1.4);
   ok(g.scene.name === 'erebus station', "the word chain docks you: 'tower' -> erebus station");
-  const probes = [[0, 0, 27, 0, 'docking bay'], [0, 0, -5, 0, 'rotunda'], [-7, -3.64, 9.4, -3.64, 'stair landing'], [0, 12, -10, 12, 'dome deck'], [11.7, 6, 7, 6, 'balcony landing']];
+  const probes = [[0, 0, 27, 0, 'docking bay'], [0, 0, -5, 0, 'rotunda'], [-7, -3.64, 9.4, -3.64, 'stair landing'], [0, 12.6, 10, 12.6, 'dome deck'], [0, 4.6, 12, 4.6, 'balcony ring'], [22, 0, 8, 0, 'crew quarters'], [-22, 0, 2.2, 0, 'hydroponics'], [20, 4.6, -9, 4.6, 'data archive']];
   for (const [x, y, z, want, name] of probes) {
     g.player.pos = [x, y + 0.9, z]; g.player.vel = [0, 0, 0];
     step(g, null, 0.9);
@@ -1982,7 +1982,7 @@ section('EREBUS: the director runs its beats once');
   const ops = C.render(g, 480, 270, g.time);
   ok(ops[0].t === 'sky' && ops[0].mode === 'erebus' && Number.isFinite(ops[0].yaw) && Number.isFinite(ops[0].time), "the sky op carries mode 'erebus' with yaw and time");
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the station renders with zero NaN polys');
-  g.player.pos = [0, 12.02, -10];
+  g.player.pos = [0, 12.62, 10];
   const ops2 = C.render(g, 480, 270, g.time);
   ok(ops2.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'the dome deck under the erebus sky renders clean');
 }
