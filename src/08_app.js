@@ -726,37 +726,59 @@
   // The cache detective, automated: ask GitHub when main was last pushed; if this
   // copy was built meaningfully earlier, it is a stale cached build - confess loudly.
   function checkStale(buildStr) {
-    // SELF-RENEWAL v3 - the user's law: PUSH -> the open page renews itself,
-    // directly. Measured physics: the Pages edge holds copies ~10 min and
-    // ignores query strings, so polling our own URL can never beat it. So we
-    // poll the RAW mirror instead (raw.githubusercontent - CORS-open, fresh
-    // within seconds of a push); on a new stamp we fetch the full fresh HTML
-    // and document.write it over the running app. Renewal no longer waits
-    // for the CDN at all. First-time visitors still ride the edge - they
-    // have no old copy to be confused by. The amber banner is retired: the
-    // moment of renewal announces itself with one line in the report block.
+    // SELF-RENEWAL v3.1 - push -> the open page rewrites itself, directly.
+    // Measured 2026-07-05: the Pages deploy can WEDGE for hours (unstuck via
+    // POST /pages/builds), and BOTH the Pages edge and raw ignore query
+    // strings (?t=111/?t=222 -> same cached HIT), so no query ever pierces a
+    // TTL. Two lanes, each the freshest legal channel:
+    //   SIGNAL: api.github.com commits (no-cache, CORS *, instant on push),
+    //           polled every 90 s (40/h, inside the 60/h anon budget) plus a
+    //           kick when the tab becomes visible.
+    //   PAYLOAD: jsDelivr pinned to the exact sha - an immutable URL cannot
+    //            be stale - with raw as fallback. Whole-document sanity, one
+    //            soft line, then document.write. No banner exists anymore.
     if (!buildStr || !window.fetch) return;
-    var RAW = 'https://raw.githubusercontent.com/woodyycchang/the-matrix-gameplay/main/index.html';
-    var busy = false;
+    var API = 'https://api.github.com/repos/woodyycchang/the-matrix-gameplay/commits/main';
+    var lastSha = '', busy = false;
+    function land(html, tag) {
+      var m = html.match(/BUILD (\d{4}-\d{4})/);
+      if (!m || m[1] === buildStr || html.indexOf('</html>') < 0) return false;
+      busy = true;
+      say('UPDATING TO BUILD ' + m[1] + '\u2026', true);
+      setTimeout(function () {
+        try { document.open(); document.write(html); document.close(); }
+        catch (e) { window.location.reload(); }
+      }, 900);
+      return true;
+    }
+    function fetchPayload(sha) {
+      var CDN = 'https://cdn.jsdelivr.net/gh/woodyycchang/the-matrix-gameplay@' + sha + '/index.html';
+      fetch(CDN, { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw 0; return r.text(); })
+        .then(function (html) { if (!land(html, 'cdn')) throw 0; })
+        .catch(function () {
+          fetch('https://raw.githubusercontent.com/woodyycchang/the-matrix-gameplay/main/index.html', { cache: 'no-store' })
+            .then(function (r) { return r.text(); })
+            .then(function (html) { land(html, 'raw'); })
+            .catch(function () {});
+        });
+    }
     function check() {
       if (busy || document.hidden) return;
-      fetch(RAW, { cache: 'no-store' })
-        .then(function (r) { return r.text(); })
-        .then(function (html) {
-          var m = html.match(/BUILD (\d{4}-\d{4})/);
-          if (!m || m[1] === buildStr) return;
-          if (html.indexOf('</html>') < 0) return;             // whole documents only
-          busy = true;
-          say('UPDATING TO BUILD ' + m[1] + '\u2026', true);
-          setTimeout(function () {
-            try { document.open(); document.write(html); document.close(); }
-            catch (e) { window.location.reload(); }
-          }, 900);
+      fetch(API, { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          var sha = j && j.sha;
+          if (!sha || sha === lastSha) return;
+          if (!lastSha) { lastSha = sha; return; }   // first reading = the world as-is
+          lastSha = sha;
+          fetchPayload(sha);
         })
         .catch(function () {});
     }
-    setTimeout(check, 4000);
-    setInterval(check, 30000);
+    setTimeout(check, 5000);
+    setInterval(check, 90000);
+    try { document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); }); } catch (e) {}
   }
 
   function loadNeural() {

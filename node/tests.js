@@ -1185,8 +1185,8 @@ section('stale cached builds confess by themselves');
   const fsE = require('fs');
   const appE = fsE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   const tplE = fsE.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/id="stale"/.test(tplE), 'template carries the red stale banner');
-  ok(/raw\.githubusercontent\.com\/woodyycchang\/the-matrix-gameplay\/main\/index\.html/.test(appE), 'the game asks the raw mirror for the newest build - fresh within seconds of a push');
+  ok(!/id="stale"/.test(tplE), 'the stale banner is gone from the template by design (v3.1: no warning states exist)');
+  ok(/api\.github\.com\/repos\/woodyycchang\/the-matrix-gameplay\/commits\/main/.test(appE), 'the SIGNAL lane is the commits API - instant on push, inside the anon budget');
   ok(/function checkStale/.test(appE) && /SELF-RENEWAL v3/.test(appE), 'boot arms the v3 self-renewal loop - warning humans to refresh is retired');
 }
 
@@ -1479,8 +1479,8 @@ section('self-healing update loop');
 {
   const fsAE = require('fs');
   const appAE = fsAE.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/fetch\(RAW, \{ cache: 'no-store' \}/.test(appAE), 'ground truth is the raw mirror - fresh within seconds of a push');
-  ok(/indexOf\('<\/html>'\) < 0/.test(appAE) && /if \(busy \|\| document\.hidden\) return;/.test(appAE), 'whole-document sanity check; hidden tabs do not churn');
+  ok(/cdn\.jsdelivr\.net\/gh\/woodyycchang\/the-matrix-gameplay@' \+ sha/.test(appAE), 'the PAYLOAD lane is sha-pinned jsDelivr - an immutable URL cannot be stale');
+  ok(/indexOf\('<\/html>'\) < 0/.test(appAE) && /if \(busy \|\| document\.hidden\) return;/.test(appAE) && /90000/.test(appAE), 'whole-document sanity, hidden tabs rest, 90 s cadence');
 }
 
 
@@ -1554,6 +1554,14 @@ section('picture anatomy: the reference frame, replicated');
   ok(/placeholder=""/.test(tplM), 'the typing place is BLANK - emptiness is the signal');
   ok(/#lookhint\{display:none;/.test(tplM), 'the persistent hint is retired: the boot screen is the manual');
   ok(/text-transform:uppercase/.test(tplM.slice(tplM.indexOf('#log .line.sys'), tplM.indexOf('#log .line.sys') + 120)), 'system lines render as small CAPS headers, echoing the report format');
+}
+
+
+section('no banner hardware remains');
+{
+  const fsAN = require('fs');
+  const tplN = fsAN.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(!/id="stale"/.test(tplN) && !/#stale\{/.test(tplN), 'the warning banner is deleted from the template - it cannot pop up because it does not exist');
 }
 
 // ---------------------------------------------------------------- summary
