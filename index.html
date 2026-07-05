@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1013</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1016</span></div>
 </div>
 
 <script>
@@ -1622,8 +1622,9 @@
       var pw=2.0, ph=1.45, off = kind==='x' ? (flip?0.014:-0.014) : (flip?-0.014:0.014);   // panels sit on the VISIBLE side of the seam-back
       for (var yy=y0; yy<y1-0.02; yy+=ph){ var y2=Math.min(y1,yy+ph);
         for (var uu=u0; uu<u1-0.02; uu+=pw){ var u2=Math.min(u1,uu+pw);
-          var j = 0.9 + C.rng(((uu*73+yy*131+fixed*17)|0)>>>0)() * 0.22;
-          var cc2 = C.scaleHex(base, j);
+          var rw = C.rng(((uu*73+yy*131+fixed*17)|0)>>>0);
+          var j = 0.9 + rw() * 0.22;
+          var cc2 = rw() < 0.06 ? C.mixHex(C.scaleHex(base, j), '#8a6a3a', 0.55) : C.scaleHex(base, j);   // sparse lit-window warmth
           if (kind==='x') C.addQuadX(m,uu+0.05,yy+0.05,u2-0.05,y2-0.05,fixed+off,cc2,flip);
           else C.addQuadZ(m,uu+0.05,yy+0.05,u2-0.05,y2-0.05,fixed+off,cc2,flip); } }
     }
@@ -1747,6 +1748,17 @@
     C.addQuadY(m,-1.6,-25.5,1.6,-24.5,1.16,'#2c8ba6');
     stripY(-6,-26.4,-1,-26.0,3.9,'#9fd8e8'); stripY(1,-26.4,6,-26.0,3.9,'#9fd8e8');
     stripY(-7.5,-19.6,7.5,-19.2,3.9,'#123646');
+    // PASS-2: the bridge reads cyan-luminous like theirs - a glowing ceiling field
+    function ceilQ(x0,z0,x1,z1,y,cc){ quad4([x0,y,z0],[x1,y,z0],[x1,y,z1],[x0,y,z1],cc); }   // DOWN-facing (ceiling)
+    for (var bz=-30; bz<-18; bz+=2.0){ for (var bx2=-9; bx2<9; bx2+=2.25){
+      var bj = C.rng(((bx2*37+bz*53)|0)>>>0)();
+      ceilQ(bx2+0.08,bz+0.08,Math.min(9,bx2+2.17),Math.min(-18,bz+1.92),3.96,C.mixHex('#123c4e','#2c7a94',bj)); } }
+    ceilQ(-8.6,-29.4,8.6,-29.0,3.94,'#8fe0f2'); ceilQ(-8.6,-19.0,8.6,-18.6,3.94,'#8fe0f2');
+    for (var bm=-6; bm<=6; bm+=3){ C.addQuadZ(m,bm-0.06,2.2,bm+0.06,3.7,-29.81,'#0d2c3a',false); }
+    C.addQuadZ(m,-7,2.2,7,2.72,-29.83,'#1a5468',false);
+    for (var hr=0; hr<8; hr++){ var ha=hr*Math.PI/4, hb=(hr+1)*Math.PI/4;
+      quad4([Math.cos(ha)*2.2,0.02,-25+Math.sin(ha)*2.2],[Math.cos(hb)*2.2,0.02,-25+Math.sin(hb)*2.2],
+            [Math.cos(hb)*2.5,0.02,-25+Math.sin(hb)*2.5],[Math.cos(ha)*2.5,0.02,-25+Math.sin(ha)*2.5],'#2c8ba6'); }
     // ---------------- REACTOR deck (y=-7) ----------------
     floor(-12,16,12,34,-7,'#1e2028');
     wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
@@ -1762,7 +1774,7 @@
     C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX-CR-0.03,OR,false); C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX+CR+0.03,OR,true);
     C.addBox(m,CX,-6.75,CZ,7.0,0.5,7.0,TR,{noBottom:true});
     // the core spills light: concentric warm pools + white-hot slot cores
-    var POOL=[[3.6,'#8a4b1e'],[5.4,'#4c2c16'],[7.4,'#2a1c12']];
+    var POOL=[[3.6,'#b06426'],[5.4,'#5c3418'],[7.4,'#2e2014']];
     for (var pl=0; pl<3; pl++){ var pr=POOL[pl][0], pc=POOL[pl][1];
       for (var pk=0; pk<8; pk++){ var pa=pk*Math.PI/4, pb=(pk+1)*Math.PI/4;
         quad4([CX+Math.cos(pa)*pr,-6.985,CZ+Math.sin(pa)*pr],[CX+Math.cos(pb)*pr,-6.985,CZ+Math.sin(pb)*pr],
@@ -1790,6 +1802,16 @@
     for (var lc=0; lc<4; lc++){ var la=lc*Math.PI/2+Math.PI/4;
       quad4([Math.cos(la)*0.5,10.9,Math.sin(la)*0.5],[Math.cos(la+1.57)*0.5,10.9,Math.sin(la+1.57)*0.5],
             [Math.cos(la+1.57)*2.6,0.06,Math.sin(la+1.57)*2.6],[Math.cos(la)*2.6,0.06,Math.sin(la)*2.6],'#12303e'); }
+    // the LUMINOUS central column (their glowing pillar with halo rings)
+    for (var lp2=0; lp2<4; lp2++){ var lpa=lp2*Math.PI/2;
+      quad4([Math.cos(lpa)*0.34,0.05,Math.sin(lpa)*0.34],[Math.cos(lpa+1.5708)*0.34,0.05,Math.sin(lpa+1.5708)*0.34],
+            [Math.cos(lpa+1.5708)*0.34,10.6,Math.sin(lpa+1.5708)*0.34],[Math.cos(lpa)*0.34,10.6,Math.sin(lpa)*0.34],'#cfeef8'); }
+    for (var hr2=0; hr2<3; hr2++){ var hy=2.4+hr2*2.6, hrr=0.9+hr2*0.18;
+      for (var hk=0; hk<8; hk++){ var h1=hk*Math.PI/4, h2b=(hk+1)*Math.PI/4;
+        quad4([Math.cos(h1)*hrr,hy,Math.sin(h1)*hrr],[Math.cos(h2b)*hrr,hy,Math.sin(h2b)*hrr],
+              [Math.cos(h2b)*(hrr+0.14),hy,Math.sin(h2b)*(hrr+0.14)],[Math.cos(h1)*(hrr+0.14),hy,Math.sin(h1)*(hrr+0.14)],'#9fe6f4');
+        quad4([Math.cos(h1)*(hrr+0.14),hy+0.001,Math.sin(h1)*(hrr+0.14)],[Math.cos(h2b)*(hrr+0.14),hy+0.001,Math.sin(h2b)*(hrr+0.14)],
+              [Math.cos(h2b)*hrr,hy+0.001,Math.sin(h2b)*hrr],[Math.cos(h1)*hrr,hy+0.001,Math.sin(h1)*hrr],'#9fe6f4'); } }
     // rotunda: twin floor ring patterns (octagonal)
     for (var rg=0; rg<2; rg++){ var rr2=rg? 8.4:4.6;
       for (var ri=0; ri<8; ri++){ var ra=ri*Math.PI/4, rb=(ri+1)*Math.PI/4;
@@ -1813,10 +1835,10 @@
     C.addQuadX(m,3.0,-4.9,9.0,-4.66,-8.8,RD,true);
     // dome deck: chart table + faint rim ring
     C.addBox(m,5,12.98,4,1.7,0.76,1.1,SD,{noBottom:true}); col(4.15,12.6,3.45,5.85,13.36,4.55);
-    C.addQuadY(m,4.3,3.55,5.7,4.45,13.38,'#0e3f52');
+    C.addQuadY(m,4.3,3.55,5.7,4.45,13.38,'#155a72'); C.addQuadY(m,4.42,3.95,5.58,4.05,13.385,'#7deeff');
     for (var dg=0; dg<8; dg++){ var ga2=dg*Math.PI/4, gb2=(dg+1)*Math.PI/4;
       quad4([Math.cos(ga2)*12.1,12.62,Math.sin(ga2)*12.1],[Math.cos(gb2)*12.1,12.62,Math.sin(gb2)*12.1],
-            [Math.cos(gb2)*12.3,12.62,Math.sin(gb2)*12.3],[Math.cos(ga2)*12.3,12.62,Math.sin(ga2)*12.3],'#12303e'); }
+            [Math.cos(gb2)*12.3,12.62,Math.sin(gb2)*12.3],[Math.cos(ga2)*12.3,12.62,Math.sin(ga2)*12.3],'#2a6a80'); }
     // bridge: twin ceiling light bars + side consoles
     stripY(-6,-27.6,-1,-27.2,3.92,'#bcd6ff'); stripY(1,-27.6,6,-27.2,3.92,'#bcd6ff');
     C.addBox(m,-6.4,0.5,-24.8,1.6,1.0,1.2,SD,{noBottom:true}); col(-7.2,0,-25.4,-5.6,1.0,-24.2);

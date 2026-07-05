@@ -43,3 +43,18 @@ near+far render zero-NaN; determinism under scripted time.
 - Bugs the loop caught: C.rng returns a GENERATOR (uncalled -> NaN -> 80% black frames);
   reactor selfshot pose faced a wall from 2.5 m (previous visual claim was confabulated).
 - Tooling: view tool went down mid-loop -> ASCII color maps + histogram stats became the judge.
+
+### Pass 2 - KEPT
+- Bridge glowing ceiling FIELD (down-facing quads; first try was backface-culled: ceilings wind downward),
+  two W-strips, band mullions, floor holo ring; dome rim/chart brightened; reactor pool +1 notch.
+- bridge {lum38,colors10,cyan41%} -> {lum66,colors17,cyan73%}  = their cyan-dominant character achieved.
+- Bug caught: addQuadY is up-facing only; ceilQ (reversed winding) added.
+
+### Pass 3 - KEPT
+- Rotunda luminous central pillar + three double-faced halo rings (their glowing column);
+  6% of wall panels warm-tinted (lit-window feel from their texture variance).
+- rotunda colors 24 -> 33 at lum 53->54.
+
+### Honest remaining deltas (renderer-native)
+- Dome sunrise flood lives in the browser canvas sky painter; headless selfshot cannot exercise it (code-reviewed, live-validated by hand).
+- Panels are jittered flats, not procedural rivet textures; emissive bloom does not exist in this renderer.
