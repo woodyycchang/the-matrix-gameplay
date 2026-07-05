@@ -10,7 +10,8 @@
   // The designated vocabulary: each intent = the exact word the parser already knows,
   // plus anchor phrasings that describe what a person might actually say.
   var INTENTS = [
-    { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks', 'hallway'] },
+    { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks'] },
+    { word: 'hallway', anchors: ['the endless corridor of doors', 'the backdoor hallway', 'deja vu, something changed', 'the infinite door'] },
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
