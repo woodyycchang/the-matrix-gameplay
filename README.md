@@ -1,3 +1,17 @@
+# EREBUS STATION — this branch's game
+
+A derelict orbital station explored on foot: the rotunda, the long bridge, the reactor heart, and a sunrise through the dome. Software-rendered in the same zero-dependency engine as THE CONSTRUCT — one self-contained HTML file.
+
+**▶ Full game & README: [`erebus-station/`](erebus-station/)**
+
+![sunrise through the dome](erebus-station/screenshots/04_dome_sunrise.png)
+
+| the bridge | the reactor |
+|---|---|
+| ![the bridge](erebus-station/screenshots/07_bridge.png) | ![the reactor](erebus-station/screenshots/10_reactor.png) |
+
+---
+
 # THE CONSTRUCT
 
 A browser-playable homage to the endless white loading space from *The Matrix* (1999), built as **one self-contained HTML file** — no dependencies, no network, no build step required to play.
