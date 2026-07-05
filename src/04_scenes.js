@@ -1850,6 +1850,231 @@
     return s;
   }
 
+  // ============ MOBIL AVE (claude/mobil-ave-3d port) ============
+  // A between-place. The cylinder identification x~x+48 becomes a literal ring:
+  // R = 288/2pi. Nothing the operator asks for compiles here; the train keeps
+  // the only key. Spec, palette, lights and every line: web/world.js + mobilAve.js, verbatim.
+  var MOB = C.MOB = { TILES:48, TILE:6.0, R:288/(2*Math.PI), PLAT0:6, PLAT1:42, SIGN0:22,
+    DOOR0:22, DOOR1:26, TX0:14, TX1:34, PERIOD:40, ARR:24, DOPEN:27, DCLOSE:33, DEP:35,
+    DROP:1.1, CEIL:5.2, SEED:0x4C1B06D0 };
+  function sceneMobil() {
+    var R = MOB.R;
+    var s = {
+      name: 'mobil ave', sky: 'mobil', fog: { near: 14, far: 110, col: '#0a1212' },
+      groundY: -1.1, ambience: 'mobil', colliders: [], insts: [],
+      spawn: { pos: [0, 0.02, 0], yaw: 0 }, label: 'MOBIL AVE'
+    };
+    function TH(sa){ return sa / R; }
+    function pt(sa, h, rad){ var t = TH(sa); return [Math.sin(t)*rad, h, -Math.cos(t)*rad]; }
+    var sp0 = pt(24.5*MOB.TILE, 0.02, R+3.4);
+    s.spawn.pos = [sp0[0], 0.02, sp0[2]]; s.spawn.yaw = Math.PI/2 + TH(24.5*MOB.TILE) + Math.PI;   // face the sign wall side, up-platform
+    var m = C.newMesh();
+    function col(x0,y0,z0,x1,y1,z1){ s.colliders.push(box([x0,y0,z0],[x1,y1,z1])); }
+    function quad4(p0,p1,p2,p3,cc){ var b=m.v.length; m.v.push(p0,p1,p2,p3); C.addFace(m,[b,b+1,b+2,b+3],cc); }
+    function rgb(a){ return C.rgb2hex(Math.min(255,a[0]*255), Math.min(255,a[1]*255), Math.min(255,a[2]*255)); }
+    function h2(x,y){ var h=((MOB.SEED>>>0) ^ Math.imul(x|0,0x9E3779B1) ^ Math.imul(y|0,0x85EBCA77))|0;
+      h=Math.imul(h^(h>>>15),0x2C1B3C6D); h=Math.imul(h^(h>>>12),0x297A2D39); h^=h>>>15; return (h>>>0)/4294967296; }
+    // annular floor quad between arcs [s0,s1], radii [rad0,rad1] at height h
+    function aq(s0,s1,rad0,rad1,h,cc){ quad4(pt(s0,h,rad0),pt(s1,h,rad0),pt(s1,h,rad1),pt(s0,h,rad1),cc); }
+    // curved wall band at radius rad between heights, facing center (inw=true) or away
+    function rq(s0,s1,h0,h1,rad,cc,inw){ if(inw) quad4(pt(s1,h0,rad),pt(s1,h1,rad),pt(s0,h1,rad),pt(s0,h0,rad),cc);
+      else quad4(pt(s0,h0,rad),pt(s0,h1,rad),pt(s1,h1,rad),pt(s1,h0,rad),cc); }
+    function chordCol(s0,s1,h0,h1,rad0,rad1){ var P=[pt(s0,0,rad0),pt(s0,0,rad1),pt(s1,0,rad0),pt(s1,0,rad1)];
+      var mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9; for(var i=0;i<4;i++){mnx=Math.min(mnx,P[i][0]);mxx=Math.max(mxx,P[i][0]);mnz=Math.min(mnz,P[i][2]);mxz=Math.max(mxz,P[i][2]);}
+      col(mnx,h0,mnz,mxx,h1,mxz); }
+    var PW=rgb([0.42,0.46,0.44]), PWB=rgb([0.30,0.34,0.33]), PF=rgb([0.38,0.37,0.34]), ES=rgb([0.62,0.55,0.22]);
+    var TB=rgb([0.16,0.15,0.14]), RL=rgb([0.55,0.56,0.58]), TW=rgb([0.20,0.21,0.22]), CE=rgb([0.24,0.25,0.26]);
+    var PI2=rgb([0.34,0.36,0.35]), BE=rgb([0.25,0.20,0.14]), SG='#9effb8', LW='#ffa848';
+    var RADW=R+6.8, RADP0=R+1.4, RADP1=R+6.8, RADT0=R-2.6, RADT1=R+1.4;
+    for (var ti=0; ti<48; ti++){
+      var s0=ti*6, s1=s0+6, gr=0.82+h2(ti,9)*0.3;
+      aq(s0,s1,RADT0,RADT1,-MOB.DROP+0.004,C.scaleHex(TB,gr),'');   // track bed
+      col(0,0,0,0,0,0);
+      s.colliders.pop();
+      chordCol(s0,s1,-MOB.DROP-0.5,-MOB.DROP,RADT0,RADT1);          // bed is a floor
+      if (ti>=6 && ti<42){
+        aq(s0,s1,RADP0,RADP1,0.004,C.scaleHex(PF,gr));               // platform slab
+        chordCol(s0,s1,-0.5,0,RADP0,RADP1);
+        aq(s0,s1,RADP0,RADP0+0.5,0.010,C.scaleHex(ES,0.9+h2(ti,3)*0.2));   // tactile edge
+        rq(s0,s1,-MOB.DROP,0,RADP0,C.scaleHex(PWB,gr),false);        // platform face to the trench
+      }
+      rq(s0,s1,0,2.6,RADW,C.scaleHex(PW,0.8+h2(ti,1)*0.35),true);    // sign wall lower
+      rq(s0,s1,2.6,MOB.CEIL,RADW,C.scaleHex(PWB,0.85+h2(ti,2)*0.25),true);
+      chordCol(s0,s1,0,MOB.CEIL,RADW-0.1,RADW+0.5);
+      rq(s0,s1,-MOB.DROP,MOB.CEIL,RADT0,C.scaleHex(TW,0.85+h2(ti,4)*0.25),false);   // tunnel wall
+      chordCol(s0,s1,-MOB.DROP,MOB.CEIL,RADT0-0.5,RADT0+0.1);
+      aq(s1,s0,RADT0,RADW,MOB.CEIL,C.scaleHex(CE,0.85+h2(ti,5)*0.25));   // ceiling (reverse winding: faces down)
+      for (var rr=0; rr<3; rr++){ var rad2=[R-0.9,R+0.5,R-0.2][rr];
+        aq(s0,s1,rad2-0.06,rad2+0.06,-MOB.DROP+(rr===2?0.10:0.16),rr===2?'#6a6248':RL); }
+      if (ti>=6 && ti<42 && ti%9===2) { var bs=s0+3;   // benches x4
+        C.addBox(m,pt(bs,0.28,R+5.6)[0],0.28,pt(bs,0,R+5.6)[2],1.9,0.12,0.5,BE,{noBottom:true});
+        C.addBox(m,pt(bs,0.14,R+5.6)[0],0.07,pt(bs,0,R+5.6)[2],1.7,0.14,0.4,'#1c1712',{noBottom:true});
+        chordCol(bs-1,bs+1,0,0.4,R+5.3,R+5.9); }
+    }
+    for (var pl2=7; pl2<42; pl2+=4){ var ps=(pl2+0.5)*6, pp=pt(ps,0,R+4.6);   // pillars every 4 tiles
+      C.addBox(m,pp[0],1.55,pp[2],0.7,3.1,0.7,PI2,{noBottom:true});
+      C.addBox(m,pp[0],0.16,pp[2],1.05,0.32,1.05,PWB,{noBottom:true});
+      C.addBox(m,pp[0],3.28,pp[2],1.05,0.3,1.05,PWB,{noBottom:true});
+      col(pp[0]-0.55,0,pp[2]-0.55,pp[0]+0.55,3.4,pp[2]+0.55);
+      var fx=pt(ps,0,R+2.2); C.addBox(m,fx[0],MOB.CEIL-0.18,fx[2],1.7,0.16,0.4,'#0d0d0d',{noBottom:true});
+      if (pl2!==27) { var tb2=pt(ps,0,R+2.2); C.addQuadY(m,tb2[0]-0.7,tb2[2]-0.12,tb2[0]+0.7,tb2[2]+0.12,MOB.CEIL-0.27,'#e69e4d'); }
+    }
+    // MOBIL, dot-matrix, tiles 22..26 - the one word the station wrote itself
+    var FONT={M:[17,27,21,17,17],O:[14,17,17,17,14],B:[30,17,30,17,30],I:[14,4,4,4,14],L:[16,16,16,16,30]};
+    var WORD='MOBIL';
+    for (var li=0; li<5; li++){ var g5=FONT[WORD[li]], base=(22+li)*6+1.1;
+      rq(base-0.5,base+4.3,1.2,3.6,RADW-0.05,'#20302a',true);
+      for (var ry2=0; ry2<5; ry2++){ for (var rxx=0; rxx<5; rxx++){ if (!((g5[ry2]>>(4-rxx))&1)) continue;
+        var lx0=base+rxx*0.72, ly0=3.15-ry2*0.44;
+        rq(lx0,lx0+0.6,ly0,ly0+0.38,RADW-0.09,SG,true); } } }
+    // end stairs (engine-native mercy): tiles 6 and 41 down to the bed
+    for (var es2=0; es2<2; es2++){ var e0=es2? 41.4*6 : 6.1*6, dir2=es2? 1 : -1;
+      for (var st3=0; st3<4; st3++){ var sy3=-0.275*(st3+1), ss0=e0+dir2*st3*0.7;
+        aq(Math.min(ss0,ss0+dir2*0.7),Math.max(ss0,ss0+dir2*0.7),RADP0,RADP0+2.2,sy3+0.276,PWB);
+        chordCol(Math.min(ss0,ss0+dir2*0.7),Math.max(ss0,ss0+dir2*0.7),sy3-0.2,sy3+0.276,RADP0,RADP0+2.2); } }
+    // ---------------- baked light (the erebus law, their rig verbatim) ----------------
+    var MLT=[];
+    for (var lt2=7; lt2<42; lt2+=4){ var lp2=pt((lt2+0.5)*6, MOB.CEIL-0.5, R+3.6);
+      MLT.push([lp2[0],MOB.CEIL-0.5,lp2[2], 1,0.66,0.28, lt2===27?0.45:1.0, 16]); }
+    var sw2=pt(24.5*6,3.4,RADW-2.2); MLT.push([sw2[0],3.4,sw2[2], 0.5,1.0,0.65, 0.42,13]);
+    for (var ut2=0; ut2<3; ut2++){ var up2=pt(([12,24,36][ut2]+0.5)*6, MOB.CEIL-0.6, R+2.5);
+      MLT.push([up2[0],MOB.CEIL-0.6,up2[2], 1,1,1, 0.66,22]); }
+    for (var cs2=0; cs2<2; cs2++){ var cp2=pt(([1,45][cs2]+0.5)*6, MOB.CEIL-0.6, R-1.8);
+      MLT.push([cp2[0],MOB.CEIL-0.6,cp2[2], 0.5,0.62,0.7, 0.4,12]); }
+    for (var mf=0; mf<m.f.length; mf++){ var ff2=m.f[mf], fc4=ff2.c;
+      if (typeof fc4!=='string'||fc4.charAt(0)!=='#') continue;
+      var r5=parseInt(fc4.slice(1,3),16), g6=parseInt(fc4.slice(3,5),16), b6=parseInt(fc4.slice(5,7),16);
+      var mx4=Math.max(r5,g6,b6), mn4=Math.min(r5,g6,b6);
+      if ((mx4>0 && (mx4-mn4)/mx4>0.42 && mx4>140) || mn4>150) continue;
+      var cx5=0,cy5=0,cz5=0,nv3=ff2.i.length;
+      for (var vz=0; vz<nv3; vz++){ var vp3=m.v[ff2.i[vz]]; cx5+=vp3[0]; cy5+=vp3[1]; cz5+=vp3[2]; }
+      cx5/=nv3; cy5/=nv3; cz5/=nv3;
+      var er2=1.45, eg2=1.50, eb2=1.50;
+      for (var lz2=0; lz2<MLT.length; lz2++){ var L3=MLT[lz2];
+        var qx=cx5-L3[0], qy=cy5-L3[1], qz=cz5-L3[2], qd=Math.sqrt(qx*qx+qy*qy+qz*qz);
+        if (qd>=L3[7]) continue;
+        var w3=(1-qd/L3[7]); w3*=w3;
+        var ee2=L3[6]*6.5*w3/(1+qd*qd*0.22);
+        er2+=ee2*L3[3]; eg2+=ee2*L3[4]; eb2+=ee2*L3[5]; }
+      ff2.c='#'+((1<<24)+(Math.min(255,Math.round(r5*er2*1.24))<<16)+(Math.min(255,Math.round(g6*eg2*1.24))<<8)+Math.min(255,Math.round(b6*eb2*1.24))).toString(16).slice(1);
+    }
+    C.meshBounds(m); C.anchorize(m, 0.05, MOB.SEED % 251, 8);
+    s.insts.unshift(inst(m, [0,0,0], 0, { label: 'mobil ave', kind: 'static' }));
+    // ---------------- the train: one curved mesh, rotated about the ring center ----------------
+    var tm = C.newMesh();
+    function tq(p0,p1,p2,p3,cc){ var b2=tm.v.length; tm.v.push(p0,p1,p2,p3); C.addFace(tm,[b2,b2+1,b2+2,b2+3],cc); }
+    var TBODY=rgb([0.30,0.33,0.36]), TROOF=rgb([0.22,0.24,0.26]), TWIN='#ffe89e';
+    for (var tg=14; tg<34; tg++){ var ts0=tg*6+0.15, ts1=tg*6+5.85;
+      var rIn=R-1.7, rOut=R+0.7;
+      tq(pt(ts1,-0.9,rOut),pt(ts1,1.9,rOut),pt(ts0,1.9,rOut),pt(ts0,-0.9,rOut),C.scaleHex(TBODY,0.9+h2(tg,7)*0.2));   // platform-side flank (faces outward)
+      var isDoor = tg>=22 && tg<26;
+      if (!isDoor) tq(pt(ts1,1.15,rOut+0.01),pt(ts1,1.7,rOut+0.01),pt(ts0,1.7,rOut+0.01),pt(ts0,1.15,rOut+0.01),TWIN);   // hot window band
+      tq(pt(ts0,-0.9,rIn),pt(ts0,1.9,rIn),pt(ts1,1.9,rIn),pt(ts1,-0.9,rIn),C.scaleHex(TBODY,0.72));
+      tq(pt(ts1,2.05,rOut),pt(ts1,2.05,rIn),pt(ts0,2.05,rIn),pt(ts0,2.05,rOut),TROOF);
+      tq(pt(ts0,1.98,rOut),pt(ts0,2.05,rOut),pt(ts1,2.05,rOut),pt(ts1,1.98,rOut),TROOF);
+    }
+    tq(pt(14*6-0.02,-0.9,R-1.7),pt(14*6-0.02,1.9,R-1.7),pt(14*6-0.02,1.9,R+0.7),pt(14*6-0.02,-0.9,R+0.7),'#101418');
+    tq(pt(34*6+0.02,-0.9,R+0.7),pt(34*6+0.02,1.9,R+0.7),pt(34*6+0.02,1.9,R-1.7),pt(34*6+0.02,-0.9,R-1.7),'#101418');
+    var hl=pt(34*6-0.6,0.6,R-0.5); C.addBox(tm,hl[0],0.6,hl[2],0.5,0.5,0.5,'#fff2cf',{noBottom:true});
+    C.meshBounds(tm);
+    var train = inst(tm, [0,0,0], 0, { label:'the train', kind:'train' });
+    train.loadT = 1; train.loadDir = 0;
+    var doorM = C.newMesh();
+    for (var dg4=22; dg4<26; dg4++){ var ds0=dg4*6+0.5, ds1=dg4*6+5.5, dmid=(ds0+ds1)/2;
+      var dq=function(a,b2){ var q0=pt(a,-0.7,R+0.71), q1=pt(a,1.85,R+0.71), q2=pt(b2,1.85,R+0.71), q3=pt(b2,-0.7,R+0.71);
+        var bb3=doorM.v.length; doorM.v.push(q3,q2,q1,q0); C.addFace(doorM,[bb3,bb3+1,bb3+2,bb3+3],C.scaleHex(TBODY,1.05)); };
+      dq(ds0,dmid); dq(dmid,ds1); }
+    C.meshBounds(doorM);
+    var doorsIt = inst(doorM, [0,0,0], 0, { label:'doors', kind:'doors' });
+    doorsIt.loadT = 1; doorsIt.loadDir = 0;
+    s._train = train; s._doors = doorsIt; s._trainCols = []; s._doorCols = [];
+    // ---------------- the director ----------------
+    s._f = { entered:false, sign:false, arr:false, open:false, seal:false, gone:true, scram:false, shut:false, drip:0, unr:null };
+    s.onWord = function (game, raw) {
+      var lw = String(raw).toLowerCase();
+      if (/\b(clear|exit|void|leave|wake|back|out|help)\b/.test(lw)) {
+        game.say('Static on the line. No door compiles, no ring, no way up. Whatever runs this station is not your operator.', 0.3);
+        game.emit('unravel');
+        return true;
+      }
+      var p2=game.player, fw2=C.fwdOf(p2.yaw,0);
+      var um=C.newMesh(); C.addBox(um,0,0.55,0,0.5,1.1,0.5,'#3fae6a',{noBottom:true}); C.addQuadY(um,-0.35,-0.35,0.35,0.35,1.12,'#57d488'); C.meshBounds(um);
+      var ui2=inst(um,[p2.pos[0]+fw2[0]*2.2,0,p2.pos[2]+fw2[2]*2.2],0,{label:'a request',kind:'prop'});
+      ui2.loadT=0; ui2.loadDir=1; s.insts.push(ui2); s._f.unr={it:ui2,t:0};
+      game.emit('unravel');
+      game.say('A pedestal sketches itself in green wireframe beside you \u2014 and unravels before it can hold anything. The station refuses the request.', 0.4);
+      return true;
+    };
+    function spliceCols(list){ for (var i2=0;i2<list.length;i2++){ var ix3=s.colliders.indexOf(list[i2]); if(ix3>=0) s.colliders.splice(ix3,1); } list.length=0; }
+    function addTrainCols(){ for (var tg2=14; tg2<34; tg2+=1){ if (tg2>=22&&tg2<26) continue;   // the doorway is the doors' business
+      var a0=tg2*6, a1=a0+6;
+      var Pq=[pt(a0,0,R-1.7),pt(a0,0,R+0.7),pt(a1,0,R-1.7),pt(a1,0,R+0.7)];
+      var mnx2=1e9,mxx2=-1e9,mnz2=1e9,mxz2=-1e9; for(var k3=0;k3<4;k3++){mnx2=Math.min(mnx2,Pq[k3][0]);mxx2=Math.max(mxx2,Pq[k3][0]);mnz2=Math.min(mnz2,Pq[k3][2]);mxz2=Math.max(mxz2,Pq[k3][2]);}
+      var cb2=box([mnx2,-1.1,mnz2],[mxx2,2.1,mxz2]); s.colliders.push(cb2); s._trainCols.push(cb2); } }
+    function addDoorCols(){ for (var dg5=22; dg5<26; dg5++){ var b0=dg5*6+0.4, b1=dg5*6+5.6;
+      var Pq2=[pt(b0,0,R+0.6),pt(b0,0,R+1.5),pt(b1,0,R+0.6),pt(b1,0,R+1.5)];
+      var mnx3=1e9,mxx3=-1e9,mnz3=1e9,mxz3=-1e9; for(var k4=0;k4<4;k4++){mnx3=Math.min(mnx3,Pq2[k4][0]);mxx3=Math.max(mxx3,Pq2[k4][0]);mnz3=Math.min(mnz3,Pq2[k4][2]);mxz3=Math.max(mxz3,Pq2[k4][2]);}
+      var cb3=box([mnx3,-0.4,mnz3],[mxx3,2.0,mxz3]); s.colliders.push(cb3); s._doorCols.push(cb3); } }
+    s.update = function (game) {
+      var t=game.time||0, F=s._f, p=game.player.pos;
+      var dtv=Math.min(0.06, t-(s._tT===undefined?t:s._tT)); s._tT=t;
+      if (s._t0===undefined){ s._t0=t;
+        game.say('A tiled platform under sodium light. The tracks run out of sight both ways \u2014 and, if you follow them far enough, back. Somewhere down the line, a train keeps its own timetable.', 1.2); }
+      var cyc=((t-s._t0)%MOB.PERIOD+MOB.PERIOD)%MOB.PERIOD;
+      var present = cyc>=MOB.ARR && cyc<MOB.DEP;
+      var doors = cyc>=MOB.DOPEN && cyc<MOB.DCLOSE;
+      // pose the train around the ring: parked at yaw 0; approach + departure sweep
+      var yawT;
+      if (cyc < MOB.ARR-4) yawT = -2.6;
+      else if (cyc < MOB.ARR) { var u2=(cyc-(MOB.ARR-4))/4; yawT = -2.6*(1-u2*u2*(3-2*u2)); }
+      else if (cyc < MOB.DEP) yawT = 0;
+      else { var u3=(cyc-MOB.DEP)/(MOB.PERIOD-MOB.DEP); yawT = 2.6*u3*u3; }
+      s._train.yaw = yawT; s._doors.yaw = yawT;
+      s._doors.pos[1] = doors ? -9 : 0;   // open doors drop out of the world
+      if (present && F.gone){ F.gone=false;
+        var cs3=((Math.atan2(p[0],-p[2])*R)%288+288)%288;
+        var rad3=Math.hypot(p[0],p[2]);
+        if (rad3<RADT1 && rad3>RADT0 && cs3>=84 && cs3<204){
+          var upp=pt(cs3,0.02,R+2.6); game.player.pos=[upp[0],0.02,upp[2]]; game.player.vel=[0,0,0];
+          game.say('Headlights bloom in the tunnel \u2014 you scramble up onto the platform as the train slams past and brakes.', 0.2);
+          F.scram=true;
+        } else game.say('A train pulls in, brakes shrieking against the loop. It waits.', 0.2);
+        game.emit('rumble'); game.emit('brakes');
+        addTrainCols(); addDoorCols(); F.shut=false;
+      }
+      if (!present && !F.gone){ F.gone=true;
+        game.say('The train pulls out and the sound folds away around the curve. The platform is yours again.', 0.3);
+        game.emit('rumble');
+        spliceCols(s._trainCols); spliceCols(s._doorCols);
+      }
+      if (present && doors && s._doorCols.length){ spliceCols(s._doorCols); game.emit('doors'); game.say('The doors rattle open.', 0.1); }
+      if (present && !doors && cyc>=MOB.DCLOSE && !s._doorCols.length){ addDoorCols(); game.emit('doors'); game.say('The doors seal.', 0.1); }
+      // shut-tight denial, once per stop, when pressing the closed flank
+      if (present && !doors && !F.shut){ var rad4=Math.hypot(p[0],p[2]);
+        var cs4=((Math.atan2(p[0],-p[2])*R)%288+288)%288;
+        if (rad4<R+1.9 && cs4>=84 && cs4<204){ F.shut=true; game.say('The train is here, but its doors are shut tight.', 0.2); } }
+      // boarding: through the open doorway onto the car floor
+      if (present && doors){ var rad5=Math.hypot(p[0],p[2]);
+        var cs5=((Math.atan2(p[0],-p[2])*R)%288+288)%288;
+        if (rad5<R+0.9 && cs5>=22*6 && cs5<26*6){
+          game.say('You step through the doors as they begin to close behind you.', 0);
+          game.transition('void', 'The station lets you go.');
+          return; } }
+      // the sign, read close
+      if (!F.sign){ var cs6=((Math.atan2(p[0],-p[2])*R)%288+288)%288; var rad6=Math.hypot(p[0],p[2]);
+        if (rad6>R+4.4 && cs6>=21*6 && cs6<27.4*6){ F.sign=true;
+          game.say('Chipped tiles on the wall spell M-O-B-I-L. Shuffled, the same five letters spell LIMBO. Someone named this place honestly.', 0.3); } }
+      // the unravel lifecycle
+      if (F.unr){ F.unr.t+=dtv; var uit=F.unr.it;
+        if (F.unr.t>0.9 && uit.loadDir!==-1){ uit.loadDir=-1; }
+        if (F.unr.t>2.2){ var uix=s.insts.indexOf(uit); if(uix>=0) s.insts.splice(uix,1); F.unr=null; } }
+      // drips in the dark
+      F.drip-=dtv; if (F.drip<=0){ F.drip=4+((t*613)%5); game.emit('drip'); }
+    };
+    s.insts.push(train); s.insts.push(doorsIt);
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -1861,6 +2086,7 @@
       case 'erebus': return sceneErebus();
       case 'epang': return sceneEpang();
       case 'empire': return sceneEmpire();
+      case 'mobil': return sceneMobil();
       default: return sceneVoid();
     }
   };

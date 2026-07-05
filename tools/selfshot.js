@@ -10,6 +10,7 @@ function paint(pose,out,sceneWord){
   if(sceneWord && (!g.scene || g.scene.name.indexOf(sceneWord)<0)){ g.request(sceneWord); for(let i=0;i<90;i++) g.update({},1/30); }   // full materialize settle
   g.player.pos=[pose[0],pose[1],pose[2]]; g.player.yaw=pose[3]; g.player.pitch=pose[4]; g.player.vel=[0,0,0];
   if(pose[5]!==undefined) g.time=pose[5];
+  if(pose[6]!==undefined && g.scene && g.scene.sky==='mobil'){ g.scene._t0 = g.time - pose[6]; for(let i=0;i<10;i++) g.update({},1/30); }
   if(pose[6]!==undefined && g.scene && g.scene.sky==='empire'){ g.scene._c0 = g.time - 2*(pose[6]-1164);
     for(let i=0;i<100;i++) g.update({},1/30); }   // the night swap re-materializes the town; wait for it
   g.update({},1/60);
@@ -138,3 +139,6 @@ paint([-4,12.62,9.5, 0.13, 0.42, 5], '/tmp/shot_dome'+SUF+'.png', 'erebus');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1170], '/tmp/shot_empire_dusk'+SUF+'.png', 'empire');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
 paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');
+paint([21.69,1.62,43.98, 4.254, 0.02, undefined, 10], '/tmp/shot_mobil_vista'+SUF+'.png', 'mobil ave');
+paint([5.31,1.62,50.56, 7.749, 0.10, undefined, 10], '/tmp/shot_mobil_sign'+SUF+'.png', 'mobil ave');
+paint([18.69,1.62,45.12, 4.320, 0.02, undefined, 29], '/tmp/shot_mobil_train'+SUF+'.png', 'mobil ave');

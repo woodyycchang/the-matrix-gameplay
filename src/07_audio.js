@@ -326,6 +326,15 @@
         o1.start(); o2.start(); ambNodes.push(o1, o2, of2, og2);
         loopNoise('bandpass', 2100, 2.0, 0.035, 0.19, 260);
       }
+      else if (name === 'mobil') {
+        // a between-place: hollow sub pair + tunnel air; nothing musical
+        var m1 = ctx.createOscillator(), m2 = ctx.createOscillator(), mf = ctx.createBiquadFilter(), mg = ctx.createGain();
+        m1.type = 'sawtooth'; m2.type = 'sawtooth'; m1.frequency.value = 34; m2.frequency.value = 34.4;
+        mf.type = 'lowpass'; mf.frequency.value = 110; mg.gain.value = 0.085;
+        m1.connect(mf); m2.connect(mf); mf.connect(mg); mg.connect(ambGain);
+        m1.start(); m2.start(); ambNodes.push(m1, m2, mf, mg);
+        loopNoise('bandpass', 900, 1.6, 0.03, 0.07, 320);
+      }
       else if (name === 'empire') {
         // a 1937 valley at dusk: warm night air + a faint insect band; the wind is elsewhere
         loopNoise('lowpass', 130, 0.5, 0.11, 0.16, 40);
@@ -374,6 +383,11 @@
       case 'whisper': hiss(1.2, 0.1, 1500, 320, 3.2); hiss(0.9, 0.07, 950, 260, 2.6, 0.4); break;
       case 'splash': hiss(0.35, 0.3, 1400, 500, 1.1); thump(140, 0.22, 0.16); blip(320, 0.18, 0.06, 'sine', 0.05); break;
       case 'clank': thump(240, 0.14, 0.1); blip(1240, 0.35, 0.028, 'triangle', 0.02); hiss(0.22, 0.05, 700, 300, 2); break;
+      case 'rumble': { this.thump(30, 1.4, 0.4); this.hiss(0.9, 0.16); break; }
+      case 'brakes': { this.hiss(0.7, 0.22); this.blip(2600, 0.10, 0.05); this.blip(2200, 0.12, 0.045); break; }
+      case 'doors': { this.blip(340, 0.06, 0.09); this.blip(240, 0.08, 0.1); break; }
+      case 'unravel': { this.hiss(0.35, 0.10); this.blip(880, 0.09, 0.05); this.blip(620, 0.10, 0.05); this.blip(410, 0.12, 0.05); break; }
+      case 'drip': { this.blip(1800, 0.05, 0.05); this.blip(1400, 0.07, 0.035); break; }
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
       case 'thud': thump(84, 0.22, 0.4); hiss(0.2, 0.16, 500, 140, 1.2); break;
       case 'sting': thump(120, 0.1, 0.22); thump(96, 0.09, 0.18, 0.11); break;

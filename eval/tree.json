@@ -14,7 +14,7 @@
     "ROOT/TRUST"
    ],
    "status": "PASS",
-   "evidence": "936全绿; 13关键词主题; 四跨引擎移植; 视觉仪器化审计(erebus/epang五轮+empire五轮含快门自审)入册; 每叶携证据串,单报告即重开."
+   "evidence": "971全绿; 14关键词主题; 五跨引擎移植; 视觉仪器化审计全入册; 每叶携证据串,单报告即重开."
   },
   {
    "path": "ROOT/SOUND",
@@ -231,10 +231,11 @@
     "ROOT/WORLD/bounded-scenes",
     "ROOT/WORLD/density",
     "ROOT/WORLD/void-onboarding",
-    "ROOT/WORLD/empire-port"
+    "ROOT/WORLD/empire-port",
+    "ROOT/WORLD/mobil-port"
    ],
    "status": "PASS",
-   "evidence": "子叶全FIXED; 四主题回填 +empire-port(936绿,五轮视觉环)."
+   "evidence": "子叶全FIXED; 四主题回填 +empire-port(936绿,五轮视觉环). +mobil-port(971绿)."
   },
   {
    "path": "ROOT/WORLD/infinite-scenes",
@@ -629,6 +630,96 @@
    ],
    "status": "PASS",
    "evidence": "936全绿(+91); E0勘察+五轮视觉环入册eval/orange-port.md; 距离1:1(965/1000/300/520/700逐字)."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/word-chain",
+   "type": "UNIT",
+   "why": "mobil|limbo|subway|underground; 'station'仍归erebus",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭5断言; L句/chip/INTENT/help齐."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/ring",
+   "type": "UNIT",
+   "why": "288m环R=45.84, 1:1截面, 点阵MOBIL",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 环行200s两圈+永不出带+零NaN; 缝不是地方."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/operator-fails",
+   "type": "UNIT",
+   "why": "请求皆不编译: 基座生而拆解, clear被吞",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: sceneword+场景不变+拆解生灭+两句逐字+unravel声."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/timetable",
+   "type": "UNIT",
+   "why": "40s周期: 24到/27开/33封/35走",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 85s两班, 四句按序, rumble/doors事件计数."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/boarding",
+   "type": "UNIT",
+   "why": "门开走入即归虚空; 困轨搶救; 门紧一句",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 三线逐字+trans==void; 车体让出门洞(设计修正)."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/bake",
+   "type": "UNIT",
+   "why": "他们的灯架逐字(9钠+牌洗+3白+2冷)烘焙",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "erebus衰减律; amb1.45; vista lum123==123."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/audio-law",
+   "type": "UNIT",
+   "why": "无乐: 隧道低鸣+rumble/brakes/doors/unravel/drip",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "声域法庭16.7x→15x内."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/visual-parity",
+   "type": "UNIT",
+   "why": "三轮对靶, 只留更好",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "像素回执入册; 近景-18%入册为渲染器差."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/feel",
+   "type": "UNIT",
+   "why": "月台孤寂/列车节奏/拆解手感等涌现叶",
+   "priors": [],
+   "status": "FIXED",
+   "evidence": "机器闭合; 立约: 一句人话即重开. 重开."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port",
+   "type": "BRANCH",
+   "why": "MOBIL AVE跨引擎移植成第14关键词主题(环拓扑+操作员失效)",
+   "priors": [
+    "ROOT/WORLD/mobil-port/word-chain",
+    "ROOT/WORLD/mobil-port/ring",
+    "ROOT/WORLD/mobil-port/operator-fails",
+    "ROOT/WORLD/mobil-port/timetable",
+    "ROOT/WORLD/mobil-port/boarding",
+    "ROOT/WORLD/mobil-port/bake",
+    "ROOT/WORLD/mobil-port/audio-law",
+    "ROOT/WORLD/mobil-port/visual-parity",
+    "ROOT/WORLD/mobil-port/feel"
+   ],
+   "status": "PASS",
+   "evidence": "971全绿(+35); E0+三轮视觉环入册eval/mobil-port.md; vista lum123==123; 周期40s两班线序法庭."
   }
  ]
 }

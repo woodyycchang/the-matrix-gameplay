@@ -33,8 +33,9 @@
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
     empire: 'Angel City, June 1937, 7:24 in the evening. The road east is closed. That is the point.',
+    mobil: 'A between place. Requests will not compile there. The train keeps the only key.',
     sedan: 'Four doors, June plates. She starts on the first crank.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city 1937 \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city 1937 \u00b7 mobil ave \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
@@ -64,6 +65,7 @@
     [/\b(erebus|station|tower)\b/, 'erebus'],
     [/\b(epang|palace)\b/, 'epang'],
     [/\b(orange empire|empire|1937|angel city|citrus|nostalgia|nostalgic)\b/, 'empire'],
+    [/\b(mobil ave|mobil|limbo|subway|underground)\b/, 'mobil'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
     [/\b(jump|roof|rooftop|rooftops|ledge|leap)\b/, 'rooftop'],
     [/\b(neon|cyber|cyberpunk|highway|ride|riding|moto|motorway|nightrun|mile)\b/, 'neon'],

@@ -2290,6 +2290,105 @@ section('ORANGE EMPIRE 1937 (Angel City recovered as native scene)');
   }
 }
 
+// ------------------------------------------- MOBIL AVE (branch port)
+section('MOBIL AVE (the between-place; the operator fails here)');
+{
+  const mkM=()=>{ const g=new C.Game(); const ev=[]; g.emit=(n)=>{ev.push(n)};
+    g.update({},0.2); g.request('mobil ave'); for(let i=0;i<40;i++)g.update({},1/30); return {g,ev}; };
+  const R=C.MOB.R;
+  const arcOf=(g)=>((Math.atan2(g.player.pos[0],-g.player.pos[2])*R)%288+288)%288;
+  eq(C.parse('mobil ave').scene,'mobil','mobil ave routes');
+  eq(C.parse('take me to limbo').scene,'mobil','limbo routes');
+  eq(C.parse('a subway platform').scene,'mobil','subway routes');
+  eq(C.parse('the station').scene,'erebus',"'station' still belongs to EREBUS");
+  eq(C.parse('an orange chair').type,'props','props unharmed');
+  ok(C.LINES.mobil && C.LINES.mobil.indexOf('train')>=0,'the operator line names the train');
+  ok(C.intent.intents.some(it=>it.word==='mobil'),'neural fallback knows the word');
+  {
+    const {g}=mkM();
+    eq(g.scene.name,'mobil ave','scene name'); eq(g.scene.label,'MOBIL AVE','label');
+    ok(g.scene.insts.some(it=>it.kind==='train'),'the train exists');
+    ok(g.scene.insts.some(it=>it.kind==='doors'),'so do its doors');
+    near(Math.hypot(g.player.pos[0],g.player.pos[2]),R+3.4,0.4,'spawn stands on the platform band');
+    ok(g.msgs.some(m=>m.text.indexOf('sodium light')>=0),'the enter line, verbatim');
+    const ops=C.render(g,480,270,g.time);
+    ok(ops.some(o=>o.t==='poly')&&ops.every(o=>o.t!=='poly'||o.p.every(Number.isFinite)),'the ring renders clean');
+  }
+  // THE LOOP: tangent walk two full circumferences; the seam is not a place
+  {
+    const {g}=mkM();
+    let unwrapped=0, prev=arcOf(g), bad=0;
+    for(let i=0;i<200*30;i++){
+      const th=Math.atan2(g.player.pos[0],-g.player.pos[2]);
+      g.player.yaw=Math.PI/2+th; g.update({fwd:1},1/30);
+      let a=arcOf(g), d=a-prev; if(d<-144)d+=288; if(d>144)d-=288; unwrapped+=d; prev=a;
+      if(!g.player.pos.every(Number.isFinite))bad++;
+      const r=Math.hypot(g.player.pos[0],g.player.pos[2]);
+      if(r<R+1.2||r>R+7.0)bad++;
+    }
+    eq(bad,0,'200 s on the loop: zero NaN, never off the band');
+    ok(unwrapped>2*288,'more than two full loops walked ('+(unwrapped/288).toFixed(1)+' turns) - x ~ x+48 as geometry');
+  }
+  // the one rule: nothing the operator asks for compiles here
+  {
+    const {g,ev}=mkM();
+    const before=g.scene.name;
+    const r1=g.request('give me a rifle');
+    eq(r1.type,'sceneword','the scene claims the word');
+    ok(g.scene.name===before,'no scene loads');
+    ok(g.scene.insts.some(it=>it.label==='a request'),'a pedestal sketches itself');
+    ok(g.msgs.some(m=>m.text.indexOf('unravels before it can hold anything')>=0),'and the refusal line is verbatim');
+    for(let i=0;i<80;i++)g.update({},1/30);
+    ok(!g.scene.insts.some(it=>it.label==='a request'),'and it unravels to nothing');
+    g.request('clear');
+    ok(g.scene.name==='mobil ave','clear does not compile either');
+    ok(g.msgs.some(m=>m.text.indexOf('not your operator')>=0),'the static line, verbatim');
+    ok(ev.indexOf('unravel')>=0,'the unravel is heard');
+  }
+  // the timetable, two full periods, lines in order
+  {
+    const {g,ev}=mkM();
+    for(let i=0;i<85*30;i++)g.update({},1/30);
+    const say=g.msgs.map(m=>m.text);
+    const iArr=say.findIndex(t=>t.indexOf('pulls in')>=0), iOpen=say.findIndex(t=>t.indexOf('rattle open')>=0);
+    const iSeal=say.findIndex(t=>t.indexOf('doors seal')>=0), iOut=say.findIndex(t=>t.indexOf('folds away')>=0);
+    ok(iArr>=0&&iOpen>iArr&&iSeal>iOpen&&iOut>iSeal,'arrive -> open -> seal -> depart, in order');
+    eq(say.filter(t=>t.indexOf('pulls in')>=0).length,2,'two arrivals in 85 s: the 40 s period holds');
+    ok(ev.filter(e=>e==='rumble').length>=4,'the rumble bookends each visit');
+    ok(ev.filter(e=>e==='doors').length>=4,'doors sound both ways');
+  }
+  // scramble by containment: caught on the rails when she comes in
+  {
+    const {g}=mkM();
+    const tp=(()=>{const th=(24*6)/R;return [Math.sin(th)*(R-0.5),0,-Math.cos(th)*(R-0.5)];})();
+    g.player.pos=[tp[0],-1.08,tp[2]];
+    for(let i=0;i<25*30;i++){ g.player.pos[0]=tp[0]; g.player.pos[2]=tp[2]; g.update({},1/30); if(g.msgs.some(m=>m.text.indexOf('scramble up onto the platform')>=0))break; }
+    ok(g.msgs.some(m=>m.text.indexOf('scramble up onto the platform')>=0),'the scramble line fires, verbatim');
+    ok(Math.hypot(g.player.pos[0],g.player.pos[2])>R+1.4,'and the walker stands on the platform');
+  }
+  // the doors are shut tight (once per stop) and boarding is the only way out
+  {
+    const {g}=mkM();
+    const door=(()=>{const th=(24*6)/R;return [Math.sin(th),-Math.cos(th)];})();
+    g.player.pos=[door[0]*(R+1.6),0.02,door[1]*(R+1.6)];
+    for(let i=0;i<25.5*30;i++){ g.player.pos[0]=door[0]*(R+1.6); g.player.pos[2]=door[1]*(R+1.6); g.update({},1/30); }
+    ok(g.msgs.some(m=>m.text.indexOf('shut tight')>=0),'the shut-tight denial, verbatim');
+    for(let i=0;i<3*30;i++){ g.player.pos[0]=door[0]*(R+0.7); g.player.pos[2]=door[1]*(R+0.7); g.update({},1/30); if(g.trans)break; }
+    ok(g.msgs.some(m=>m.text.indexOf('step through the doors')>=0),'the boarding line, verbatim');
+    eq(g.trans&&g.trans.name,'void','the train is the only way out - back to the void');
+  }
+  // determinism + perf
+  {
+    const run=()=>{const g=new C.Game(); g.emit=()=>{}; g.update({},0.2); g.request('mobil');
+      for(let i=0;i<200;i++){const th=Math.atan2(g.player.pos[0],-g.player.pos[2]); g.player.yaw=Math.PI/2+th; g.update({fwd:1},1/60);}
+      return g.player.pos.map(v=>v.toFixed(5)).join(',');};
+    eq(run(),run(),'twin runs agree: the loop is deterministic');
+    const {g}=mkM();
+    const t0=Date.now(); for(let i=0;i<30;i++)C.render(g,480,270,g.time+i*0.03);
+    ok((Date.now()-t0)/30<34,'platform renders inside the painter budget ('+((Date.now()-t0)/30).toFixed(1)+' ms)');
+  }
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);
