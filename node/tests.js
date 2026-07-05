@@ -1090,8 +1090,8 @@ section('UI layout sanity (template guards)');
 {
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#console\{position:fixed;left:0;right:0;bottom:6vh;/.test(tpl) && /align-items:center/.test(tpl), 'console is a floating full-width cinematic band; content centers inside it');
-  ok(/flex-wrap:wrap;justify-content:center/.test(tpl) && /body\.con #chips\{opacity:\.9;pointer-events:auto\}/.test(tpl), 'chips wrap centered and reveal only while the console is open');
+  ok(/#console\{position:fixed;left:4vw;bottom:8vh;/.test(tpl) && /align-items:flex-start/.test(tpl), 'console is a lower-LEFT block off the axis - the environment owns the screen');
+  ok(!/#chips\{/.test(tpl) && !/id="chips"/.test(tpl), 'chips are executed: no markup, no styling - typing is the interface');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
 }
@@ -1324,10 +1324,10 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
 {
   const fsP = require('fs');
   const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/var defs = \[\['weapons'/.test(appP) && /defs\.length; i\+\+\) hud\.chips\.appendChild/.test(appP), 'the chip row definition exists right where the loop consumes it');
+  ok(!/hud\.chips/.test(appP) && !/function chip\(/.test(appP), 'the chip system is fully retired: no factory, no mount, no defs');
   ok(!/__deepvoice__/.test(appP) && !/__neural__/.test(appP), 'both utility chips are gone - only world-request chips remain');
   const used = (appP.match(/\bdefs\b/g) || []).length;
-  ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs) - a lone reference means a beheaded declaration');
+  ok(used === 0, 'defs is gone with the chips (' + used + ' refs)');
 }
 
 
@@ -1338,7 +1338,7 @@ section('HUD wording is fluid and can never collide (Loop N3/N4 finding)');
   ok(/#top\{[^}]*display:flex;justify-content:space-between/.test(tpl), 'title and hint share one flex bar - overlap is impossible by construction');
   ok(/<div id="top"><div id="scene">THE CONSTRUCT<\/div><div id="lookhint">EDGES/.test(tpl), 'the markup actually nests both into the bar (default hint text intact)');
   ok(/#scene\{[^}]*text-overflow:ellipsis/.test(tpl), 'a long scene line ellipsizes instead of invading the hint');
-  ok((tpl.match(/clamp\(/g) || []).length >= 7, 'HUD wording scales with the window: rem+vw clamp() on title/hint/aim/log/input/chips (zoom-safe)');
+  ok((tpl.match(/clamp\(/g) || []).length >= 4, 'HUD wording scales with the window: rem+vw clamp() on the surviving surfaces');
 }
 
 
@@ -1358,7 +1358,7 @@ section('real-view layout: nothing pinned, nothing bleeding');
   const fsS = require('fs');
   const tplS = fsS.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/html,body\{height:100%;overflow:hidden/.test(tplS), 'the page itself can never scroll or reveal a background band (rule pre-existed)');
-  ok(/#console\{position:fixed;left:0;right:0;bottom:6vh;/.test(tplS), 'console spans full width as a floating band, never a pinned box');
+  ok(/left:4vw;bottom:8vh/.test(tplS), 'the block anchors lower-left like the reference frame');
 }
 
 
@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/#log \.line\{[^}]*mix-blend-mode:difference/.test(tplT) && !/#console\{[^}]*linear-gradient/.test(tplT), 'the backdrop is GONE by design: legibility over any scene comes from difference blending, like EXO');
+  ok(/#log\{[^}]*mix-blend-mode:difference/.test(tplT) && !/#console\{[^}]*linear-gradient/.test(tplT), 'no backdrop: the whole report block difference-blends over any scene');
 }
 
 
@@ -1375,7 +1375,7 @@ section('full screen, dynamically adjusted');
   const fsU = require('fs');
   const tplU = fsU.readFileSync(__dirname + '/../template.html', 'utf8');
   const appU = fsU.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/min\(920px,94vw\)/.test(tplU) && /min\(680px,90vw\)/.test(tplU), 'the floating stack keeps fluid centered caps');
+  ok(((tplU.match(/min\(46ch,72vw\)/g) || []).length) >= 2, 'log and input share the report-block width');
   ok(/requestFullscreen/.test(appU) && /exitFullscreen/.test(appU), 'F toggles true browser fullscreen');
   ok(/F fullscreen/.test(tplU), 'the boot keys teach it');
 }
@@ -1540,10 +1540,20 @@ section('EXO transmission UI');
   const fsAL = require('fs');
   const tplL = fsAL.readFileSync(__dirname + '/../template.html', 'utf8').replace(/\n\s*/g,'');
   const appL = fsAL.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(/letter-spacing:\.26em/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL), 'transmission typography: wide tracking, lines evaporate');
+  ok(/#log \.line\{[^}]*text-align:left/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL) && /border-top:1px dashed/.test(tplL), 'picture anatomy: left-aligned telemetry between dashed rules, lines evaporate');
   ok(/classList\.add\('in'\)/.test(appL) && /classList\.add\('faded'\)/.test(appL) && /\/\^you: \//.test(appL), 'lifecycle wired: fade-in, evaporate, faint player echoes');
   ok(/classList\.add\('con'\)/.test(appL) && /classList\.remove\('con'\)/.test(appL), 'Esc reveals the console; play hides every app control');
-  ok(/\.chip\{[^}]*border:0/.test(tplL), 'chips are ghost text, not app buttons');
+  ok(!/\.chip\{/.test(tplL), 'no chip styling remains anywhere');
+}
+
+
+section('picture anatomy: the reference frame, replicated');
+{
+  const fsAM = require('fs');
+  const tplM = fsAM.readFileSync(__dirname + '/../template.html', 'utf8');
+  ok(/placeholder=""/.test(tplM), 'the typing place is BLANK - emptiness is the signal');
+  ok(/#lookhint\{display:none;/.test(tplM), 'the persistent hint is retired: the boot screen is the manual');
+  ok(/text-transform:uppercase/.test(tplM.slice(tplM.indexOf('#log .line.sys'), tplM.indexOf('#log .line.sys') + 120)), 'system lines render as small CAPS headers, echoing the report format');
 }
 
 // ---------------------------------------------------------------- summary

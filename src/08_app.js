@@ -890,17 +890,6 @@
     if (!touch.active) { openConsole(); hud.hint.style.opacity = 1; }
   }
 
-  function chip(label, req) {
-    var b = document.createElement('button');
-    b.className = 'chip'; b.type = 'button'; b.textContent = label;
-    b.addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      say('you: ' + (req || label), true);
-      game.request(req || label);
-      A.handle('chirp');
-    });
-    return b;
-  }
 
   function init() {
     canvas = document.getElementById('c');
@@ -916,13 +905,9 @@
     hud.inRow.classList.add('open');   // the console is always visible — typing is first-class
     hud.input.addEventListener('focus', function () { consoleOpen = true; });
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
-    hud.chips = document.getElementById('chips');
     hud.hint = document.getElementById('lookhint');
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
-
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
-    for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
 
     window.addEventListener('keydown', function (e) {
       if (consoleOpen) {
