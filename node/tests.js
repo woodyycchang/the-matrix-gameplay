@@ -1329,6 +1329,10 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
   const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/function chip\(/.test(appP) && /hud\.chips\.appendChild/.test(appP), 'the chip system is back: factory and mount live');
   ok(!/__deepvoice__/.test(appP) && !/__neural__/.test(appP), 'both utility chips are gone - only world-request chips remain');
+  const audP = fsP.readFileSync(__dirname + '/../src/07_audio.js', 'utf8');
+  const emitBody = audP.slice(audP.indexOf("case 'engine'") >= 0 ? audP.indexOf("case 'engine'") : audP.indexOf("case 'thud'"), audP.indexOf('function ring'));
+  ok(!/this\.(blip|hiss|thump|boom)/.test(emitBody), "audio emits call bare closures, never this.methods (the drip that beheaded MOBIL AVE in the browser)");
+
   const used = (appP.match(/\bdefs\b/g) || []).length;
   ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs)');
 }
