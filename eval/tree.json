@@ -414,7 +414,8 @@
     "ROOT/EREBUS/E4-courts",
     "ROOT/EREBUS/E5-feel",
     "ROOT/EREBUS/G12-wings-balcony",
-    "ROOT/EREBUS/G34-director-ambience"
+    "ROOT/EREBUS/G34-director-ambience",
+    "ROOT/EREBUS/G5-dressing"
    ]
   },
   {
@@ -465,6 +466,13 @@
    "why": "平价二环:柜摆鬼/人影两段式/断电雾潜/光柱随日/station床+随机敲击",
    "status": "FIXED",
    "evidence": "本提交: 820->830, 法庭全节拍在案"
+  },
+  {
+   "path": "ROOT/EREBUS/G5-dressing",
+   "type": "UNIT",
+   "why": "陈设终装:圆厅屏/光锥/环纹/墙带,码头肋管,堆顶环/接线盒/井底红条,穹顶星图台/缘灯,舰桥顶灯/副控,医疗IV",
+   "status": "FIXED",
+   "evidence": "本提交: 830绿保持, 零NaN法庭覆盖新几何"
   }
  ]
 }

@@ -862,6 +862,48 @@
     s.logs=[{x:3.2,z:27.4,head:'STATION LOG 01 // CMDR. E. ASHE',text:'DAY 212 - Resupply skiff away on schedule. Erebus holds 41 souls.\\nDr. Vann insists the survey array is reading a structured return from\\ninside the storm. Probably instrument nois…',shown:false},{x:1.8,z:-26.2,head:'STATION LOG 04 // FINAL ENTRY',text:'DAY 244 - If anyone reads this: do not answer it.\\nIt learned the crew from the archive and it wears them well.\\nIt is very patient and very polite and it is standing behi-\\n[ENTRY…',shown:false},{x:22,z:-12.6,head:'MEDICAL LOG 02 // DR. I. OKONKWO, CMO',text:'DAY 236 - Third crewman this week reporting the same dream. Identical detail, identical order: the corridor, the door, the light going out. Prescribing rest. Logging it as shared stress response.',shown:false},{x:20,z:-13.2,y:5.5,head:'ARCHIVE QUERY LOG 03 // ARCHIVIST R. TAN',text:'DAY 240 - Query anomaly. 3,118 files accessed between 03:00 and 03:04 station time. No crew awake. No process logged. The files were all personnel records. Every one of them was read.',shown:false}];
     C.addBox(m,3.2,1.05,27.9,0.7,1.3,0.16,'#0c1a28',{noBottom:true});
     C.addBox(m,1.8,1.05,-26.6,0.7,1.3,0.16,'#0c1a28',{noBottom:true});
+    // ---------------- G5 dressing (per the branch's visual-loop ledger) ----------------
+    // rotunda: four wall data screens
+    C.addQuadZ(m,5.75,1.45,7.25,2.35,-12.79,'#0e3f52',false); C.addQuadZ(m,-7.25,1.45,-5.75,2.35,-12.79,'#0e3f52',false);
+    C.addQuadX(m,5.75,1.45,7.25,2.35,-12.79,'#0e3f52',false); C.addQuadX(m,-7.25,1.45,-5.75,2.35,12.79,'#0e3f52',true);
+    // rotunda: central light cone (four dark-cyan trapezoids, non-collide)
+    for (var lc=0; lc<4; lc++){ var la=lc*Math.PI/2+Math.PI/4;
+      quad4([Math.cos(la)*0.5,10.9,Math.sin(la)*0.5],[Math.cos(la+1.57)*0.5,10.9,Math.sin(la+1.57)*0.5],
+            [Math.cos(la+1.57)*2.6,0.06,Math.sin(la+1.57)*2.6],[Math.cos(la)*2.6,0.06,Math.sin(la)*2.6],'#0b1d2a'); }
+    // rotunda: twin floor ring patterns (octagonal)
+    for (var rg=0; rg<2; rg++){ var rr2=rg? 8.4:4.6;
+      for (var ri=0; ri<8; ri++){ var ra=ri*Math.PI/4, rb=(ri+1)*Math.PI/4;
+        quad4([Math.cos(ra)*rr2,0.012,Math.sin(ra)*rr2],[Math.cos(rb)*rr2,0.012,Math.sin(rb)*rr2],
+              [Math.cos(rb)*(rr2+0.22),0.012,Math.sin(rb)*(rr2+0.22)],[Math.cos(ra)*(rr2+0.22),0.012,Math.sin(ra)*(rr2+0.22)],'#0e1622'); } }
+    // rotunda: mid wall band + cyan hairline under the balcony
+    C.addQuadZ(m,-12.6,3.6,12.6,3.85,-12.78,TR,false); C.addQuadZ(m,-12.6,3.6,12.6,3.85,12.78,true?TR:TR,true);
+    C.addQuadX(m,-12.6,3.6,12.6,3.85,-12.78,TR,false); C.addQuadX(m,-12.6,3.6,12.6,3.85,12.78,TR,true);
+    C.addQuadZ(m,-12.6,3.95,12.6,4.02,-12.77,CY,false); C.addQuadX(m,-12.6,3.95,12.6,4.02,12.77,CY,true);
+    // dock: wall ribs + ceiling pipe runs + airlock screen
+    for (var dk=0; dk<4; dk++){ var dz=20.5+dk*3.2;
+      C.addBox(m,-7.82,2.6,dz,0.3,5.2,0.5,SD,{noBottom:true}); C.addBox(m,7.82,2.6,dz,0.3,5.2,0.5,SD,{noBottom:true}); }
+    C.addBox(m,-2.4,5.28,25,0.22,0.22,12.6,TR,{noBottom:true}); C.addBox(m,2.4,5.28,25,0.22,0.22,12.6,TR,{noBottom:true});
+    C.addQuadZ(m,-1.1,3.7,1.1,4.5,31.78,'#0e3f52',false);
+    // reactor: core top ring + junction boxes + shaft-base red strip
+    for (var tr2=0; tr2<8; tr2++){ var ta=tr2*Math.PI/4, tb=(tr2+1)*Math.PI/4;
+      quad4([CX+Math.cos(ta)*2.85,-0.82,CZ+Math.sin(ta)*2.85],[CX+Math.cos(tb)*2.85,-0.82,CZ+Math.sin(tb)*2.85],
+            [CX+Math.cos(tb)*3.1,-0.82,CZ+Math.sin(tb)*3.1],[CX+Math.cos(ta)*3.1,-0.82,CZ+Math.sin(ta)*3.1],TR); }
+    for (var jb=0; jb<3; jb++){ var jz=19+jb*5;
+      C.addBox(m,11.7,-5.6,jz,0.5,0.9,0.7,SD,{noBottom:true}); C.addQuadX(m,jz-0.25,-5.5,jz+0.25,-5.35,11.42,AM,false); }
+    C.addQuadX(m,3.0,-4.9,9.0,-4.66,-8.8,RD,true);
+    // dome deck: chart table + faint rim ring
+    C.addBox(m,5,12.98,4,1.7,0.76,1.1,SD,{noBottom:true}); col(4.15,12.6,3.45,5.85,13.36,4.55);
+    C.addQuadY(m,4.3,3.55,5.7,4.45,13.38,'#0e3f52');
+    for (var dg=0; dg<8; dg++){ var ga2=dg*Math.PI/4, gb2=(dg+1)*Math.PI/4;
+      quad4([Math.cos(ga2)*12.1,12.62,Math.sin(ga2)*12.1],[Math.cos(gb2)*12.1,12.62,Math.sin(gb2)*12.1],
+            [Math.cos(gb2)*12.3,12.62,Math.sin(gb2)*12.3],[Math.cos(ga2)*12.3,12.62,Math.sin(ga2)*12.3],'#12303e'); }
+    // bridge: twin ceiling light bars + side consoles
+    stripY(-6,-27.6,-1,-27.2,3.92,'#bcd6ff'); stripY(1,-27.6,6,-27.2,3.92,'#bcd6ff');
+    C.addBox(m,-6.4,0.5,-24.8,1.6,1.0,1.2,SD,{noBottom:true}); col(-7.2,0,-25.4,-5.6,1.0,-24.2);
+    C.addBox(m,6.4,0.5,-24.8,1.6,1.0,1.2,SD,{noBottom:true}); col(5.6,0,-25.4,7.2,1.0,-24.2);
+    C.addQuadY(m,-7.0,-25.2,-5.8,-24.4,1.02,'#0e2f3f'); C.addQuadY(m,5.8,-25.2,7.0,-24.4,1.02,'#0e2f3f');
+    // med bay: IV stand
+    C.addBox(m,17.2,1.05,-4.9,0.08,2.1,0.08,TR,{noBottom:true}); C.addBox(m,17.2,2.05,-4.62,0.08,0.06,0.5,TR,{noBottom:true});
     C.meshBounds(m); C.anchorize(m, 0.05, 61, 8);
     s.insts.unshift(inst(m, [0,0,0], 0, { label: 'station', kind: 'static' }));
     // ---------------- director (once-each ghost beats) ----------------
