@@ -4,6 +4,12 @@ One self-contained `index.html` (Three.js from CDN, all geometry procedural, no 
 Open the file in any modern browser → click 入宮 → WASD to walk, mouse to look,
 Shift run, Space jump, T hastens the day-night cycle, M toggles the procedural guqin+wind score.
 
+![宮門破曉 — the gate at dawn](screenshots/01_gate_dawn.png)
+
+| 前殿黃昏 — the front hall at dusk | 龍 — the dragon at dusk |
+|---|---|
+| ![the front hall at dusk](screenshots/04_hall_dusk.png) | ![the dragon at dusk](screenshots/07_dragon_dusk.png) |
+
 12 named areas from the rhapsody, all reachable on foot: 前殿, 複道行空 (a walkable
 mid-air skyway), 鼎鐺玉石 treasury, 歌臺, 舞殿, 廊腰縵回 (a corridor that bridges a river),
 妝鏡樓, 長橋臥波 dragon bridge, 蜂房水渦 pavilion quarter, 二川溶溶 two rivers with
