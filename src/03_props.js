@@ -349,4 +349,134 @@
   P.redDress = function () {
     return P.human({ tier: 'custom', dress: true, suit: '#c1121f', skin: '#d8b9a4', hair: '#caa84a', longhair: true, seed: 47 });
   };
+
+  // ---- hallway props (ported from construct-deja-vu) ----
+  P.doorLeaf = function (mir) {
+    var m = C.newMesh();
+    m.vp = []; m.pivots = [];
+    var zd = mir ? -1 : 1;
+    var v0 = m.v.length;
+    C.addBox(m, 0, 0.02, zd * 0.415, 0.06, 2.02, 0.79, '#241c15');
+    C.addQuadX(m, zd * 0.06, 0.14, zd * 0.70, 1.92, mir ? -0.034 : 0.034, '#2c2118', !mir);
+    C.addBox(m, 0.055, 0.98, zd * 0.70, 0.05, 0.09, 0.05, '#8a6b2f');   // knob
+    for (var i = v0; i < m.v.length; i++) m.vp[i] = 5;
+    m.pivots[5] = [0, 1.0, 0];
+    C.anchorize(m, 0.9, mir ? 411 : 410, 4); C.meshBounds(m);
+    return m;
+  };
+
+  P.hallDoor = function (bricked) {
+    var m = C.newMesh();
+    var W = 0.95, H = 2.05, wood = '#3a2d20', frame = '#2c221a';
+    C.addBox(m, -W / 2 - 0.05, 0, 0, 0.1, H + 0.06, 0.13, frame);      // jamb L
+    C.addBox(m, W / 2 + 0.05, 0, 0, 0.1, H + 0.06, 0.13, frame);       // jamb R
+    C.addBox(m, 0, H + 0.02, 0, W + 0.2, 0.09, 0.13, frame);           // lintel
+    C.addBox(m, 0, 0, 0, W + 0.2, 0.03, 0.13, '#241c15');              // threshold
+    if (!bricked) {
+      C.addQuadZ(m, -W / 2, 0.02, W / 2, H, -0.02, '#080706', true);   // the dark behind
+      var leaf = C.newMesh();
+      C.addBox(leaf, W / 2 - 0.02, 0.03, 0, W - 0.04, H - 0.05, 0.045, wood);
+      C.addBox(leaf, W - 0.12, 1.02, 0.035, 0.03, 0.03, 0.05, '#8a7a4c'); // knob
+      C.mergeMesh(m, leaf, [-W / 2, 0, 0.03], -0.62);                  // hinged at the left jamb, ajar
+    } else {
+      C.addQuadZ(m, -W / 2, 0.02, W / 2, H, -0.01, '#3a322c', true);   // mortar bed
+      var r = C.rng(88);
+      for (var row = 0; row * 0.235 < H - 0.2; row++) {
+        var y = 0.05 + row * 0.235;
+        var off = (row % 2) * 0.16;
+        for (var x = -W / 2 + 0.02 + off - 0.16; x < W / 2 - 0.05; x += 0.325) {
+          var bw = Math.min(0.30, W / 2 - 0.03 - x);
+          if (bw < 0.08) continue;
+          C.addBox(m, Math.max(-W / 2 + 0.17, x + bw / 2), y, 0.015, bw, 0.21, 0.06,
+            C.mixHex('#5d3a2e', '#4a2f26', r()));
+        }
+      }
+    }
+    return fin(m, 6, bricked ? 92 : 91, 6);
+  };
+
+  P.hallWindow = function (barred) {
+    var m = C.newMesh();
+    var W = 1.1, Y0 = 1.05, Y1 = 2.15, frame = '#2e2721';
+    C.addBox(m, 0, Y0 - 0.07, 0, W + 0.24, 0.09, 0.16, frame);          // sill
+    C.addBox(m, 0, Y1, 0, W + 0.24, 0.08, 0.12, frame);                 // head
+    C.addBox(m, -W / 2 - 0.05, Y0, 0, 0.1, Y1 - Y0, 0.12, frame);
+    C.addBox(m, W / 2 + 0.05, Y0, 0, 0.1, Y1 - Y0, 0.12, frame);
+    C.addQuadZ(m, -W / 2, Y0, W / 2, Y1, 0.0, '#0b1220', true);         // night
+    C.addQuadZ(m, -W / 2 + 0.12, Y0 + 0.55, W / 2 - 0.55, Y1 - 0.18, 0.005, '#1d2a44', true); // moon wash
+    C.addBox(m, 0, Y0, 0.02, 0.05, Y1 - Y0, 0.05, frame);               // muntin |
+    C.addBox(m, 0, (Y0 + Y1) / 2, 0.02, W, 0.05, 0.05, frame);          // muntin —
+    if (barred) {
+      for (var i = 0; i < 5; i++) {
+        var x = -W / 2 + 0.09 + i * ((W - 0.18) / 4);
+        C.addBox(m, x, Y0 - 0.02, 0.085, 0.035, Y1 - Y0 + 0.08, 0.035, '#101114');
+      }
+      C.addBox(m, 0, Y0 + 0.16, 0.085, W + 0.1, 0.045, 0.045, '#141518'); // cross strap
+      C.addBox(m, 0, Y1 - 0.22, 0.085, W + 0.1, 0.045, 0.045, '#141518');
+    }
+    return fin(m, 7, barred ? 94 : 93, 6);
+  };
+
+  P.ceilLamp = function (dead) {
+    var m = C.newMesh();
+    C.addBox(m, 0, -0.12, 0, 0.05, 0.12, 0.05, '#2a2620');              // stem
+    C.addCyl(m, 0, -0.26, 0, 0.17, 0.13, dead ? '#26241f' : '#4a4437', 8, { noBottom: false });
+    if (!dead) C.addBox(m, 0, -0.315, 0, 0.19, 0.05, 0.19, '#e8c477', { flat: true }); // glow globe
+    return fin(m, dead ? 10 : 12, dead ? 96 : 95, 5);
+  };
+
+  P.cat = function () {
+    var m = C.newMesh();
+    m.vp = []; m.pivots = [];
+    function part(pid, pivot, fn) {
+      var v0 = m.v.length;
+      fn();
+      for (var i = v0; i < m.v.length; i++) m.vp[i] = pid;
+      m.pivots[pid] = pivot;
+    }
+    var fur = '#17171a', furD = '#101013';
+    part(0, [0, 0, 0], function () {
+      C.addBox(m, 0, 0.17, 0.02, 0.16, 0.17, 0.42, fur);              // trunk
+      C.addBox(m, 0, 0.16, -0.17, 0.18, 0.19, 0.14, furD);            // haunches
+      C.addBox(m, 0, 0.26, 0.24, 0.13, 0.12, 0.13, fur);              // head
+      C.addBox(m, -0.045, 0.375, 0.22, 0.035, 0.05, 0.02, furD);      // ear L
+      C.addBox(m, 0.045, 0.375, 0.22, 0.035, 0.05, 0.02, furD);       // ear R
+      C.addQuadZ(m, -0.052, 0.29, -0.018, 0.315, 0.307, '#7ddc8a', true);  // eye L
+      C.addQuadZ(m, 0.018, 0.29, 0.052, 0.315, 0.307, '#7ddc8a', true);   // eye R
+    });
+    part(1, [-0.055, 0.14, 0.15], function () { C.addBox(m, -0.055, 0.0, 0.15, 0.045, 0.14, 0.05, furD); });
+    part(2, [0.055, 0.14, 0.15], function () { C.addBox(m, 0.055, 0.0, 0.15, 0.045, 0.14, 0.05, furD); });
+    part(3, [-0.06, 0.14, -0.16], function () { C.addBox(m, -0.06, 0.0, -0.16, 0.05, 0.14, 0.055, furD); });
+    part(4, [0.06, 0.14, -0.16], function () { C.addBox(m, 0.06, 0.0, -0.16, 0.05, 0.14, 0.055, furD); });
+    part(5, [0, 0.24, -0.24], function () {
+      C.addBox(m, 0, 0.235, -0.33, 0.035, 0.045, 0.2, fur);           // tail base
+      C.addBox(m, 0, 0.27, -0.43, 0.03, 0.11, 0.035, furD);           // tail tip, hooked up
+    });
+    return fin(m, 14, 313, 5);
+  };
+
+  P.archway = function (bricked) {
+    var m = C.newMesh();
+    var W = 2.0, H = 2.35, stone = '#3f382f';
+    C.addBox(m, -W / 2 - 0.08, 0, 0, 0.16, H + 0.1, 0.2, stone);
+    C.addBox(m, W / 2 + 0.08, 0, 0, 0.16, H + 0.1, 0.2, stone);
+    C.addBox(m, 0, H + 0.04, 0, W + 0.32, 0.13, 0.2, stone);
+    if (bricked) {
+      C.addQuadZ(m, -W / 2, 0.0, W / 2, H, 0.055, '#38302a', true);
+      C.addQuadZ(m, -W / 2, 0.0, W / 2, H, -0.055, '#332c26', false);
+      var r = C.rng(97);
+      for (var row = 0; row * 0.235 < H - 0.12; row++) {
+        var y = 0.03 + row * 0.235;
+        var off = (row % 2) * 0.17;
+        for (var x = -W / 2 + 0.02 + off - 0.17; x < W / 2 - 0.06; x += 0.345) {
+          var bw = Math.min(0.32, W / 2 - 0.04 - x);
+          if (bw < 0.08) continue;
+          C.addBox(m, Math.max(-W / 2 + 0.18, x + bw / 2), y, 0, bw, 0.21, 0.11,
+            C.mixHex('#5d3a2e', '#472e25', r()));
+        }
+      }
+    }
+    return fin(m, 5, bricked ? 99 : 98, 6);
+  };
+
 })(typeof globalThis !== 'undefined' ? globalThis : this);

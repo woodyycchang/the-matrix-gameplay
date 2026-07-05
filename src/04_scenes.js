@@ -27,6 +27,20 @@
   function box(min, max) { return { min: min, max: max }; }
 
   // ---------------- VOID ----------------
+  // ---- the cat is a pure function of the tick (ported) ----
+  C.catPose = function (p) {
+    var u = p / (HALL.N - 1);
+    var ph = p * 0.145, s = Math.sin(ph);
+    return [
+      HALL.CAT_X0 + (HALL.CAT_X1 - HALL.CAT_X0) * u,   // x
+      Math.abs(Math.cos(ph)) * 0.018,                   // y bob
+      HALL.CAT_Z,                                       // z, hugging the north wall
+      Math.PI / 2,                                      // yaw: nose toward +x
+      s * 0.6, -s * 0.6, -s * 0.6, s * 0.6,             // diagonal leg pairs
+      Math.sin(ph * 0.42) * 0.4                         // tail swish
+    ];
+  };
+
   function sceneVoid() {
     return {
       name: 'construct', sky: 'white', fog: { near: 10, far: 52, col: C.WHITE },
