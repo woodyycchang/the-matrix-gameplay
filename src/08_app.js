@@ -159,6 +159,18 @@
       }
     }
   }
+  function chip(label, req) {
+    var b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = label;
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      say('you: ' + (req || label), true);
+      game.request(req || label);
+      A.handle('chirp');
+    });
+    return b;
+  }
+
   function openConsole() {
     document.body.classList.add('con');
     consoleOpen = true;
@@ -900,6 +912,9 @@
     hud.input.addEventListener('focus', function () { consoleOpen = true; });
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
+    hud.chips = document.getElementById('chips');
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['a chair', 'a chair'], ['clear', 'clear']];
+    for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
 

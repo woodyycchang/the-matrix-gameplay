@@ -28,8 +28,8 @@
   #mic.live{border-color:var(--green);box-shadow:0 0 0 3px rgba(70,255,122,.25);color:#0d7a3a}
   /* console */
   #console{position:fixed;left:4vw;bottom:8vh;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-  #log{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:min(46ch,72vw);border-top:1px dashed rgba(60,200,110,.55);border-bottom:1px dashed rgba(60,200,110,.55);padding:9px 2px 10px}
-  #log .line{font-size:clamp(12px,.6rem + .45vw,15px);letter-spacing:.1em;text-align:left;line-height:1.5;color:#21d95e;text-shadow:0 1px 2px rgba(3,24,10,.6),0 0 10px rgba(33,217,94,.3);opacity:0;transition:opacity .8s ease}
+  #log{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:min(46ch,72vw);border-top:1px dashed rgba(13,122,58,.6);border-bottom:1px dashed rgba(13,122,58,.6);padding:9px 2px 10px}
+  #log .line{font-size:clamp(12px,.6rem + .45vw,15px);letter-spacing:.1em;text-align:left;line-height:1.5;color:#0d7a3a;text-shadow:0 0 1px rgba(0,0,0,.15),0 0 9px rgba(60,220,130,.32);opacity:0;transition:opacity .8s ease}
   #log .line.in{opacity:1}
   #log .line.faded{opacity:0}
   #log .line.sys{font-size:.85em;text-transform:uppercase;letter-spacing:.16em}
@@ -37,13 +37,17 @@
   #log .line.you.in{opacity:.5}
   #inrow{display:flex;gap:8px;align-items:center;justify-content:flex-start;pointer-events:none;opacity:0;transition:opacity .35s;width:min(46ch,72vw)}
   body.con #inrow{opacity:1;pointer-events:auto}
-  #inrow input{background:transparent;border:0;border-bottom:1px solid rgba(60,200,110,.5);text-align:left;letter-spacing:.12em;flex:1;color:#21d95e;caret-color:#21d95e}
+  #chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin-top:8px;pointer-events:none;opacity:0;transition:opacity .35s;width:min(46ch,72vw)}
+  body.con #chips{opacity:.9;pointer-events:auto}
+  .chip{font:inherit;font-size:clamp(10px,.5rem + .4vw,12px);letter-spacing:.14em;text-transform:lowercase;color:#0d7a3a;background:none;border:0;padding:2px 8px;cursor:pointer;opacity:.8}
+  .chip:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
+  #inrow input{background:transparent;border:0;border-bottom:1px solid rgba(13,122,58,.55);text-align:left;letter-spacing:.12em;flex:1;color:#0d7a3a;caret-color:#0d7a3a}
   #mic{background:transparent;border-color:transparent;opacity:.5}
   #inrow.open{opacity:1}
   #inrow .gt{color:#0d7a3a;font-size:clamp(12px,.6rem + .5vw,15px)}
   #cmd{flex:1;max-width:46ch;background:rgba(251,251,249,.85);border:0;border-bottom:1px solid rgba(42,42,40,.4);
     font:inherit;font-size:clamp(12px,.6rem + .5vw,15px);color:var(--ink);padding:5px 2px;outline:none;letter-spacing:.03em}
-  #cmd::placeholder{color:rgba(33,217,94,.45)}   /* wrap, never clip: every chip visible at any width */
+  #cmd::placeholder{color:transparent}   /* wrap, never clip: every chip visible at any width */
   #chips::-webkit-scrollbar{display:none}
   /* touch */
   #tbtns{position:fixed;right:10px;bottom:110px;display:none;flex-direction:column;gap:8px}
@@ -72,7 +76,8 @@
 <div id="aim"></div>
 <div id="console">
   <div id="log"></div>
-  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="ask for anything — ‘weapons’, ‘dojo’, ‘three chairs’…" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
+  <div id="inrow"><span class="gt">&gt;</span><input id="cmd" placeholder="" autocomplete="off" spellcheck="false"><button id="mic" title="hold V to talk">&#9210;</button></div>
+  <div id="chips"></div>
 </div>
 
 <div id="tbtns"></div>

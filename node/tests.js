@@ -1091,7 +1091,7 @@ section('UI layout sanity (template guards)');
   const fs8 = require('fs');
   const tpl = fs8.readFileSync(__dirname + '/../template.html', 'utf8');
   ok(/#console\{position:fixed;left:4vw;bottom:8vh;/.test(tpl) && /align-items:flex-start/.test(tpl), 'console is a lower-LEFT block off the axis - the environment owns the screen');
-  ok(!/#chips\{/.test(tpl) && !/id="chips"/.test(tpl), 'chips are executed: no markup, no styling - typing is the interface');
+  ok(/id="chips"/.test(tpl) && /body\.con #chips\{opacity:\.9;pointer-events:auto\}/.test(tpl), 'the click-words are back: ghost chips revealed only while the console is open');
   ok(/spellcheck="false"><button id="mic"/.test(tpl), 'mic is docked inside the input row, not floating mid-screen');
   ok(/EDGES = TURN/.test(tpl) && /quick click fire\/strike/.test(tpl) && /<div id="top"><div id="scene">/.test(tpl), 'boot keys + hint match the no-capture scheme (hint lives in the flex top bar)');
 }
@@ -1324,10 +1324,10 @@ section('runtime smoke: init-critical identifiers exist (lesson from the beheade
 {
   const fsP = require('fs');
   const appP = fsP.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
-  ok(!/hud\.chips/.test(appP) && !/function chip\(/.test(appP), 'the chip system is fully retired: no factory, no mount, no defs');
+  ok(/function chip\(/.test(appP) && /hud\.chips\.appendChild/.test(appP), 'the chip system is back: factory and mount live');
   ok(!/__deepvoice__/.test(appP) && !/__neural__/.test(appP), 'both utility chips are gone - only world-request chips remain');
   const used = (appP.match(/\bdefs\b/g) || []).length;
-  ok(used === 0, 'defs is gone with the chips (' + used + ' refs)');
+  ok(used >= 2, 'defs is declared AND consumed (' + used + ' refs)');
 }
 
 
@@ -1366,7 +1366,7 @@ section('console reads over ANY scene (world-text collision fixed)');
 {
   const fsT = require('fs');
   const tplT = fsT.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/color:#21d95e/.test(tplT) && !/#log\{[^}]*mix-blend-mode/.test(tplT) && /text-shadow:0 1px 2px rgba\(3,24,10/.test(tplT), 'Matrix phosphor: green with a hairline dark edge reads over the white void AND the neon night');
+  ok(/color:#0d7a3a/.test(tplT) && !/color:#21d95e/.test(tplT) && !/#log\{[^}]*mix-blend-mode/.test(tplT), 'the voice is DEEP Matrix green (#0d7a3a family) with a whisper of glow');
 }
 
 
@@ -1543,7 +1543,7 @@ section('EXO transmission UI');
   ok(/#log \.line\{[^}]*text-align:left/.test(tplL) && /#log \.line\.faded\{opacity:0\}/.test(tplL) && /border-top:1px dashed/.test(tplL), 'picture anatomy: left-aligned telemetry between dashed rules, lines evaporate');
   ok(/classList\.add\('in'\)/.test(appL) && /classList\.add\('faded'\)/.test(appL) && /\/\^you: \//.test(appL), 'lifecycle wired: fade-in, evaporate, faint player echoes');
   ok(/classList\.add\('con'\)/.test(appL) && /classList\.remove\('con'\)/.test(appL), 'Esc reveals the console; play hides every app control');
-  ok(!/\.chip\{/.test(tplL), 'no chip styling remains anywhere');
+  ok(/\.chip\{[^}]*border:0/.test(tplL) && /text-transform:lowercase/.test(tplL) && /color:#0d7a3a/.test(tplL), 'chips are borderless lowercase ghost text in dark green');
 }
 
 
@@ -1551,7 +1551,7 @@ section('picture anatomy: the reference frame, replicated');
 {
   const fsAM = require('fs');
   const tplM = fsAM.readFileSync(__dirname + '/../template.html', 'utf8');
-  ok(/placeholder="ask for anything/.test(tplM), 'the predefined words live in the placeholder - people always know what to type, no buttons needed');
+  ok(/placeholder=""/.test(tplM) && /id="chips"/.test(tplM), 'the input stays BLANK; the predefined words live as click-chips instead');
   ok(/#lookhint\{display:none;/.test(tplM), 'the persistent hint is retired: the boot screen is the manual');
   ok(/text-transform:uppercase/.test(tplM.slice(tplM.indexOf('#log .line.sys'), tplM.indexOf('#log .line.sys') + 120)), 'system lines render as small CAPS headers, echoing the report format');
 }
