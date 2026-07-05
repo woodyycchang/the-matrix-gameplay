@@ -1581,7 +1581,7 @@ section('N1 ride-feel: the branch equations live natively');
   const fsN1 = require('fs');
   const gmN = fsN1.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
   ok(/steerCouple = 0\.5 \+ 0\.5 \* C\.clamp\(bk\.speed/.test(gmN), 'steering authority grows with speed (branch shape), not the inverse');
-  ok(/p\.yaw = C\.clamp\(p\.yaw, -1\.15, 1\.15\)/.test(gmN), 'the arcade clamp: you ride DOWN the street');
+  ok(/p\.yaw = C\.clamp\(p\.yaw, -0\.35, 0\.35\)/.test(gmN) && /rollT = -this\.bike\.lean \* 0\.40/.test(gmN), 'lean-carve: the nose caps at ~20 deg while the bank shows at ~23 - a held turn arcs, never pivots');
   ok(/Math\.abs\(bk\.sSm\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4 on the SMOOTHED steer state');
   ok(/function crashHit\(strength\)/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /self\.shake = Math\.max\(self\.shake \|\| 0, strength\)/.test(gmN), 'crashHit is one shared unit: cooldown, hard cut, shake');
 }
@@ -1635,7 +1635,7 @@ section('N4: a quarter hour down the mile - endless, bounded, finite');
   ok(g.scene.traffic.length === 14, 'the traffic census stays exactly fourteen');
   const pz = g.player.pos[2];
   ok(g.scene.traffic.every(v => v.it.pos[2] > pz - 195 && v.it.pos[2] < pz + 78 && Number.isFinite(v.it.pos[2])), 'every car rides inside its ring around the rider, finite');
-  ok(g.player.pos.every(Number.isFinite) && Number.isFinite(g.bike.speed) && Math.abs(g.player.yaw) <= 1.1500001, 'rider state finite; the arcade clamp held for the whole ride');
+  ok(g.player.pos.every(Number.isFinite) && Number.isFinite(g.bike.speed) && Math.abs(g.player.yaw) <= 0.3500001, 'rider state finite; the arcade clamp held for the whole ride');
   ok(Object.keys(g.scene.chunks).length <= 7, 'the chunk window stays within its seven-slot budget');
   const ops = C.render(g, 640, 360, g.time);
   ok(ops.every(o => o.t !== 'poly' || o.p.every(Number.isFinite)), 'a far-out frame renders with zero NaN polys');

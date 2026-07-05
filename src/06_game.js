@@ -613,7 +613,7 @@
     var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * steerCouple;
     p.yaw += bk.sSm * steerRate * dt;
     if (sc.infinite) {
-      p.yaw = C.clamp(p.yaw, -1.15, 1.15);   // arcade clamp: you ride DOWN the street
+      p.yaw = C.clamp(p.yaw, -0.35, 0.35);   // LEAN-CARVE: ~20\u00b0 max nose angle - a held turn banks and arcs, never pivots sideways
       if (Math.abs(steerIn) < 0.04) p.yaw += -p.yaw * Math.min(1, 0.8 * dt);   // hands off: drift back to the axis
     }
     var leanT = C.clamp(bk.sSm, -1, 1) * 0.95 * Math.min(1, bk.speed / (B.MAX * 0.85));
@@ -963,7 +963,7 @@
       eyeT = C.lerp(0.34, EYE, k); rollT = C.lerp(1.25, 0, k) + Math.sin(this._riseT * 9) * 0.05 * (1 - k);
     } else {
       eyeT = EYE; rollT = 0;
-      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.28; }
+      if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.40; }   // the bank is VISIBLE: ~23\u00b0 at full lean
       if (this.shake > 0) { this.shake = Math.max(0, this.shake - 2.4 * dt); rollT += (Math.random() - 0.5) * this.shake * 0.22; eyeT += (Math.random() - 0.5) * this.shake * 0.08; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
