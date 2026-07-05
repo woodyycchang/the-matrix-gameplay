@@ -353,6 +353,9 @@
         hiss(0.3, 0.4, 200, 80, 1);
         blip(3050, 2.8, 0.05, 'sine', 0.15); // tinnitus
         break;
+      case 'dejavu': hiss(0.5, 0.2, 2600, 240, 1.6); blip(660, 0.09, 0.08, 'sine'); blip(440, 0.14, 0.08, 'sine', 0.09); break;
+      case 'seal': thump(70, 0.3, 0.4); hiss(0.35, 0.18, 500, 120, 1.2, 0.05); break;
+      case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
       case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;
       case 'heartSoft': thump(64, 0.12, 0.16); thump(58, 0.1, 0.12, 0.16); break;

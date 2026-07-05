@@ -359,6 +359,335 @@
     return s;
   }
 
+  function sceneHallway() {
+    var HL = HALL.HL, HW = HALL.HW, H = HALL.H;
+    var s = {
+      name: 'hallway', sky: 'hall', fog: { near: 8, far: 34, col: '#14100d' },
+      groundY: 0, ambience: 'hall', colliders: [], insts: [],
+      spawn: { pos: [8.2, 0, 0], yaw: -Math.PI / 2 },
+      update: null
+    };
+    var m = C.newMesh();
+    function ceilQuad(x0, z0, x1, z1, y, col) {
+      var b = m.v.length;
+      m.v.push([x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1]);
+      return C.addFace(m, [b, b + 1, b + 2, b + 3], col);
+    }
+    // floor: old planks + a runner
+    for (var px = -HL; px < HL + 2.1; px += 0.55) {
+      var tone = ((Math.round(px / 0.55) % 2) === 0) ? '#3b2f22' : '#342a1e';
+      if (px >= HL) tone = ((Math.round(px / 0.55) % 2) === 0) ? '#4a4a46' : '#444440';
+      C.addQuadY(m, px, -HW, Math.min(px + 0.53, HL + 2.1), HW, 0.001, tone, 'floor');
+    }
+    C.addQuadY(m, -HL + 0.3, -0.52, HL - 0.3, 0.52, 0.006, '#571f1f', 'floor');   // runner
+    C.addQuadY(m, -HL + 0.3, -0.52, HL - 0.3, -0.46, 0.008, '#7a5a2b', 'floor');
+    C.addQuadY(m, -HL + 0.3, 0.46, HL - 0.3, 0.52, 0.008, '#7a5a2b', 'floor');
+    // walls: wainscot below, plaster field above; the north wall skips the lit alcove
+    var WAIN = '#403428', FIELD = '#6a6156', SKIRT = '#241d16', RAIL = '#4a3e31';
+    function wallN(x0, x1) {   // faces +z
+      C.addQuadZ(m, x0, 0, x1, 0.14, -HW + 0.02, SKIRT, true);
+      C.addQuadZ(m, x0, 0.14, x1, 0.95, -HW + 0.02, WAIN, true);
+      C.addQuadZ(m, x0, 0.95, x1, H, -HW + 0.02, FIELD, true);
+      C.addQuadZ(m, x0, 2.22, x1, 2.28, -HW + 0.025, RAIL, true);
+    }
+    function wallS(x0, x1) {   // faces -z
+      C.addQuadZ(m, x0, 0, x1, 0.14, HW - 0.02, SKIRT, false);
+      C.addQuadZ(m, x0, 0.14, x1, 0.95, HW - 0.02, WAIN, false);
+      C.addQuadZ(m, x0, 0.95, x1, H, HW - 0.02, FIELD, false);
+      C.addQuadZ(m, x0, 2.22, x1, 2.28, HW - 0.025, RAIL, false);
+    }
+    wallN(-HL, 0.55); wallN(1.45, HL);
+    wallS(-HL, HL);
+    // chimney breasts give the corridor rhythm and hide the cat's entry and exit
+    [-3.8, 3.8].forEach(function (bx) {
+      C.addBox(m, bx, 0, -HW + 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+      C.addBox(m, bx, 0, HW - 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+    });
+    // decorative closed doors (painted shut, part of the wall)
+    [[-6.6, -1], [-4.9, 1], [6.4, 1], [-7.6, 1]].forEach(function (dd) {
+      var dx = dd[0], side = dd[1];
+      var zq = side < 0 ? -HW + 0.03 : HW - 0.03;
+      C.addQuadZ(m, dx - 0.45, 0.02, dx + 0.45, 2.02, zq, '#241c15', side < 0);
+      C.addQuadZ(m, dx - 0.52, 2.02, dx + 0.52, 2.12, zq, '#2c221a', side < 0);
+    });
+    // the lit alcove the cat crosses: recess, warm back wall, light spilling out
+    C.addQuadX(m, -HW - 0.86, 0, -HW, 2.06, 0.56, '#4a3c2c', false);
+    C.addQuadX(m, -HW - 0.86, 0, -HW, 2.06, 1.44, '#4a3c2c', true);
+    C.addQuadZ(m, 0.56, 0, 1.44, 2.06, -HW - 0.84, '#8a7452', true);
+    C.addQuadZ(m, 0.60, 0.15, 1.40, 1.85, -HW - 0.835, '#c9a765', true);
+    C.addQuadY(m, 0.55, -HW - 0.84, 1.45, -HW, 0.004, '#6e5636', 'floor');
+    ceilQuad(0.55, -HW - 0.84, 1.45, -HW, 2.06, '#5a4830');
+    C.addQuadY(m, 0.45, -HW, 1.55, -HW + 0.85, 0.01, '#caa25f', 'floor');   // spill, bright
+    C.addQuadY(m, 0.35, -HW + 0.85, 1.65, -HW + 1.7, 0.012, '#8a6b3f', 'floor'); // spill, dim
+    C.addBox(m, 0.52, 0, -HW + 0.02, 0.08, 2.1, 0.1, '#2c221a');   // alcove jambs
+    C.addBox(m, 1.48, 0, -HW + 0.02, 0.08, 2.1, 0.1, '#2c221a');
+    C.addBox(m, 1.0, 2.06, -HW + 0.02, 1.06, 0.09, 0.1, '#2c221a');
+    // far end: a double door that never opens (until it does) — a swappable fixture, not room geometry
+    // ceiling with beams
+    ceilQuad(-HL, -HW, HL + 2.1, HW, H, '#4c4238');
+    for (var bz = -HL + 1.4; bz < HL; bz += 2.4) C.addBox(m, bz, H - 0.1, 0, 0.2, 0.1, 2 * HW, '#2e2620');
+    // the landing beyond the archway (the way you came in)
+    C.addQuadZ(m, HL, 0, HL + 2.1, H, -HW + 0.02, '#565048', true);
+    C.addQuadZ(m, HL, 0, HL + 2.1, H, HW - 0.02, '#565048', false);
+    C.addQuadX(m, -HW, 0, HW, H, HL + 2.08, '#7e8a86', false);
+    C.addQuadX(m, -0.6, 0.1, 0.6, 2.0, HL + 2.06, '#9fb0aa', false);   // stairwell glow
+    C.addQuadY(m, HL + 0.1, -0.8, HL + 1.9, 0.8, 0.01, '#5f6a66', 'floor');
+    C.anchorize(m, 0.9, 74, 12); C.meshBounds(m);
+    s.insts.push(inst(m, [0, 0, 0], 0, { shadow: false, kind: 'room', label: 'hallway' }));
+
+    function mkFarEnd() {
+      var fm = C.newMesh();
+      // full-height wall around a 1.7 m doorway; the leaves are separate hinged instances
+      C.addQuadX(fm, -HW, 0, -0.85, H, 0.02, '#544a3e', true);
+      C.addQuadX(fm, 0.85, 0, HW, H, 0.02, '#544a3e', true);
+      C.addQuadX(fm, -0.85, 2.05, 0.85, H, 0.02, '#544a3e', true);
+      C.addBox(fm, -0.89, 0, 0, 0.1, 2.1, 0.14, '#2c221a');
+      C.addBox(fm, 0.89, 0, 0, 0.1, 2.1, 0.14, '#2c221a');
+      C.addBox(fm, 0, 2.05, 0, 1.88, 0.09, 0.14, '#2c221a');
+      C.addQuadX(fm, -0.83, 0.02, 0.83, 2.04, -0.09, '#0a0806', true);   // the dark past the frame
+      C.anchorize(fm, 0.8, 57, 8); C.meshBounds(fm);
+      return fm;
+    }
+    function leafPair(x, delay) {
+      var L2 = inst(C.props.doorLeaf(false), [x, 0, -0.85], 0, { label: 'door', kind: 'leaf', shadow: false });
+      var R2 = inst(C.props.doorLeaf(true), [x, 0, 0.85], 0, { label: 'door', kind: 'leaf', shadow: false });
+      L2.pose = [0, 0, 0, 0, 0, 0]; R2.pose = [0, 0, 0, 0, 0, 0];
+      if (delay != null) { L2.loadT = 0; L2.loadDir = 1; L2._delay = delay; R2.loadT = 0; R2.loadDir = 1; R2._delay = delay; }
+      return [L2, R2];
+    }
+    var SEGP = HALL.SEGP;
+    function mkSegMesh() {
+      var sm = C.newMesh();
+      var hp = SEGP / 2;
+      for (var sx = -hp; sx < hp; sx += 0.55) {
+        var tn = ((Math.round(sx / 0.55) % 2) === 0) ? '#3b2f22' : '#342a1e';
+        C.addQuadY(sm, sx, -HW, Math.min(sx + 0.53, hp), HW, 0.001, tn, 'floor');
+      }
+      C.addQuadY(sm, -hp, -0.52, hp, 0.52, 0.006, '#571f1f', 'floor');
+      C.addQuadY(sm, -hp, -0.52, hp, -0.46, 0.008, '#7a5a2b', 'floor');
+      C.addQuadY(sm, -hp, 0.46, hp, 0.52, 0.008, '#7a5a2b', 'floor');
+      function wseg(z, front) {
+        C.addQuadZ(sm, -hp, 0, hp, 0.14, z, SKIRT, front);
+        C.addQuadZ(sm, -hp, 0.14, hp, 0.95, z, WAIN, front);
+        C.addQuadZ(sm, -hp, 0.95, hp, H, z, FIELD, front);
+        C.addQuadZ(sm, -hp, 2.22, hp, 2.28, z + (front ? 0.005 : -0.005), RAIL, front);
+      }
+      wseg(-HW + 0.02, true); wseg(HW - 0.02, false);
+      C.addBox(sm, 0, 0, -HW + 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+      C.addBox(sm, 0, 0, HW - 0.12, 0.7, H, 0.24, FIELD, { noBottom: true });
+      [[-1.9, -1], [1.9, 1]].forEach(function (dd) {
+        var zq = dd[1] < 0 ? -HW + 0.03 : HW - 0.03;
+        C.addQuadZ(sm, dd[0] - 0.45, 0.02, dd[0] + 0.45, 2.02, zq, '#241c15', dd[1] < 0);
+        C.addQuadZ(sm, dd[0] - 0.52, 2.02, dd[0] + 0.52, 2.12, zq, '#2c221a', dd[1] < 0);
+      });
+      C.addBox(sm, 0, 0, -0.89, 0.14, 2.1, 0.1, '#2c221a');   // doorframe: jambs + lintel + header
+      C.addBox(sm, 0, 0, 0.89, 0.14, 2.1, 0.1, '#2c221a');
+      C.addBox(sm, 0, 2.05, 0, 0.14, 0.09, 1.88, '#2c221a');
+      C.addQuadX(sm, -HW, 2.14, HW, H, 0.03, '#544a3e', true);
+      C.addQuadX(sm, -HW, 2.14, HW, H, -0.03, '#544a3e', false);
+      var cb = sm.v.length;
+      sm.v.push([-hp, H, -HW], [hp, H, -HW], [hp, H, HW], [-hp, H, HW]);
+      C.addFace(sm, [cb, cb + 1, cb + 2, cb + 3], '#4c4238');
+      for (var bxx = -2.4; bxx <= 2.4; bxx += 2.4) C.addBox(sm, bxx, H - 0.1, 0, 0.2, 0.1, 2 * HW, '#2e2620');
+      C.anchorize(sm, 0.5, 91, 6); C.meshBounds(sm);
+      return sm;
+    }
+
+    // fixtures: candidates carry a `mut` descriptor; the glitch picks ONE at runtime
+    var P2 = C.props;
+    var doorB = inst(P2.hallDoor(false), [-2.5, 0, HW], Math.PI, { label: 'door', kind: 'fixture' });
+    doorB.state = 'open'; doorB.mut = { alt: 'bricked', label: 'brick', make: function () { return P2.hallDoor(true); } };
+    var winI = inst(P2.hallWindow(false), [5.5, 0, -HW], 0, { label: 'window', kind: 'fixture' });
+    winI.state = 'clear'; winI.mut = { alt: 'barred', label: 'bars', make: function () { return P2.hallWindow(true); } };
+    var lampI = inst(P2.ceilLamp(false), [0, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampI.state = 'lit'; lampI.mut = { alt: 'dead', label: 'dead', make: function () { return P2.ceilLamp(true); } };
+    var lampA = inst(P2.ceilLamp(false), [-5.6, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampA.state = 'lit';
+    var lampB = inst(P2.ceilLamp(false), [5.6, H, 0], 0, { label: 'lamp', kind: 'fixture', shadow: false });
+    lampB.state = 'lit';
+    var way = inst(P2.archway(false), [HL, 0, 0], -Math.PI / 2, { label: 'the way back', kind: 'wayback' });
+    way.state = 'open';
+    var cat = inst(P2.cat(), [HALL.CAT_X0, 0, HALL.CAT_Z], Math.PI / 2, { label: 'cat', kind: 'cat', shadow: true });
+    cat.pose = [0, 0, 0, 0, 0, 0];
+    var farEnd = inst(mkFarEnd(), [-HL, 0, 0], 0, { label: 'far door', kind: 'farend' });
+    farEnd.state = 'armed';
+    var feLeaves = leafPair(-HL, null);
+    s.insts.push(doorB, winI, lampI, lampA, lampB, way, cat, farEnd, feLeaves[0], feLeaves[1]);
+
+    // colliders
+    function box2(min, max) { return { min: min, max: max }; }
+    s.colliders.push(box2([-HL, 0, HW - 0.15], [HL, H, HW + 0.6]));                 // south wall
+    s.colliders.push(box2([-HL, 0, -HW - 0.6], [0.55, H, -HW + 0.15]));             // north, left of alcove
+    s.colliders.push(box2([1.45, 0, -HW - 0.6], [HL, H, -HW + 0.15]));              // north, right of alcove
+    s.colliders.push(box2([0.43, 0, -HW - 0.9], [0.57, H, -HW + 0.02]));            // alcove jamb walls
+    s.colliders.push(box2([1.43, 0, -HW - 0.9], [1.57, H, -HW + 0.02]));
+    s.colliders.push(box2([0.43, 0, -HW - 1.02], [1.57, H, -HW - 0.82]));           // alcove back
+    [-3.8, 3.8].forEach(function (bx) {
+      s.colliders.push(box2([bx - 0.35, 0, -HW], [bx + 0.35, H, -HW + 0.24]));
+      s.colliders.push(box2([bx - 0.35, 0, HW - 0.24], [bx + 0.35, H, HW]));
+    });
+    s.colliders.push(box2([-2.95, 0, HW - 0.42], [-2.05, 1.9, HW]));                // the ajar leaf
+    s.colliders.push(box2([-HL - 0.3, 0, -HW], [-HL + 0.12, H, -0.85]));            // far-door jambs
+    s.colliders.push(box2([-HL - 0.3, 0, 0.85], [-HL + 0.12, H, HW]));
+    s.colliders.push(box2([HL, 0, -HW - 0.6], [HL + 2.2, H, -HW + 0.12]));          // landing sides
+    s.colliders.push(box2([HL, 0, HW - 0.12], [HL + 2.2, H, HW + 0.6]));
+    s.colliders.push(box2([HL + 2.02, 0, -HW], [HL + 2.25, H, HW]));                // landing back
+
+    // the corridor with no end is there from the first frame: doors that open for whoever
+    // comes near, one per period, and a wrap that keeps the far stretch the far stretch
+    var dvDoors = [];
+    function hangDoor(dx, leaves) {
+      if (s.insts.indexOf(leaves[0]) < 0) s.insts.push(leaves[0], leaves[1]);
+      var dcol = box2([dx - 0.14, 0, -0.85], [dx + 0.14, 2.05, 0.85]);
+      s.colliders.push(dcol);
+      dvDoors.push({ x: dx, leaves: leaves, col: dcol, blocked: true, a: 0, tgt: 0 });
+    }
+    hangDoor(-HL, feLeaves);
+    var segMesh = mkSegMesh();
+    for (var sk = 0; sk < 3; sk++) {
+      var scx = -HL - SEGP / 2 - sk * SEGP;
+      var seg = inst(segMesh, [scx, 0, 0], 0, { shadow: false, kind: 'segment', label: 'corridor' });
+      s.insts.push(seg);
+      var sl = inst(C.props.ceilLamp(false), [scx, H, 0], 0, { label: 'lamp', kind: 'segment', shadow: false });
+      sl.state = 'lit';
+      s.insts.push(sl);
+      s.colliders.push(box2([scx - 0.35, 0, -HW], [scx + 0.35, H, -HW + 0.24]));
+      s.colliders.push(box2([scx - 0.35, 0, HW - 0.24], [scx + 0.35, H, HW]));
+      hangDoor(scx, leafPair(scx, null));
+    }
+    s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, HW - 0.15], [-HL, H, HW + 0.6]));
+    s.colliders.push(box2([-HL - 3 * SEGP - 1, 0, -HW - 0.6], [-HL, H, -HW + 0.15]));
+    s.colliders.push(box2([-HL - 3 * SEGP - 0.5, 0, -HW], [-HL - 3 * SEGP - 0.26, H, HW]));
+
+    // ---- the déjà vu controller ----
+    // Runs on its own fixed tick so the record is a per-tick array regardless of
+    // how the host schedules dt. Phases: settle -> pass1 (record) -> glitch
+    // (mutate ONE fixture) -> pass2 (replay the record) -> seal -> after.
+    var dv = s.dv = {
+      phase: 'settle', t: 0, p: 0, g: 0, acc: 0,
+      rec: [], cat: cat, way: way,
+      cands: [doorB, winI, lampI], chosen: null, sealed: false, tap: null,
+      doors: dvDoors, doorA: 0,
+      loop: { at: -HL - 2 * SEGP - 0.01, hard: -HL - 2.75 * SEGP, laps: 0 }
+    };
+    s.update = function (game, dt) {
+      dv.acc += dt;
+      while (dv.acc >= HALL.TICK - 1e-9) {
+        dv.acc -= HALL.TICK;
+        dvTick(game);
+      }
+    };
+    function dvTick(game) {
+      dv.t++;
+      if (dv.phase === 'settle') {
+        cat.loadT = 0; cat.loadDir = 0; cat._delay = 0;
+        if (dv.t >= HALL.SETTLE) { dv.phase = 'pass1'; dv.p = 0; cat.loadT = 1; }
+      } else if (dv.phase === 'pass1') {
+        if (dv.p < HALL.N) {
+          var st = C.catPose(dv.p);
+          applyCat(cat, st);
+          dv.rec.push(st);
+          if (dv.tap) dv.tap('pass1', dv.p, cat);
+          dv.p++;
+        } else {
+          dv.phase = 'glitch'; dv.g = 0; cat.loadT = 0;
+        }
+      } else if (dv.phase === 'glitch') {
+        dv.g++;
+        if (dv.g === HALL.GLITCH_AT) {
+          var r = C.rng(((game.time * 997) | 0) ^ 0x2a17)();
+          dv.chosen = dv.cands[Math.min(dv.cands.length - 1, (r * dv.cands.length) | 0)];
+          mutateFixture(dv.chosen);
+          game.fx.codeFlash = Math.max(game.fx.codeFlash, 0.55);
+          game.emit('dejavu');
+        }
+        if (dv.g >= HALL.GLITCH) { dv.phase = 'pass2'; dv.p = 0; cat.loadT = 1; }
+      } else if (dv.phase === 'pass2') {
+        if (dv.p < HALL.N) {
+          applyCat(cat, dv.rec[dv.p]);            // replay: the record IS the walk
+          if (dv.tap) dv.tap('pass2', dv.p, cat);
+          dv.p++;
+        } else {
+          dv.phase = 'seal'; dv.g = 0; cat.loadT = 0;
+        }
+      } else if (dv.phase === 'seal') {
+        dv.g++;
+        if (dv.g >= HALL.SEAL_AT) {
+          way.mesh = C.props.archway(true);
+          way.state = 'bricked'; way.label = 'wall'; way._wv = null;
+          way.glyphEpoch = (way.glyphEpoch | 0) + 1; way.reResolve = 1;
+          way.loadT = 0; way.loadDir = 1; way._delay = 0;
+          s.colliders.push(box2([HL - 0.12, 0, -HW], [HL + 0.14, HALL.H, HW]));
+          if (game.player.pos[0] > HL - 0.55) { game.player.pos[0] = HL - 0.6; game.player.vel[0] = 0; }
+          dv.sealed = true;
+          game.emit('seal');
+          game.say(C.LINES.dejavu, 0.5);
+          game.say(C.LINES.wayback, 3.0);
+          dv.boothT = dv.t + 330;   // let “listen for it” land, then the phone rings
+          // the far door's code re-seeds: in code vision it now spells where it leads
+          farEnd.label = 'corridor';
+          farEnd.glyphEpoch = (farEnd.glyphEpoch | 0) + 1; farEnd.reResolve = 1;
+          dv.phase = 'after';
+        }
+      }
+      if (dv.doors) {
+        // each door minds its own distance: near it, it opens for you; leave it, it shuts behind you.
+        // TRIG/RELEASE both sit under the half-period, so at the wrap line every door reads shut
+        // from both sides — the seam stays invisible.
+        var TRIG = 2.6, RELEASE = 3.1, LEAF_MAX = 1.86, LEAF_SPD = 3.4;
+        var pxd = game.player.pos[0], maxA = 0;
+        for (var dj = 0; dj < dv.doors.length; dj++) {
+          var D = dv.doors[dj];
+          var nd = Math.abs(pxd - D.x);
+          var tgt = nd < TRIG ? LEAF_MAX : (nd > RELEASE ? 0 : D.tgt);
+          if (tgt > 0 && D.tgt === 0) game.emit('creak');
+          D.tgt = tgt;
+          if (D.a < tgt) D.a = Math.min(tgt, D.a + LEAF_SPD * HALL.TICK);
+          else if (D.a > tgt) D.a = Math.max(tgt, D.a - LEAF_SPD * HALL.TICK);
+          D.leaves[0].pose[5] = D.a;
+          D.leaves[1].pose[5] = -D.a;
+          if (D.a > maxA) maxA = D.a;
+          var passable = D.a > 0.5;
+          if (passable && D.blocked) {
+            var ci = s.colliders.indexOf(D.col);
+            if (ci >= 0) s.colliders.splice(ci, 1);
+            D.blocked = false;
+          } else if (!passable && !D.blocked) {
+            s.colliders.push(D.col);
+            D.blocked = true;
+          }
+        }
+        dv.doorA = maxA;
+      }
+      if (dv.phase === 'after') {
+        if (dv.boothT && dv.t >= dv.boothT) {
+          dv.boothT = 0;
+          game.addProp('booth', [1.0, 0, -1.62], Math.PI, null, 0.3);
+        }
+      }
+      {
+        if (dv.loop) {
+          var ppx = game.player.pos[0];
+          var facingAway = Math.sin(game.player.yaw) < -0.35;   // wraps hide behind your back
+          if ((ppx < dv.loop.at && facingAway) || ppx < dv.loop.hard) {
+            game.player.pos[0] += SEGP;
+            dv.loop.laps++;
+            // the doors' memory travels with you: shift each periodic door's swing one period along,
+            // so the one you just passed is still easing shut behind you and the one ahead reads shut
+            var ring = dv.doors.filter(function (d) { return d.x < -HL; }).sort(function (a, b) { return b.x - a.x; });
+            for (var ri = 0; ri < ring.length; ri++) {
+              var src = ring[ri + 1];
+              ring[ri].a = src ? src.a : 0;
+              ring[ri].tgt = src ? src.tgt : 0;
+            }
+            if (dv.sealed && !dv.loopSaid) { dv.loopSaid = true; game.say(C.LINES.loop, 0.2); }
+          }
+        }
+      }
+    }
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -366,6 +695,7 @@
       case 'rooftop': return sceneRoof();
       case 'city': return sceneCity();
       case 'neon': return sceneNeon();
+      case 'hallway': return sceneHallway();
       default: return sceneVoid();
     }
   };
