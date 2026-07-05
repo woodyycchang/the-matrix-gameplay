@@ -712,6 +712,141 @@
     return s;
   }
 
+  function sceneErebus() {
+    // EREBUS STATION - condensed native port of the branch's Three.js single-file.
+    // Three decks on one groundY=-7 basement: every floor is a collider top,
+    // stairs are 0.28 risers, the walker's support scan does the rest.
+    var s = {
+      name: 'erebus station', sky: 'erebus', fog: { near: 9, far: 46, col: '#070b16' },
+      groundY: -7, ambience: 'void', colliders: [], insts: [],
+      spawn: { pos: [0, 0.02, 27], yaw: 0 },
+      label: 'EREBUS STATION'
+    };
+    var CY = '#4de3ff', AM = '#ffb057', RD = '#ff4038', OR = '#ff7a2a', ST = '#232a38', SD = '#161b26', TR = '#0d121c', FL = '#1a2130';
+    var m = C.newMesh();
+    function col(x0,y0,z0,x1,y1,z1){ s.colliders.push(box([x0,y0,z0],[x1,y1,z1])); }
+    function floor(x0,z0,x1,z1,top,cc){ col(x0,top-0.5,z0,x1,top,z1); C.addQuadY(m,x0,z0,x1,z1,top+0.004,cc||FL,'floor'); }
+    function wallX(x,z0,z1,y0,y1,cc){ col(x-0.18,y0,z0,x+0.18,y1,z1); C.addQuadX(m,z0,y0,z1,y1,x,(cc||ST), x<0); }
+    function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.18,x1,y1,z+0.18); C.addQuadZ(m,x0,y0,x1,y1,z,(cc||ST), z>0); }
+    function stripY(x0,z0,x1,z1,y,ccc){ C.addQuadY(m,x0,z0,x1,z1,y,ccc); }
+    function stair(x0,x1,z0,dz,steps,yA,yB){
+      var rise=(yB-yA)/steps;
+      for(var i=0;i<steps;i++){ var zz=z0+dz*i*0.55, yy=yA+rise*(i+1);
+        col(x0,yy-0.26,Math.min(zz,zz+dz*0.55),x1,yy,Math.max(zz,zz+dz*0.55));
+        C.addBox(m,(x0+x1)/2,yy-0.13,zz+dz*0.275,(x1-x0),0.26,0.55,SD,{noBottom:true}); }
+    }
+    // ---------------- DOCKING BAY (spawn) ----------------
+    floor(-8,18,8,32,0,FL);
+    wallZ(32,-8,8,0,5.5); wallX(-8,18,32,0,5.5); wallX(8,18,32,0,5.5);
+    wallZ(18,-8,-2,0,5.5); wallZ(18,2,8,0,5.5); wallZ(18,-2,2,3.1,5.5);   // doorway to corridor
+    stripY(-7.5,18.6,7.5,19.0,0.02,'#0e1420'); stripY(-7.5,31.0,7.5,31.4,0.02,'#0e1420');
+    C.addQuadZ(m,-3,0.6,3,3.4,31.8,'#0a1526',false);   // airlock plate
+    stripY(-0.35,18.2,0.35,31.6,0.03,AM);              // guide line
+    // ---------------- corridor A ----------------
+    floor(-2,13,2,18,0,'#141a26');
+    wallX(-2,13,18,0,3.1); wallX(2,13,18,0,3.1);
+    for (var rb=0; rb<3; rb++){ C.addBox(m,0,3.02,14+rb*1.6,3.9,0.14,0.18,TR,{noBottom:true}); }
+    // ---------------- CENTRAL ROTUNDA ----------------
+    floor(-13,-13,13,2,0); floor(-13,2,-9,10,0); floor(-5,2,13,10,0); floor(-13,10,13,13,0);   // SW stair hole x[-9,-5] z[2,10]
+    // walls with 4 doorways (u -2..2, h 2.8): S+N real, E/W sealed-door bays
+    wallZ(13,-13,-2,0,12); wallZ(13,2,13,0,12); wallZ(13,-2,2,2.8,12);
+    wallZ(-13,-13,-2,0,12); wallZ(-13,2,13,0,12); wallZ(-13,-2,2,2.8,12);
+    wallX(-13,-13,-2,0,12); wallX(-13,2,13,0,12); wallX(-13,-2,2,2.8,12);
+    wallX(13,-13,-2,0,12); wallX(13,2,13,0,12); wallX(13,-2,2,2.8,12);
+    // corner pilasters + cyan pin strips
+    var PC=[[-12,-12],[12,-12],[-12,12],[12,12]];
+    for (var pi=0; pi<4; pi++){ var px=PC[pi][0], pz=PC[pi][1];
+      col(px-0.8,0,pz-0.8,px+0.8,12,pz+0.8); C.addBox(m,px,6,pz,1.6,12,1.6,ST,{noBottom:true});
+      var off=(pz>0?-0.86:0.86); C.addQuadZ(m,px-0.05,0.4,px+0.05,11.4,pz+off,CY,pz<0); }
+    // amber sconces + upper ring light + radial spokes
+    C.addQuadZ(m,-0.5,6,0.5,7.4,-12.7,AM,false); C.addQuadZ(m,-0.5,6,0.5,7.4,12.7,AM,true);
+    C.addQuadX(m,-0.5,6,0.5,7.4,-12.7,AM,false); C.addQuadX(m,-0.5,6,0.5,7.4,12.7,AM,true);
+    stripY(-12.7,-12.82,12.7,-12.7,11.3,CY); stripY(-12.7,12.7,12.7,12.82,11.3,CY);
+    for (var sk=0; sk<8; sk++){ var aa=sk*Math.PI/4+Math.PI/8;
+      C.addBox(m,Math.cos(aa)*6.9,11.78,Math.sin(aa)*6.9,0.2,0.24,11.6,TR,{yaw:aa,noBottom:true}); }
+    // sealed doors, honestly labeled
+    s.insts.push(inst(P.hallDoor(false), [-13+0.3, 0, -7], Math.PI/2, { label: 'HYDROPONICS', kind: 'door', state: 'sealed' }));
+    s.insts.push(inst(P.hallDoor(false), [-13+0.3, 0, 7], Math.PI/2, { label: 'CREW QUARTERS', kind: 'door', state: 'sealed' }));
+    s.insts.push(inst(P.hallDoor(false), [13-0.3, 0, -7], -Math.PI/2, { label: 'MED BAY', kind: 'door', state: 'sealed' }));
+    s.insts.push(inst(P.hallDoor(false), [13-0.3, 0, 7], -Math.PI/2, { label: 'DATA ARCHIVE', kind: 'door', state: 'sealed' }));
+    // stairs DOWN (SW shaft) to reactor deck: two flights + landing
+    stair(-9,-6.6,2.2,+1,13,0,-3.64);
+    floor(-9,9.35,-5,10,-3.64,'#10151f');
+    stair(-7.4,-5,9.35,-1,12,-3.64,-7);
+    wallX(-9,2,10,-7,0.2); wallX(-5,2,10,-7,-0.2); wallZ(10,-9,-5,-7,0.2);
+    // stairs UP (east) to dome deck: two flights + landing at y6
+    stair(11,12.8,-6,+1,22,0,6);
+    floor(10.5,6.1,13,8,6,'#10151f');
+    stair(9.2,11,6.1,-1,22,6,12);
+    // ---------------- dome deck y=12 + skeletal glass dome ----------------
+    floor(-13,-13,13,-6.6,12,'#0f141e'); floor(-13,6.6,13,13,12,'#0f141e');
+    floor(-13,-6.6,9,6.6,12,'#0f141e');   // east strip open for stair arrival x[9,13]
+    col(8.7,12,-6.6,9,13.1,6.6); col(9,12,-6.9,13,13.1,-6.6); col(9,12,6.6,13,13.1,6.9);   // rails at stair hole
+    C.addBox(m,8.85,12.55,0,0.1,1.1,13.2,TR,{noBottom:true});
+    for (var dr=0; dr<8; dr++){ var da=dr*Math.PI/4;
+      var bx=Math.cos(da)*12.4, bz=Math.sin(da)*12.4, tx=Math.cos(da)*3.6, tz=Math.sin(da)*3.6;
+      C.addFace(m,[bx,12,bz],[tx,18,tz],[Math.cos(da+0.06)*3.6,18,Math.sin(da+0.06)*3.6],[Math.cos(da+0.06)*12.4,12,Math.sin(da+0.06)*12.4],'#26405c'); }
+    col(-13,12,-13.4,13,13.4,-12.9); col(-13,12,12.9,13,13.4,13.4); col(-13.4,12,-13,-12.9,13.4,13); col(12.9,12,-13,13.4,13.4,13);   // rim rails
+    // ---------------- north corridor + COMMAND BRIDGE ----------------
+    floor(-2,-18,2,-13,0,'#141a26'); wallX(-2,-18,-13,0,3.1); wallX(2,-18,-13,0,3.1);
+    floor(-9,-30,9,-18,0,FL);
+    wallX(-9,-30,-18,0,4); wallX(9,-30,-18,0,4); wallZ(-18,-9,-2,0,4); wallZ(-18,2,9,0,4); wallZ(-18,-2,2,3.1,4);
+    wallZ(-30,-9,-5.2,0,4); wallZ(-30,-3.8,3.8,0,4); wallZ(-30,5.2,9,0,4);
+    wallZ(-30,-5.2,-3.8,0,1.4); wallZ(-30,-5.2,-3.8,2.3,4); wallZ(-30,3.8,5.2,0,1.4); wallZ(-30,3.8,5.2,2.3,4);   // two viewport slits
+    C.addBox(m,0,0.55,-25,5.6,1.1,1.6,SD,{noBottom:true}); col(-2.8,0,-25.8,2.8,1.1,-24.2);   // console dais
+    C.addQuadY(m,-2.4,-25.7,2.4,-24.3,1.12,'#0e2f3f');
+    C.addFace(m,[-4.5,1.4,-29.9],[-4.5,2.3,-29.9],[-1.2,0.2,-23.4],[-1.2,0.05,-23.4],'#2a2417');   // sun shafts
+    C.addFace(m,[4.5,1.4,-29.9],[4.5,2.3,-29.9],[1.2,0.2,-23.4],[1.2,0.05,-23.4],'#2a2417');
+    // ---------------- REACTOR deck (y=-7) ----------------
+    floor(-12,16,12,34,-7,'#12161f');
+    wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
+    stripY(-11,19.9,11,20.1,-6.96,AM); stripY(-11,28.9,11,29.1,-6.96,AM);
+    stripY(-11,20.4,11,21.6,-7.42,CY); stripY(-11,27.4,11,28.6,-7.42,CY);   // coolant under-glow
+    for (var gk=0; gk<12; gk++){ stripY(-11+gk*1.9,20.3,-10.4+gk*1.9,21.7,-6.98,'#0c1017'); stripY(-11+gk*1.9,27.3,-10.4+gk*1.9,28.7,-6.98,'#0c1017'); }
+    // the core: octagon prism + orange glow slots + pedestal
+    var CR=2.7, CX=0, CZ=25.0;
+    for (var oc=0; oc<8; oc++){ var a0=oc*Math.PI/4, a1=(oc+1)*Math.PI/4;
+      C.addFace(m,[CX+Math.cos(a0)*CR,-6.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a0)*CR,-0.9,CZ+Math.sin(a0)*CR],[CX+Math.cos(a1)*CR,-0.9,CZ+Math.sin(a1)*CR],[CX+Math.cos(a1)*CR,-6.9,CZ+Math.sin(a1)*CR],SD); }
+    col(CX-2.2,-7,CZ-2.2,CX+2.2,-0.8,CZ+2.2);
+    C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ-CR-0.03,OR,false); C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ+CR+0.03,OR,true);
+    C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX-CR-0.03,OR,false); C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX+CR+0.03,OR,true);
+    C.addBox(m,CX,-6.75,CZ,7.0,0.5,7.0,TR,{noBottom:true});
+    // emergency strips (director swaps their state)
+    s.emg = [];
+    var EPOS=[[-11.8,22],[-11.8,30],[11.8,26]];
+    for (var ei=0; ei<3; ei++){ var it=inst(P.emgStrip('off'), [EPOS[ei][0],-5.4,EPOS[ei][1]], EPOS[ei][0]<0?Math.PI/2:-Math.PI/2, { label:'emg', kind:'emg', state:'off' }); s.insts.push(it); s.emg.push(it); }
+    // the alcove + the figure
+    floor(6,34,10,36.5,-7,'#0e1219'); wallZ(36.5,6,10,-7,-3.4); wallX(6,34,36.5,-7,-3.4); wallX(10,34,36.5,-7,-3.4);
+    C.addQuadZ(m,6.6,-6.6,9.4,-3.8,36.3,'#141033',false);   // violet backlight
+    var fig=inst(P.figure(), [8,-7,35.6], Math.PI, { label:'figure', kind:'figure', state:'still' });
+    s.insts.push(fig); s.fig=fig;
+    // two crew-log terminals
+    s.logs=[{x:3.2,z:27.4,head:'STATION LOG 01 // CMDR. E. ASHE',text:'DAY 212 - Resupply skiff away on schedule. Erebus holds 41 souls.\\nDr. Vann insists the survey array is reading a structured return from\\ninside the storm. Probably instrument nois…',shown:false},{x:1.8,z:-26.2,head:'STATION LOG 04 // FINAL ENTRY',text:'DAY 244 - If anyone reads this: do not answer it.\\nIt learned the crew from the archive and it wears them well.\\nIt is very patient and very polite and it is standing behi-\\n[ENTRY…',shown:false}];
+    C.addBox(m,3.2,1.05,27.9,0.7,1.3,0.16,'#0c1a28',{noBottom:true});
+    C.addBox(m,1.8,1.05,-26.6,0.7,1.3,0.16,'#0c1a28',{noBottom:true});
+    C.meshBounds(m); C.anchorize(m, 0.05, 61, 8);
+    s.insts.unshift(inst(m, [0,0,0], 0, { label: 'station', kind: 'static' }));
+    // ---------------- director (once-each ghost beats) ----------------
+    s._dir = { black:false, phase:0, pt:0, fig:false };
+    s.update = function (game) {
+      var p = game.player.pos, d = s._dir, t = game.time || 0;
+      var dtv = Math.min(0.06, t - (s._tT === undefined ? t : s._tT)); s._tT = t;
+      // crew logs: proximity typewriter, once each
+      for (var li=0; li<s.logs.length; li++){ var lg=s.logs[li];
+        if (!lg.shown && Math.abs(p[0]-lg.x)<1.6 && Math.abs(p[2]-lg.z)<1.6 && p[1]>-1){ lg.shown=true; game.say(lg.head+' \u2014 '+lg.text, 0.4); } }
+      // reactor first entry: blackout -> red -> half power
+      if (!d.black && p[1] < -4 && p[2] > 15){ d.black=true; d.phase=1; d.pt=t; game.emit('powerdown'); swapEmg('dead'); game.fx.flash=0.5; game.fx.flashCol='#02030a'; }
+      if (d.black && d.phase===1 && t-d.pt>0.9){ d.phase=2; game.emit('alarm'); swapEmg('red'); }
+      if (d.black && d.phase===2 && t-d.pt>3.4){ d.phase=3; game.emit('whisper'); swapEmg('half'); }
+      // the figure dissolves on approach
+      if (!d.fig && s.fig && Math.hypot(p[0]-8,p[2]-35.6)<2.3 && p[1]<-4){ d.fig=true; game.emit('whisper');
+        s.fig.reResolve=1; s.fig.glyphEpoch=(s.fig.glyphEpoch|0)+1; s.fig._goneAt=t+0.55; }
+      if (s.fig && s.fig._goneAt && t>s.fig._goneAt){ var ix=s.insts.indexOf(s.fig); if(ix>=0) s.insts.splice(ix,1); s.fig=null; }
+      function swapEmg(st){ for (var k=0;k<s.emg.length;k++){ var e2=s.emg[k]; e2.state=st; e2.mesh=P.emgStrip(st); e2.glyphEpoch=(e2.glyphEpoch|0)+1; e2.reResolve=1; e2.loadT=0; } }
+    };
+    return s;
+  }
+
   C.makeScene = function (name) {
     switch (name) {
       case 'weapons': return sceneWeapons();
@@ -720,6 +855,7 @@
       case 'city': return sceneCity();
       case 'neon': return sceneNeon();
       case 'hallway': return sceneHallway();
+      case 'erebus': return sceneErebus();
       default: return sceneVoid();
     }
   };

@@ -231,6 +231,26 @@
     return m;
   };
 
+  P.emgStrip = function (state) { // reactor emergency strip: off | dead | red | half
+    var m = C.newMesh();
+    var cc = state === 'red' ? '#ff4038' : state === 'half' ? '#8a5a2e' : state === 'dead' ? '#05070c' : '#141a24';
+    C.addBox(m, 0, 0, 0, 0.14, 2.6, 0.5, '#0a0e16');
+    C.addQuadX(m, -0.24, -1.2, 0.24, 1.2, 0.09, cc, false);
+    C.meshBounds(m);
+    return m;
+  };
+
+  P.figure = function () { // the alcove figure: a still dark silhouette
+    var m = C.newMesh();
+    var ink = '#04060a';
+    C.addBox(m, 0, 0.8, 0, 0.46, 1.6, 0.3, ink);        // body column
+    C.addBox(m, 0, 1.74, 0, 0.26, 0.26, 0.24, ink);      // head
+    C.addBox(m, -0.16, 0.7, 0.02, 0.12, 1.35, 0.22, '#03050a');
+    C.addBox(m, 0.16, 0.7, 0.02, 0.12, 1.35, 0.22, '#03050a');
+    C.meshBounds(m);
+    return m;
+  };
+
   P.bike = function () { // original naked street bike; nose at +z like every prop front
     var m = C.newMesh();
     var body = '#2b3037', tank = '#3f4651', dark = '#15171a', steel = '#7c828a', accent = '#2f9e57';

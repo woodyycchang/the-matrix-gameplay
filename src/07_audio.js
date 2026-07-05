@@ -355,6 +355,9 @@
         break;
       case 'dejavu': hiss(0.5, 0.2, 2600, 240, 1.6); blip(660, 0.09, 0.08, 'sine'); blip(440, 0.14, 0.08, 'sine', 0.09); break;
       case 'seal': thump(70, 0.3, 0.4); hiss(0.35, 0.18, 500, 120, 1.2, 0.05); break;
+      case 'powerdown': thump(46, 0.7, 0.5); hiss(0.9, 0.28, 900, 90, 1.4); blip(180, 0.5, 0.1, 'sawtooth'); break;
+      case 'alarm': blip(620, 0.16, 0.14, 'square'); blip(470, 0.16, 0.14, 'square', 0.22); blip(620, 0.16, 0.12, 'square', 0.44); break;
+      case 'whisper': hiss(1.2, 0.1, 1500, 320, 3.2); hiss(0.9, 0.07, 950, 260, 2.6, 0.4); break;
       case 'creak': hiss(0.7, 0.12, 900, 180, 2.2); blip(140, 0.5, 0.05, 'triangle'); break;
       case 'impactSmall': thump(110, 0.25, 0.34); hiss(0.15, 0.22, 400, 150, 1); break;
       case 'heart': thump(64, 0.16, 0.34); thump(58, 0.13, 0.26, 0.18); break;

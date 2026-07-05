@@ -288,6 +288,53 @@
               g.addColorStop(0, '#aebfc8');
               g.addColorStop(Math.max(0.02, Math.min(0.98, hor / H)), '#d6dadc');
               g.addColorStop(1, op.fogCol);
+            } else if (op.mode === 'erebus') {
+              // deep space: starfield pans with yaw; a ringed gas giant sits at a
+              // fixed azimuth; the sun orbits (their 240 s period) and slips into
+              // occlusion night behind the giant.
+              ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, W, H);
+              var wrap = function (x) { while (x > Math.PI) x -= Math.PI * 2; while (x < -Math.PI) x += Math.PI * 2; return x; };
+              var fovX = 1.25, px = function (d) { return W * 0.5 + (d / fovX) * (W * 0.62); };
+              for (var si = 0; si < 110; si++) {
+                var h1 = Math.sin(si * 12.9898) * 43758.5453; h1 -= Math.floor(h1);
+                var h2 = Math.sin(si * 78.233) * 12543.21; h2 -= Math.floor(h2);
+                var sd = wrap(h1 * Math.PI * 2 - op.yaw);
+                if (Math.abs(sd) > fovX) continue;
+                var sy = h2 * H * 0.9;
+                ctx.fillStyle = 'rgba(220,230,255,' + (0.25 + 0.55 * ((si * 31) % 7) / 7).toFixed(2) + ')';
+                ctx.fillRect(px(sd), sy, (si % 9 === 0 ? 2 : 1), (si % 9 === 0 ? 2 : 1));
+              }
+              var sunAz = (op.time || 0) * (Math.PI * 2 / 240), sunEl = Math.sin(sunAz) * 0.45 + 0.12;
+              var GAZ = 2.4, GEL = 0.18;
+              var dd = Math.hypot(wrap(sunAz - GAZ), sunEl - GEL);
+              var vis = Math.max(0, Math.min(1, (dd - 0.18) / (0.55 - 0.18)));
+              var hor2 = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
+              var sdx = wrap(sunAz - op.yaw);
+              if (Math.abs(sdx) < fovX + 0.3) {
+                var sx = px(sdx), sy2 = hor2 - sunEl * H * 0.9;
+                var gl = ctx.createRadialGradient(sx, sy2, 2, sx, sy2, 90);
+                gl.addColorStop(0, 'rgba(255,236,200,' + (0.85 * vis + 0.05).toFixed(2) + ')');
+                gl.addColorStop(0.25, 'rgba(255,190,120,' + (0.35 * vis).toFixed(2) + ')');
+                gl.addColorStop(1, 'rgba(255,170,90,0)');
+                ctx.fillStyle = gl; ctx.fillRect(sx - 90, sy2 - 90, 180, 180);
+                ctx.fillStyle = 'rgba(255,246,224,' + (0.55 + 0.45 * vis).toFixed(2) + ')';
+                ctx.beginPath(); ctx.arc(sx, sy2, 13 + 6 * vis, 0, Math.PI * 2); ctx.fill();
+              }
+              var gdx = wrap(GAZ - op.yaw);
+              if (Math.abs(gdx) < fovX + 0.5) {
+                var gx = px(gdx), gy = hor2 - GEL * H * 0.9, gr = 120;
+                var gg = ctx.createRadialGradient(gx - gr * 0.3, gy - gr * 0.3, gr * 0.1, gx, gy, gr);
+                gg.addColorStop(0, '#22304a'); gg.addColorStop(0.7, '#101a2c'); gg.addColorStop(1, '#060b16');
+                ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(gx, gy, gr, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = 'rgba(140,170,210,0.16)'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(gx, gy, gr * 0.72, 0.3, 2.4); ctx.stroke();
+                ctx.save(); ctx.translate(gx, gy); ctx.rotate(-0.32); ctx.scale(1, 0.22);
+                ctx.strokeStyle = 'rgba(190,205,230,0.28)'; ctx.lineWidth = 10;
+                ctx.beginPath(); ctx.arc(0, 0, gr * 1.55, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+              }
+              var gb = ctx.createLinearGradient(0, H * 0.72, 0, H);
+              gb.addColorStop(0, 'rgba(7,11,22,0)'); gb.addColorStop(1, op.fogCol);
+              ctx.fillStyle = gb; ctx.fillRect(0, H * 0.72, W, H * 0.28);
             } else { // dojo
               g.addColorStop(0, '#c9bda3');
               g.addColorStop(1, op.fogCol);
