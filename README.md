@@ -1,3 +1,17 @@
+# 桃花源記 · THE PEACH BLOSSOM SPRING — this branch's game
+
+Tao Yuanming's 421 AD fable, played from the fisherman's boat: row past the point where the forest turns to pure peach blossom, find the light in the cliff, and keep the village's one request. One self-contained HTML file (Three.js r128 via CDN); river, grove, village, people and music all generated at load.
+
+**▶ Full game & README: [`peach-blossom/`](peach-blossom/)**
+
+![the light in the cliff](peach-blossom/shots/03_source.png)
+
+| 中無雜樹 — not one stray tree | 豁然開朗 — it opens out |
+|---|---|
+| ![the grove](peach-blossom/shots/02_grove.png) | ![the village](peach-blossom/shots/05_village_first.png) |
+
+---
+
 # THE CONSTRUCT
 
 A browser-playable homage to the endless white loading space from *The Matrix* (1999), built as **one self-contained HTML file** — no dependencies, no network, no build step required to play.
