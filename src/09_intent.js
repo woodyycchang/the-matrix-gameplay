@@ -10,7 +10,7 @@
   // The designated vocabulary: each intent = the exact word the parser already knows,
   // plus anchor phrasings that describe what a person might actually say.
   var INTENTS = [
-    { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks'] },
+    { word: 'weapons', anchors: ['guns and rifles', 'an armory full of weapons', 'something to shoot with', 'firearms racks', 'hallway'] },
     { word: 'dojo', anchors: ['a place to train and fight', 'martial arts sparring room', 'practice kung fu', 'a fighting dojo'] },
     { word: 'rooftop', anchors: ['jump between rooftops', 'a leap across buildings', 'the jump program', 'high ledges to leap'] },
     { word: 'city', anchors: ['a crowded street with people', 'pedestrians at lunch hour', 'busy downtown crowd', 'a plaza full of walkers'] },
@@ -148,6 +148,8 @@
       { role: 'assistant', content: 'WORD: none | SAY: I hear you. Name a program, I will load it.' },
       { role: 'user', content: 'i want to learn how to fight' },
       { role: 'assistant', content: 'WORD: dojo | SAY: Then step onto the mat. Loading the dojo.' },
+      { role: 'user', content: 'the backdoor corridor with all the doors' },
+      { role: 'assistant', content: 'WORD: hallway | SAY: The corridor. Watch the doorway.' },
       { role: 'user', content: 'motor' },
       { role: 'assistant', content: 'WORD: motorcycle | SAY: Two wheels, compiled. Swing a leg over.' },
       { role: 'user', content: 'a fast ride through the night' },
