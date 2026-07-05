@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-0958</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0705-1004</span></div>
 </div>
 
 <script>
@@ -1606,12 +1606,12 @@
     // Three decks on one groundY=-7 basement: every floor is a collider top,
     // stairs are 0.28 risers, the walker's support scan does the rest.
     var s = {
-      name: 'erebus station', sky: 'erebus', fog: { near: 9, far: 46, col: '#070b16' },
+      name: 'erebus station', sky: 'erebus', fog: { near: 7, far: 58, col: '#070b16' },   // matches their FogExp2 .023 falloff at hall scale
       groundY: -7, ambience: 'station', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 27], yaw: 0 },
       label: 'EREBUS STATION'
     };
-    var CY = '#4de3ff', AM = '#ffb057', RD = '#ff4038', OR = '#ff7a2a', ST = '#232a38', SD = '#161b26', TR = '#0d121c', FL = '#1a2130';
+    var CY = '#7deeff', AM = '#ffc272', RD = '#ff5548', OR = '#ff8a34', ST = '#2e3a50', SD = '#20293a', TR = '#141c2c', FL = '#28404f';   // GRADED to their RENDERED pixels, not their albedo table
     var m = C.newMesh();
     function col(x0,y0,z0,x1,y1,z1){ s.colliders.push(box([x0,y0,z0],[x1,y1,z1])); }
     function floor(x0,z0,x1,z1,top,cc){ col(x0,top-0.5,z0,x1,top,z1); C.addQuadY(m,x0,z0,x1,z1,top+0.004,cc||FL,'floor'); }
@@ -1629,11 +1629,11 @@
     floor(-8,18,8,32,0,FL);
     wallZ(32,-8,8,0,5.5); wallX(-8,18,32,0,5.5); wallX(8,18,32,0,5.5);
     wallZ(18,-8,-2,0,5.5); wallZ(18,2,8,0,5.5); wallZ(18,-2,2,3.1,5.5);   // doorway to corridor
-    stripY(-7.5,18.6,7.5,19.0,0.02,'#0e1420'); stripY(-7.5,31.0,7.5,31.4,0.02,'#0e1420');
-    C.addQuadZ(m,-3,0.6,3,3.4,31.8,'#0a1526',false);   // airlock plate
+    stripY(-7.5,18.6,7.5,19.0,0.02,'#1c2836'); stripY(-7.5,31.0,7.5,31.4,0.02,'#1c2836');
+    C.addQuadZ(m,-3,0.6,3,3.4,31.8,'#16304a',false);   // airlock plate
     stripY(-0.35,18.2,0.35,31.6,0.03,AM);              // guide line
     // ---------------- corridor A ----------------
-    floor(-2,13,2,18,0,'#141a26');
+    floor(-2,13,2,18,0,'#243447');
     wallX(-2,13,18,0,3.1); wallX(2,13,18,0,3.1);
     for (var rb=0; rb<3; rb++){ C.addBox(m,0,3.02,14+rb*1.6,3.9,0.14,0.18,TR,{noBottom:true}); }
     // ---------------- CENTRAL ROTUNDA ----------------
@@ -1655,15 +1655,15 @@
     for (var sk=0; sk<8; sk++){ var aa=sk*Math.PI/4+Math.PI/8;
       C.addBox(m,Math.cos(aa)*6.9,11.78,Math.sin(aa)*6.9,0.2,0.24,11.6,TR,{yaw:aa,noBottom:true}); }
     // ---------------- EAST vestibule -> CREW QUARTERS (S) + MED BAY (N) ----------------
-    floor(13,-2,17,2,0,'#141a26'); wallZ(-2,13,17,0,3.1); wallZ(2,13,17,0,3.1,undefined);
+    floor(13,-2,17,2,0,'#243447'); wallZ(-2,13,17,0,3.1); wallZ(2,13,17,0,3.1,undefined);
     floor(15,2,29,14,0,FL);
     wallX(15,4,14,0,3.2); wallX(29,2,14,0,3.2); wallZ(14,15,29,0,3.2); wallZ(2,17,29,0,3.2);
     wallX(15,2,4,2.6,3.2);   // quarters door head
     for (var qb=0; qb<5; qb++){ for (var qs=0; qs<2; qs++){ var bz2=4.5+qb*1.9, bx2=qs? 26.5:17.5;
       C.addBox(m,bx2,0.55,bz2,2.2,0.5,1.5,SD,{noBottom:true}); col(bx2-1.1,0,bz2-0.75,bx2+1.1,0.55,bz2+0.75);
       C.addBox(m,bx2+(qs?1.2:-1.2),1.5,bz2,0.08,1.9,1.5,'#0e131d',{noBottom:true}); } }
-    C.addQuadX(m,6,1.5,8.4,2.4,28.97,'#0a1220',false); C.addQuadX(m,10,1.5,12.4,2.4,28.97,'#0a1220',false);
-    floor(15,-14,29,-2,0,'#151b28');
+    C.addQuadX(m,6,1.5,8.4,2.4,28.97,'#16273c',false); C.addQuadX(m,10,1.5,12.4,2.4,28.97,'#16273c',false);
+    floor(15,-14,29,-2,0,'#26364a');
     wallX(15,-14,-4,0,3.2); wallX(29,-14,-2,0,3.2); wallZ(-14,15,29,0,3.2); wallZ(-2,17,29,0,3.2);
     wallX(15,-4,-2,2.6,3.2);
     C.addBox(m,20,0.45,-6,2.4,0.5,1.1,'#cfe0e6',{noBottom:true}); col(18.8,0,-6.55,21.2,0.5,-5.45);
@@ -1677,13 +1677,13 @@
     wallX(-15,-7,-2,0,6); wallX(-15,2,7,0,6); wallX(-15,-2,2,2.8,6);
     wallX(-29,-7,7,0,6); wallZ(-7,-29,-15,0,6); wallZ(7,-29,-15,0,6);
     for (var hp=0; hp<3; hp++){ var hz=-4.4+hp*4.4;
-      C.addBox(m,-22,0.5,hz,10,0.5,1.3,'#1a2430',{noBottom:true}); col(-27,0,hz-0.65,-17,0.5,hz+0.65);
+      C.addBox(m,-22,0.5,hz,10,0.5,1.3,'#2a3646',{noBottom:true}); col(-27,0,hz-0.65,-17,0.5,hz+0.65);
       stripY(-27,hz-0.6,-17,hz+0.6,3.9,'#59ff9c');
       for (var lf=0; lf<9; lf++){ var lx=-26.4+lf*1.05;
         quad4([lx,0.5,hz],[lx-0.18,1.05,hz-0.14],[lx+0.18,1.05,hz+0.14],[lx,0.5,hz],'#2e7a4a'); } }
-    C.addBox(m,-27.2,1.0,0,1.4,2.0,5.4,'#12314a',{noBottom:true}); col(-27.9,0,-2.7,-26.5,2.0,2.7);
+    C.addBox(m,-27.2,1.0,0,1.4,2.0,5.4,'#1d4a66',{noBottom:true}); col(-27.9,0,-2.7,-26.5,2.0,2.7);
     // ---------------- BALCONY EAST: DATA ARCHIVE ----------------
-    floor(13,-14,27,-4,4.6,'#10151f');
+    floor(13,-14,27,-4,4.6,'#203042');
     wallX(13,-14,-11,4.6,9.2); wallX(13,-8,-4,4.6,9.2); wallX(13,-11,-8,7.2,9.2);
     wallX(27,-14,-4,4.6,9.2); wallZ(-14,13,27,4.6,9.2); wallZ(-4,13,27,4.6,9.2);
     for (var ar=0; ar<2; ar++){ for (var ak=0; ak<5; ak++){ var ax=15.5+ak*2.3, az=ar? -11.5:-6.5;
@@ -1692,20 +1692,20 @@
     stripY(14,-13.6,26,-13.2,9.12,'#bcd6ff');
     // stairs DOWN (SW shaft) to reactor deck: two flights + landing
     stair(-9,-6.6,2.2,+1,13,0,-3.64);
-    floor(-9,8.8,-5,10,-3.64,'#10151f');
+    floor(-9,8.8,-5,10,-3.64,'#203042');
     stair(-7.4,-5,9.35,-1,12,-3.64,-7);
     wallX(-9,2,10,-7,0.2); wallX(-5,2,10,-7,-0.2); wallZ(10.35,-9,-5,-7,-0.55);
     // stairs UP (east): flight to the BALCONY RING at 4.6, then N flight to the dome deck 12.6
     stair(11,12.8,-6.2,+1,17,0,4.6);
     // balcony ring (their y=4.6): a 2.2-wide walk around the rotunda interior, inner rail
-    floor(-13,-13,13,-10.8,4.6,'#11161f'); floor(-13,10.8,13,13,4.6,'#11161f');
-    floor(-13,-10.8,-10.8,10.8,4.6,'#11161f'); floor(10.8,-10.8,13,10.8,4.6,'#11161f');
+    floor(-13,-13,13,-10.8,4.6,'#223246'); floor(-13,10.8,13,13,4.6,'#223246');
+    floor(-13,-10.8,-10.8,10.8,4.6,'#223246'); floor(10.8,-10.8,13,10.8,4.6,'#223246');
     col(-10.9,4.6,-10.9,10.9,5.7,-10.7); col(-10.9,4.6,10.7,10.9,5.7,10.9);
     col(-10.9,4.6,-10.9,-10.7,5.7,10.9); col(10.7,4.6,-10.9,10.9,5.7,10.9);
     stair(-12.8,-11,3.2,+1,29,4.6,12.6);   // west flight balcony -> dome deck
     // ---------------- dome deck y=12.6 + skeletal glass dome ----------------
-    floor(-13,-13,13,2.9,12.6,'#0f141e'); floor(-13,13,13,13,12.6,'#0f141e');
-    floor(-13,2.9,-12.9,13,12.6,'#0f141e'); floor(-9.4,2.9,13,13,12.6,'#0f141e');   // west strip open for stair arrival
+    floor(-13,-13,13,2.9,12.6,'#2c3a4a'); floor(-13,13,13,13,12.6,'#2c3a4a');
+    floor(-13,2.9,-12.9,13,12.6,'#2c3a4a'); floor(-9.4,2.9,13,13,12.6,'#2c3a4a');   // west strip open for stair arrival
     col(-9.5,12.6,2.9,-9.3,13.7,13); col(-13,12.6,2.7,-9.3,13.7,2.9);   // rails at stair hole
     C.addBox(m,-9.4,13.15,8,0.1,1.1,10,TR,{noBottom:true});
     for (var dr=0; dr<8; dr++){ var da=dr*Math.PI/4;
@@ -1713,7 +1713,7 @@
       quad4([bx,12.6,bz],[tx,18.6,tz],[Math.cos(da+0.06)*3.6,18.6,Math.sin(da+0.06)*3.6],[Math.cos(da+0.06)*12.4,12.6,Math.sin(da+0.06)*12.4],'#26405c'); }
     col(-13,12.6,-13.4,13,14,-12.9); col(-13,12.6,12.9,13,14,13.4); col(-13.4,12.6,-13,-12.9,14,13); col(12.9,12.6,-13,13.4,14,13);   // rim rails
     // ---------------- north corridor + COMMAND BRIDGE ----------------
-    floor(-2,-18,2,-13,0,'#141a26'); wallX(-2,-18,-13,0,3.1); wallX(2,-18,-13,0,3.1);
+    floor(-2,-18,2,-13,0,'#243447'); wallX(-2,-18,-13,0,3.1); wallX(2,-18,-13,0,3.1);
     floor(-9,-30,9,-18,0,FL);
     wallX(-9,-30,-18,0,4); wallX(9,-30,-18,0,4); wallZ(-18,-9,-2,0,4); wallZ(-18,2,9,0,4); wallZ(-18,-2,2,3.1,4);
     wallZ(-30,-9,-5.2,0,4); wallZ(-30,-3.8,3.8,0,4); wallZ(-30,5.2,9,0,4);
@@ -1725,7 +1725,7 @@
     var sh2 = inst(P.sunShaft(true), [4.2, 0, -29.8], Math.PI, { label: 'shaft', kind: 'shaft' }); sh2.state = 'on';
     s.insts.push(sh1, sh2); s.shafts.push(sh1, sh2);
     // ---------------- REACTOR deck (y=-7) ----------------
-    floor(-12,16,12,34,-7,'#12161f');
+    floor(-12,16,12,34,-7,'#1e2028');
     wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
     stripY(-11,19.9,11,20.1,-6.96,AM); stripY(-11,28.9,11,29.1,-6.96,AM);
     stripY(-11,20.4,11,21.6,-7.42,CY); stripY(-11,27.4,11,28.6,-7.42,CY);   // coolant under-glow
@@ -1743,8 +1743,8 @@
     var EPOS=[[-11.8,22],[-11.8,30],[11.8,26]];
     for (var ei=0; ei<3; ei++){ var it=inst(P.emgStrip('off'), [EPOS[ei][0],-5.4,EPOS[ei][1]], EPOS[ei][0]<0?Math.PI/2:-Math.PI/2, { label:'emg', kind:'emg' }); it.state='off'; s.insts.push(it); s.emg.push(it); }
     // the alcove + the figure
-    floor(6,34,10,36.5,-7,'#0e1219'); wallZ(36.5,6,10,-7,-3.4); wallX(6,34,36.5,-7,-3.4); wallX(10,34,36.5,-7,-3.4);
-    C.addQuadZ(m,6.6,-6.6,9.4,-3.8,36.3,'#141033',false);   // violet backlight
+    floor(6,34,10,36.5,-7,'#181c26'); wallZ(36.5,6,10,-7,-3.4); wallX(6,34,36.5,-7,-3.4); wallX(10,34,36.5,-7,-3.4);
+    C.addQuadZ(m,6.6,-6.6,9.4,-3.8,36.3,'#2a1f66',false);   // violet backlight
     var fig=inst(P.figure(), [8,-7,35.6], Math.PI, { label:'figure', kind:'figure' });
     fig.state='still'; s.figWait=fig; s.fig=null;
     // two crew-log terminals
@@ -1758,12 +1758,12 @@
     // rotunda: central light cone (four dark-cyan trapezoids, non-collide)
     for (var lc=0; lc<4; lc++){ var la=lc*Math.PI/2+Math.PI/4;
       quad4([Math.cos(la)*0.5,10.9,Math.sin(la)*0.5],[Math.cos(la+1.57)*0.5,10.9,Math.sin(la+1.57)*0.5],
-            [Math.cos(la+1.57)*2.6,0.06,Math.sin(la+1.57)*2.6],[Math.cos(la)*2.6,0.06,Math.sin(la)*2.6],'#0b1d2a'); }
+            [Math.cos(la+1.57)*2.6,0.06,Math.sin(la+1.57)*2.6],[Math.cos(la)*2.6,0.06,Math.sin(la)*2.6],'#12303e'); }
     // rotunda: twin floor ring patterns (octagonal)
     for (var rg=0; rg<2; rg++){ var rr2=rg? 8.4:4.6;
       for (var ri=0; ri<8; ri++){ var ra=ri*Math.PI/4, rb=(ri+1)*Math.PI/4;
         quad4([Math.cos(ra)*rr2,0.012,Math.sin(ra)*rr2],[Math.cos(rb)*rr2,0.012,Math.sin(rb)*rr2],
-              [Math.cos(rb)*(rr2+0.22),0.012,Math.sin(rb)*(rr2+0.22)],[Math.cos(ra)*(rr2+0.22),0.012,Math.sin(ra)*(rr2+0.22)],'#0e1622'); } }
+              [Math.cos(rb)*(rr2+0.22),0.012,Math.sin(rb)*(rr2+0.22)],[Math.cos(ra)*(rr2+0.22),0.012,Math.sin(ra)*(rr2+0.22)],'#1e2c3c'); } }
     // rotunda: mid wall band + cyan hairline under the balcony
     C.addQuadZ(m,-12.6,3.6,12.6,3.85,-12.78,TR,false); C.addQuadZ(m,-12.6,3.6,12.6,3.85,12.78,true?TR:TR,true);
     C.addQuadX(m,-12.6,3.6,12.6,3.85,-12.78,TR,false); C.addQuadX(m,-12.6,3.6,12.6,3.85,12.78,TR,true);
@@ -1815,7 +1815,7 @@
       }
       // blackout dims the whole station's air; half power lifts it partly
       if (d.black && d.phase === 1) { s.fog.col = '#03040a'; s.fog.far = 26; }
-      if (d.black && d.phase === 3 && s.fog.far < 40) { s.fog.col = '#060a13'; s.fog.far = 40; }
+      if (d.black && d.phase === 3 && s.fog.far < 48) { s.fog.col = '#060a13'; s.fog.far = 48; }
       // the bridge light columns follow the sun
       var dayNow = Math.sin(t * (Math.PI * 2 / 240)) * 0.45 + 0.12 > 0.1;
       if (dayNow !== d.day) { d.day = dayNow;

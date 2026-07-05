@@ -415,7 +415,8 @@
     "ROOT/EREBUS/E5-feel",
     "ROOT/EREBUS/G12-wings-balcony",
     "ROOT/EREBUS/G34-director-ambience",
-    "ROOT/EREBUS/G5-dressing"
+    "ROOT/EREBUS/G5-dressing",
+    "ROOT/EREBUS/G6-grading"
    ]
   },
   {
@@ -473,6 +474,13 @@
    "why": "陈设终装:圆厅屏/光锥/环纹/墙带,码头肋管,堆顶环/接线盒/井底红条,穹顶星图台/缘灯,舰桥顶灯/副控,医疗IV",
    "status": "FIXED",
    "evidence": "本提交: 830绿保持, 零NaN法庭覆盖新几何"
+  },
+  {
+   "path": "ROOT/EREBUS/G6-grading",
+   "type": "UNIT",
+   "why": "终屏色板重调:采样他家成片像素而非材质表;雾曲线对齐FogExp2;Rig C自拍双机位目审",
+   "status": "FIXED",
+   "evidence": "本提交: 墙#2e3a50对锚#2a364b/地青洗#28404f/CY AM OR提饱和/雾7-58; our_rotunda与our_reactor自拍均入他家色族; 830绿保持"
   }
  ]
 }
