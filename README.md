@@ -1,3 +1,17 @@
+# MOBIL AVE — this branch's game
+
+The in-between subway station from *Revolutions*: a 48-tile looping platform, the sign, the train that arrives on its own schedule. A zero-dependency tile engine (2D, fully tested) plus a 3D staging of the same world spec — and a built-in honest camera (`tools/preview3d.js`) that software-renders the very file you play.
+
+**▶ Play (3D):** open [`web/mobil-ave-3d.html`](web/mobil-ave-3d.html) · **standalone:** [`dist/`](dist/) · **2D playthrough:** `node node/play.js`
+
+![the platform vista](shots/01_vista.png)
+
+| | |
+|---|---|
+| ![shot](shots/02_sign.png) | ![shot](shots/03_train.png) |
+
+---
+
 # the-matrix-gameplay
 
 Zero-dependency tile game engine. Scenes live in `construct/`; the engine,
