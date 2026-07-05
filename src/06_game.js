@@ -551,7 +551,7 @@
   // Bike feel ported from the author's STREET PROTOCOL CFG, rescaled for the Construct's tighter world.
   // (Street ran a 3 km street at 64 m/s; here the envelope is smaller but keeps the same character:
   //  heavy roll-on, real steering, a turbo that clearly bites, walls you can clip.)
-  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 1.15, TURBO_STEER: 0.8, EYE: 1.34,
+  C.BIKE = { MAX: 22, BOOST: 34, ACCEL: 12, BRAKE: 26, COAST: 3.2, STEER: 0.24, TURBO_STEER: 0.17, EYE: 1.34,
              TURBO_MAX: 3.0, TURBO_REGEN: 0.28, TURBO_GATE: 4, TURBO_GAIN: 1.9, OVER_FALL: 24 };
 
   Game.prototype.mountBike = function (it) {
@@ -609,9 +609,11 @@
     // 3.4 m lanes vs the branch's 10 m. Hands off -> gentle self-straighten.
     var sTgt = C.clamp(steerIn, -1.4, 1.4);
     bk.sSm = (bk.sSm || 0) + (sTgt - (bk.sSm || 0)) * Math.min(1, (Math.abs(sTgt) > Math.abs(bk.sSm || 0) ? 9 : 12) * dt);
-    var steerCouple = 0.5 + 0.5 * C.clamp(bk.speed / (B.MAX * 0.55), 0, 1);
-    var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * steerCouple;
-    p.yaw += bk.sSm * steerRate * dt;
+    // KINEMATIC CARVE: rotation comes FROM rolling - yawRate = v/L * tan(steer).
+    // Standing still you cannot rotate at all; the wheels are the leverage and
+    // the path is the arc. The middle-point spin is physically abolished.
+    var steerAng = bk.sSm * (bk.boosting ? B.TURBO_STEER : B.STEER);
+    p.yaw += (bk.speed / 30) * Math.tan(steerAng) * dt;
     if (sc.infinite) {
       p.yaw = C.clamp(p.yaw, -0.26, 0.26);   // LEAN-CARVE: ~20\u00b0 max nose angle - a held turn banks and arcs, never pivots sideways
       if (Math.abs(steerIn) < 0.04) p.yaw += -p.yaw * Math.min(1, 0.8 * dt);   // hands off: drift back to the axis
