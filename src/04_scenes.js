@@ -726,8 +726,20 @@
     var m = C.newMesh();
     function col(x0,y0,z0,x1,y1,z1){ s.colliders.push(box([x0,y0,z0],[x1,y1,z1])); }
     function floor(x0,z0,x1,z1,top,cc){ col(x0,top-0.5,z0,x1,top,z1); C.addQuadY(m,x0,z0,x1,z1,top+0.004,cc||FL,'floor'); }
-    function wallX(x,z0,z1,y0,y1,cc){ col(x-0.18,y0,z0,x+0.18,y1,z1); C.addQuadX(m,z0,y0,z1,y1,x,(cc||ST), x<0); }
-    function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.18,x1,y1,z+0.18); C.addQuadZ(m,x0,y0,x1,y1,z,(cc||ST), z>0); }
+    function panels(kind,u0,u1,y0,y1,fixed,base,flip){
+      // seam back + jittered panel grid: the fake DataTexture
+      var seam = C.scaleHex(base, 0.62);
+      if (kind==='x') C.addQuadX(m,u0,y0,u1,y1,fixed,seam,flip); else C.addQuadZ(m,u0,y0,u1,y1,fixed,seam,flip);
+      var pw=2.0, ph=1.45, off = kind==='x' ? (flip?0.014:-0.014) : (flip?-0.014:0.014);   // panels sit on the VISIBLE side of the seam-back
+      for (var yy=y0; yy<y1-0.02; yy+=ph){ var y2=Math.min(y1,yy+ph);
+        for (var uu=u0; uu<u1-0.02; uu+=pw){ var u2=Math.min(u1,uu+pw);
+          var j = 0.9 + C.rng(((uu*73+yy*131+fixed*17)|0)>>>0)() * 0.22;
+          var cc2 = C.scaleHex(base, j);
+          if (kind==='x') C.addQuadX(m,uu+0.05,yy+0.05,u2-0.05,y2-0.05,fixed+off,cc2,flip);
+          else C.addQuadZ(m,uu+0.05,yy+0.05,u2-0.05,y2-0.05,fixed+off,cc2,flip); } }
+    }
+    function wallX(x,z0,z1,y0,y1,cc){ col(x-0.18,y0,z0,x+0.18,y1,z1); panels('x',z0,z1,y0,y1,x,(cc||ST), x<0); }
+    function wallZ(z,x0,x1,y0,y1,cc){ col(x0,y0,z-0.18,x1,y1,z+0.18); panels('z',x0,x1,y0,y1,z,(cc||ST), z>0); }
     function stripY(x0,z0,x1,z1,y,ccc){ C.addQuadY(m,x0,z0,x1,z1,y,ccc); }
     function quad4(p0,p1,p2,p3,cc){ var b=m.v.length; m.v.push(p0,p1,p2,p3); C.addFace(m,[b,b+1,b+2,b+3],cc); }
     function stair(x0,x1,z0,dz,steps,yA,yB){
@@ -754,6 +766,11 @@
     wallZ(-13,-13,-2,0,12); wallZ(-13,2,13,0,12); wallZ(-13,-2,2,2.8,12);
     wallX(-13,-13,-2,0,12); wallX(-13,2,13,0,12); wallX(-13,-2,2,2.8,12);
     wallX(13,-13,-2,0,12); wallX(13,2,13,0,12); wallX(13,-2,2,2.8,12);
+    // rotunda floor: 2.2 m tile grid with per-tile jitter (the fake floor texture)
+    for (var tz=-13; tz<13; tz+=2.2){ for (var tx=-13; tx<13; tx+=2.2){
+      if (tx>-9.2 && tx<-4.8 && tz>1.8 && tz<10.2) continue;   // stair hole
+      var tj = 0.88 + C.rng(((tx*57+tz*91)|0)>>>0)() * 0.24;
+      C.addQuadY(m,tx+0.06,tz+0.06,Math.min(13,tx+2.14),Math.min(13,tz+2.14),0.008,C.scaleHex(FL,tj)); } }
     // corner pilasters + cyan pin strips
     var PC=[[-12,-12],[12,-12],[-12,12],[12,12]];
     for (var pi=0; pi<4; pi++){ var px=PC[pi][0], pz=PC[pi][1];
@@ -835,6 +852,12 @@
     var sh1 = inst(P.sunShaft(true), [-4.2, 0, -29.8], 0, { label: 'shaft', kind: 'shaft' }); sh1.state = 'on';
     var sh2 = inst(P.sunShaft(true), [4.2, 0, -29.8], Math.PI, { label: 'shaft', kind: 'shaft' }); sh2.state = 'on';
     s.insts.push(sh1, sh2); s.shafts.push(sh1, sh2);
+    // bridge reads CYAN-LUMINOUS like theirs: wide holo band, console holo, ceiling glow rows
+    C.addQuadZ(m,-7,2.7,7,3.7,-29.82,'#17607a',false);
+    C.addQuadZ(m,-6.6,3.12,6.6,3.28,-29.80,'#7deeff',false);
+    C.addQuadY(m,-1.6,-25.5,1.6,-24.5,1.16,'#2c8ba6');
+    stripY(-6,-26.4,-1,-26.0,3.9,'#9fd8e8'); stripY(1,-26.4,6,-26.0,3.9,'#9fd8e8');
+    stripY(-7.5,-19.6,7.5,-19.2,3.9,'#123646');
     // ---------------- REACTOR deck (y=-7) ----------------
     floor(-12,16,12,34,-7,'#1e2028');
     wallX(-12,16,34,-7,-0.4); wallX(12,16,34,-7,-0.4); wallZ(34,-12,6,-7,-0.4); wallZ(34,10,12,-7,-0.4); wallZ(16,-12,-9,-7,-0.4); wallZ(16,-5,12,-7,-0.4);
@@ -849,6 +872,14 @@
     C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ-CR-0.03,OR,false); C.addQuadZ(m,CX-0.5,-6.1,CX+0.5,-1.7,CZ+CR+0.03,OR,true);
     C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX-CR-0.03,OR,false); C.addQuadX(m,CZ-0.5,-6.1,CZ+0.5,-1.7,CX+CR+0.03,OR,true);
     C.addBox(m,CX,-6.75,CZ,7.0,0.5,7.0,TR,{noBottom:true});
+    // the core spills light: concentric warm pools + white-hot slot cores
+    var POOL=[[3.6,'#8a4b1e'],[5.4,'#4c2c16'],[7.4,'#2a1c12']];
+    for (var pl=0; pl<3; pl++){ var pr=POOL[pl][0], pc=POOL[pl][1];
+      for (var pk=0; pk<8; pk++){ var pa=pk*Math.PI/4, pb=(pk+1)*Math.PI/4;
+        quad4([CX+Math.cos(pa)*pr,-6.985,CZ+Math.sin(pa)*pr],[CX+Math.cos(pb)*pr,-6.985,CZ+Math.sin(pb)*pr],
+              [CX+Math.cos(pb)*(pr+1.4),-6.985,CZ+Math.sin(pb)*(pr+1.4)],[CX+Math.cos(pa)*(pr+1.4),-6.985,CZ+Math.sin(pa)*(pr+1.4)],pc); } }
+    C.addQuadZ(m,CX-0.32,-5.6,CX+0.32,-2.2,CZ-CR-0.06,'#ffd9a0',false); C.addQuadZ(m,CX-0.32,-5.6,CX+0.32,-2.2,CZ+CR+0.06,'#ffd9a0',true);
+    C.addQuadX(m,CZ-0.32,-5.6,CZ+0.32,-2.2,CX-CR-0.06,'#ffd9a0',false); C.addQuadX(m,CZ-0.32,-5.6,CZ+0.32,-2.2,CX+CR+0.06,'#ffd9a0',true);
     // emergency strips (director swaps their state)
     s.emg = [];
     var EPOS=[[-11.8,22],[-11.8,30],[11.8,26]];

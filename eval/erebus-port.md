@@ -28,3 +28,18 @@ INTENT entry + exemplar).
 enter/word; rooms reachable (walk sim, no wall pierce, stairs up+down); dome/bridge/reactor census;
 figure present then dissolved after approach; blackout director one-shot phases; sky op mode 'erebus';
 near+far render zero-NaN; determinism under scripted time.
+
+
+## VISUAL LOOP LOG (side-by-side, keep-only-if-better)
+
+### Pass 1 - KEPT (commit this)
+- Change set: station-wide panel-grid walls (seam-back 0.62x + 2.0x1.45 jittered panels, visible-side offset),
+  rotunda 2.2 m floor tiles, reactor core spill (3 warm pool rings + white-hot slot cores),
+  bridge holo band/console holo/ceiling rows, dome sunrise flood (browser sky painter).
+- Verdict metrics (selfshot 960x540, /16 histogram):
+  rotunda B0 {lum51, colors18} -> A1 {lum53, colors21, +#224455 panel highlights} = texture gained, no darkening.
+  reactor (pose corrected to face the core) A1 {lum67, colors24, warm #442211 at 8%}.
+  bridge ~unchanged at this pose -> carried to Pass 2 (needs their cyan-luminous ceiling).
+- Bugs the loop caught: C.rng returns a GENERATOR (uncalled -> NaN -> 80% black frames);
+  reactor selfshot pose faced a wall from 2.5 m (previous visual claim was confabulated).
+- Tooling: view tool went down mid-loop -> ASCII color maps + histogram stats became the judge.

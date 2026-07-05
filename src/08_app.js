@@ -320,6 +320,15 @@
                 ctx.fillStyle = 'rgba(255,246,224,' + (0.55 + 0.45 * vis).toFixed(2) + ')';
                 ctx.beginPath(); ctx.arc(sx, sy2, 13 + 6 * vis, 0, Math.PI * 2); ctx.fill();
               }
+              // SUNRISE FLOOD: their dome shots are awash - a wide sky glow when the sun sits low
+              var flood = Math.max(0, 1 - Math.abs(sunEl - 0.18) / 0.32) * vis;
+              if (flood > 0.02) {
+                var fg = ctx.createLinearGradient(0, Math.max(0, hor2 - H * 0.55), 0, Math.min(H, hor2 + H * 0.1));
+                fg.addColorStop(0, 'rgba(30,70,95,0)');
+                fg.addColorStop(0.7, 'rgba(70,150,180,' + (0.22 * flood).toFixed(2) + ')');
+                fg.addColorStop(1, 'rgba(255,190,120,' + (0.16 * flood).toFixed(2) + ')');
+                ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+              }
               var gdx = wrap(GAZ - op.yaw);
               if (Math.abs(gdx) < fovX + 0.5) {
                 var gx = px(gdx), gy = hor2 - GEL * H * 0.9, gr = 120;

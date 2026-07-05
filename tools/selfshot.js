@@ -35,5 +35,8 @@ function paint(pose,out){
   fs.writeFileSync(out, PNG.sync.write(png));
   console.log('wrote',out,'polys:',ops.filter(o=>o.t==='poly').length);
 }
-paint([0,0.02,10.5, 0, 0.10], '/tmp/our_rotunda.png');
-paint([0,-6.98,18.5, 0, 0.06], '/tmp/our_reactor.png');
+const SUF=process.argv[2]||'';
+paint([0,0.02,10.5, 0, 0.10], '/tmp/shot_rotunda'+SUF+'.png');
+paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png');
+paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png');
+paint([-4,12.62,9.5, 0.6, 0.30], '/tmp/shot_dome'+SUF+'.png');
