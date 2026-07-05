@@ -595,10 +595,14 @@
     if (bk.boosting) { bk.turbo = Math.max(0, bk.turbo - dt); }
     else { bk.turbo = Math.min(B.TURBO_MAX, bk.turbo + dt * B.TURBO_REGEN); }
     // steering scales down with speed (twitchy when slow, stable when fast), turbo widens line
-    var speedFrac = bk.speed / B.BOOST;
-    var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * (1 - 0.55 * C.clamp(speedFrac, 0, 1));
+    // BRANCH FEEL (ported): steering authority GROWS with speed - you carve
+    // at pace and can barely wrench it at a standstill.
+    var steerCouple = 0.5 + 0.5 * C.clamp(bk.speed / (B.MAX * 0.55), 0, 1);
+    var steerRate = (bk.boosting ? B.TURBO_STEER : B.STEER) * steerCouple;
     p.yaw += steerIn * steerRate * dt;
-    bk.lean += (C.clamp(steerIn, -1, 1) * Math.min(1, bk.speed / B.MAX) - bk.lean) * Math.min(1, 6 * dt);
+    if (sc.infinite) p.yaw = C.clamp(p.yaw, -1.15, 1.15);   // arcade clamp: you ride DOWN the street
+    var leanT = C.clamp(steerIn, -1, 1) * 0.95 * Math.min(1, bk.speed / (B.MAX * 0.85));
+    bk.lean += (leanT - bk.lean) * Math.min(1, (Math.abs(steerIn) > 0.05 ? 8 : 4) * dt);   // snap in, ease out
     // longitudinal — roll-on with diminishing accel near vmax; turbo lifts the cap and boosts accel
     var maxv = bk.boosting ? B.BOOST : B.MAX;
     if (thr) {
@@ -635,8 +639,13 @@
       if (blocked(p.pos[0], nz)) { hitWall = true; }
       else p.pos[2] = nz;
     }
+    bk.crashCd = Math.max(0, (bk.crashCd || 0) - dt);
     if (hitWall) {
-      bk.speed *= 0.6;                       // bleed speed once per frame, not per substep
+      if (bk.crashCd <= 0) {                 // unified crashHit (branch-ported): cooldown, hard cut, shake
+        bk.crashCd = 0.45;
+        bk.speed *= 0.35;
+        this.shake = Math.max(this.shake || 0, 0.5);
+      } else bk.speed *= 0.985;              // grinding inside cooldown only scrubs
       // throttle the scrape sound: at most one every 0.15s, so grinding the wall
       // can't stack dozens of hisses into a roar
       if (this.time - (bk._lastScrape || -1) > 0.15) { this.emit('scrape'); bk._lastScrape = this.time; }
@@ -926,6 +935,7 @@
     } else {
       eyeT = EYE; rollT = 0;
       if (this.bike) { eyeT = C.BIKE.EYE; rollT = -this.bike.lean * 0.28; }
+      if (this.shake > 0) { this.shake = Math.max(0, this.shake - 2.4 * dt); rollT += (Math.random() - 0.5) * this.shake * 0.22; eyeT += (Math.random() - 0.5) * this.shake * 0.08; }
       if (fx.painLinger > 0) rollT += Math.sin(this.time * 1.4) * 0.018 * Math.min(1, fx.painLinger / 30);
     }
     cam.pos[0] = p.pos[0];

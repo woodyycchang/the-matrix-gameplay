@@ -1574,6 +1574,17 @@ section('scene-aware voice: code-green after dark');
   ok(/classList\.toggle\('dark', \/NEON\/i/.test(appO), 'only NEON flips the code-green skin; armory and the rest keep the original ink');
 }
 
+
+section('N1 ride-feel: the branch equations live natively');
+{
+  const fsN1 = require('fs');
+  const gmN = fsN1.readFileSync(__dirname + '/../src/06_game.js', 'utf8');
+  ok(/steerCouple = 0\.5 \+ 0\.5 \* C\.clamp\(bk\.speed/.test(gmN), 'steering authority grows with speed (branch shape), not the inverse');
+  ok(/if \(sc\.infinite\) p\.yaw = C\.clamp\(p\.yaw, -1\.15, 1\.15\)/.test(gmN), 'the arcade clamp: you ride DOWN the street');
+  ok(/Math\.abs\(steerIn\) > 0\.05 \? 8 : 4/.test(gmN), 'lean snaps in at 8 and eases out at 4, exactly the branch rhythm');
+  ok(/bk\.crashCd = 0\.45;/.test(gmN) && /bk\.speed \*= 0\.35;/.test(gmN) && /this\.shake = Math\.max\(this\.shake \|\| 0, 0\.5\)/.test(gmN), 'crashHit unified: cooldown, hard cut, shake');
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

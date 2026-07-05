@@ -327,8 +327,8 @@
    "path": "ROOT/NEON-RIDE/N1-ride-feel",
    "type": "UNIT",
    "why": "速度耦合转向+yaw钳±1.15+lean弹簧+crashHit核心",
-   "status": "PENDING",
-   "evidence": ""
+   "status": "FIXED",
+   "evidence": "本提交: 速度增益转向(0.5+0.5曲线)+街轴钳±1.15(仅infinite)+lean弹簧(贴8回4,幅0.95×速)+crashHit(0.45cd/×0.35/shake0.5,磨墙期微刮)+相机抖动衰减2.4/s; 推力曲线与涡轮经济学核实早已同款"
   },
   {
    "path": "ROOT/NEON-RIDE/N2-boulevard",
