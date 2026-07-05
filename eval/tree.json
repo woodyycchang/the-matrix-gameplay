@@ -14,7 +14,7 @@
     "ROOT/TRUST"
    ],
    "status": "PASS",
-   "evidence": "845全绿; 12关键词主题; 三跨引擎移植; 视觉仪器化审计(选优保留5轮+认识论审计入册); 每叶携证据串,单报告即重开."
+   "evidence": "936全绿; 13关键词主题; 四跨引擎移植; 视觉仪器化审计(erebus/epang五轮+empire五轮含快门自审)入册; 每叶携证据串,单报告即重开."
   },
   {
    "path": "ROOT/SOUND",
@@ -230,10 +230,11 @@
     "ROOT/WORLD/infinite-scenes",
     "ROOT/WORLD/bounded-scenes",
     "ROOT/WORLD/density",
-    "ROOT/WORLD/void-onboarding"
+    "ROOT/WORLD/void-onboarding",
+    "ROOT/WORLD/empire-port"
    ],
    "status": "PASS",
-   "evidence": "子叶全FIXED; 四主题回填"
+   "evidence": "子叶全FIXED; 四主题回填 +empire-port(936绿,五轮视觉环)."
   },
   {
    "path": "ROOT/WORLD/infinite-scenes",
@@ -538,6 +539,96 @@
    "why": "手感叶+像素回执自拍",
    "status": "FIXED",
    "evidence": "首跑全绿电池: 涉水着床+splash/桥顶/複道跨河/賦文5/8句机器步展开; 黎明自拍warm97%落#aa8855族. 有报告即重开."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/word-chain",
+   "type": "UNIT",
+   "why": "六件套词链; 'orange chair'仍是道具",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: parser 6断言; 'orange empire|empire|1937|angel city|citrus|nostalgi*'; JARVIS无破折号."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/town-and-road",
+   "type": "UNIT",
+   "why": "主街14楼+酒吧内景+东路分块流送",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 普查+双向流送有界+树碰撞随块增删+确定性双跑一致."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/sedan",
+   "type": "UNIT",
+   "why": "1937轿车: 分支CFG逐字驾驶",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 包络(26/9.5/16/2.0)+转向弧+倒挡-6.5+dismiss熄油; 5.5m/s路障双态."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/seams",
+   "type": "UNIT",
+   "why": "六道缝隙全触发",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: USUAL/SKIP64s/EVERGREEN/CLOCKWORK刻钟/MIRROR双子/965电台20哔; 纸条八行逐字."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/ending-loop",
+   "type": "UNIT",
+   "why": "965结局+终端双出口",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 七句独白逐字有序+MERIDIAN终端逐字+RETURN重置钟位留缝隙+尾声How green+END归白屋."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/sky-fog",
+   "type": "UNIT",
+   "why": "empire天幕三调色板+场景日钟",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: sky op带分钟钟; 60s=30game-min; 雾随相位与edge活编."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/audio-law",
+   "type": "UNIT",
+   "why": "无乐谱无人声: 氛围+thud/sting/crackle",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "法庭: 事件流断言; 965电台为哔; SKIP以针噪不以旋律; 层增益基线全过."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/visual-parity",
+   "type": "UNIT",
+   "why": "五轮并排: 黄昏65↔63/夜15↔16/线框绿3%==3%",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "像素回执入册含一次快门自审改判; 仅留明显更好."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port/feel",
+   "type": "UNIT",
+   "why": "车感/缝隙节奏/结局节奏等涌现叶",
+   "priors": [],
+   "status": "FIXED",
+   "evidence": "机器闭合; 立约: Master一句报告即重开, 不问缘由. 重开."
+  },
+  {
+   "path": "ROOT/WORLD/empire-port",
+   "type": "BRANCH",
+   "why": "ORANGE EMPIRE 1937跨引擎移植成第13关键词主题",
+   "priors": [
+    "ROOT/WORLD/empire-port/word-chain",
+    "ROOT/WORLD/empire-port/town-and-road",
+    "ROOT/WORLD/empire-port/sedan",
+    "ROOT/WORLD/empire-port/seams",
+    "ROOT/WORLD/empire-port/ending-loop",
+    "ROOT/WORLD/empire-port/sky-fog",
+    "ROOT/WORLD/empire-port/audio-law",
+    "ROOT/WORLD/empire-port/visual-parity",
+    "ROOT/WORLD/empire-port/feel"
+   ],
+   "status": "PASS",
+   "evidence": "936全绿(+91); E0勘察+五轮视觉环入册eval/orange-port.md; 距离1:1(965/1000/300/520/700逐字)."
   }
  ]
 }

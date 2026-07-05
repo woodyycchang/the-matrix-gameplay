@@ -342,9 +342,14 @@
               var horC = bl2('#e9eef0', '#e8843c', '#131a26');
               var hor4 = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
               var g4 = ctx.createLinearGradient(0, 0, 0, Math.max(1, hor4));
-              g4.addColorStop(0, topC); g4.addColorStop(0.62, midC); g4.addColorStop(1, horC);
+              g4.addColorStop(0, topC); g4.addColorStop(0.5, midC); g4.addColorStop(1, horC);
               ctx.fillStyle = g4; ctx.fillRect(0, 0, W, Math.max(1, hor4));
               ctx.fillStyle = op.fogCol; ctx.fillRect(0, Math.max(0, hor4), W, H);
+              if (df2 > 0.1) {
+                var gw = ctx.createLinearGradient(0, Math.max(0, hor4 - H * 0.22), 0, Math.max(1, hor4));
+                gw.addColorStop(0, 'rgba(255,196,106,0)'); gw.addColorStop(1, 'rgba(255,196,106,' + (df2 * 0.55).toFixed(2) + ')');
+                ctx.fillStyle = gw; ctx.fillRect(0, Math.max(0, hor4 - H * 0.22), W, H * 0.22);
+              }
               if (nf2 > 0.08) {
                 for (var si4 = 0; si4 < 80; si4++) {
                   var h14 = Math.sin(si4 * 12.9898) * 43758.5453; h14 -= Math.floor(h14);

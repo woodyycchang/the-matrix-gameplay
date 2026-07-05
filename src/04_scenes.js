@@ -1201,9 +1201,9 @@
       }
     }
     function wireTree(x, z, sscale, fade) {
-      var wc = C.mixHex('#0c3a1e', '#2aff70', fade);
+      var wc = C.mixHex('#14562c', '#2aff70', fade);
       var h = 1.5 * sscale, cy = 2.4 * sscale, cr = 1.45 * sscale;
-      C.addQuadZ(m, x - 0.05, 0, x + 0.05, h, z, wc, true); C.addQuadZ(m, x - 0.05, 0, x + 0.05, h, z, wc, false);
+      C.addQuadZ(m, x - 0.09, 0, x + 0.09, h, z, wc, true); C.addQuadZ(m, x - 0.09, 0, x + 0.09, h, z, wc, false);
       var b0 = m.v.length;
       m.v.push([x, cy + cr, z], [x + cr, cy, z], [x, cy - cr * 0.7, z], [x - cr, cy, z]);
       C.addFace(m, [b0, b0 + 1, b0 + 2, b0 + 3], wc); C.addFace(m, [b0 + 3, b0 + 2, b0 + 1, b0], wc);
@@ -1219,9 +1219,9 @@
       C.addQuadZ(m, x - cw, cy - ch, x + cw, cy + ch, z, can, true); C.addQuadZ(m, x - cw, cy - ch, x + cw, cy + ch, z, can, false);
       C.addQuadX(m, z - cw, cy - ch, z + cw, cy + ch, x, can, true); C.addQuadX(m, z - cw, cy - ch, z + cw, cy + ch, x, can, false);
     }
-    var gx0 = Math.ceil(x0 / 13) * 13;
+    var gx0 = Math.ceil(x0 / 13) * 13, tzMax = x0 >= 608 ? 72 : 46;
     for (var tx = gx0; tx < x1; tx += 13) {
-      for (var tz = -46; tz <= 46; tz += 13) {
+      for (var tz = -tzMax; tz <= tzMax; tz += 13) {
         var rg2 = C.rng(((ci * 131 + tx * 7 + tz * 13) ^ 0x1937) >>> 0);
         var jx = tx + (rg2() - 0.5) * 3.2, jz = tz + (rg2() - 0.5) * 3.2;
         if (Math.abs(jz) < 13.5) continue;
@@ -1503,10 +1503,52 @@
       var mnz = Math.min(q0[2], q1[2]) - 2, mxz = Math.max(q0[2], q1[2]) + 2;
       col(mnx, 0, mnz, mxx, 60, mxz);
     }
+    // PASS-2 (visual loop): the branch lit its albedo with a dusk sun; our renderer
+    // has no lights, so the evening is BAKED - every structural face is warm-shifted
+    // and pulled to ~60%, while emissive-reading faces (high saturation + bright:
+    // neon bands, lit windows, wire green, lamp heads) keep their voltage.
+    var bakeList = [m, mg];
+    for (var bm = 0; bm < 2; bm++) { var MM = bakeList[bm];
+    for (var tf2 = 0; tf2 < MM.f.length; tf2++) {
+      var fc = MM.f[tf2].c;
+      if (typeof fc !== 'string' || fc.charAt(0) !== '#') continue;
+      var rr = parseInt(fc.slice(1, 3), 16), gg = parseInt(fc.slice(3, 5), 16), bb2 = parseInt(fc.slice(5, 7), 16);
+      var mx = Math.max(rr, gg, bb2), mn = Math.min(rr, gg, bb2);
+      var sat = mx > 0 ? (mx - mn) / mx : 0;
+      if (sat > 0.5 && mx > 140) continue;
+      MM.f[tf2].c = C.scaleHex(C.mixHex(fc, '#ff9a58', 0.14), 0.48);
+    } }
     C.meshBounds(m); C.anchorize(m, 0.05, 81, 8);
     C.meshBounds(mg);
-    s.insts.unshift(inst(m, [0, 0, 0], 0, { label: 'angel city', kind: 'static' }));
-    s.insts.unshift(inst(mg, [0, 0, 0], 0, { label: 'the valley', kind: 'ground' }));
+    // PASS-3 (visual loop): the branch dims the town with its light rig at night;
+    // we have no lights, so night is a SECOND MESH (shared verts, remapped colors)
+    // swapped by the mutation trick. Vivid faces keep their voltage; faces inside
+    // The Blue Pacific keep their dusk warmth - the windows glow against the dark.
+    function nightRemap(srcM, dimK, blueK) {
+      var out = { v: srcM.v, f: [], anchors: srcM.anchors };
+      for (var nf2 = 0; nf2 < srcM.f.length; nf2++) {
+        var f0 = srcM.f[nf2], fc2 = f0.c, nc = fc2;
+        if (typeof fc2 === 'string' && fc2.charAt(0) === '#') {
+          var r3 = parseInt(fc2.slice(1, 3), 16), g3 = parseInt(fc2.slice(3, 5), 16), b3 = parseInt(fc2.slice(5, 7), 16);
+          var mx2 = Math.max(r3, g3, b3), mn2 = Math.min(r3, g3, b3);
+          var vivid = mx2 > 0 && (mx2 - mn2) / mx2 > 0.5 && mx2 > 140;
+          var cxs = 0, cys = 0, czs = 0, nvp = f0.i.length;
+          for (var vi2 = 0; vi2 < nvp; vi2++) { var vv = srcM.v[f0.i[vi2]]; cxs += vv[0]; cys += vv[1]; czs += vv[2]; }
+          cxs /= nvp; cys /= nvp; czs /= nvp;
+          var inBar2 = cxs > -25 && cxs < -7 && czs > 9.7 && czs < 23.5 && cys < 3.5;
+          if (!vivid && !inBar2) nc = C.mixHex(C.scaleHex(fc2, dimK), '#141a28', blueK);
+        }
+        out.f.push({ i: f0.i, c: nc, n: f0.n, tag: f0.tag });
+      }
+      C.meshBounds(out);
+      return out;
+    }
+    var mNight = nightRemap(m, 0.34, 0.22), mgNight = nightRemap(mg, 0.30, 0.25);
+    var townIt = inst(m, [0, 0, 0], 0, { label: 'angel city', kind: 'static' });
+    var valleyIt = inst(mg, [0, 0, 0], 0, { label: 'the valley', kind: 'ground' });
+    s.insts.unshift(townIt); s.insts.unshift(valleyIt);
+    s._townIt = townIt; s._valleyIt = valleyIt;
+    s._mDay = m; s._mNight = mNight; s._mgDay = mg; s._mgNight = mgNight; s._nightOn = false;
     // ---------------- moving parts: the sedan, the barricades, the townsfolk ----------------
     var sed = inst(P.sedan('#3a3e36'), [10, 0, -4.2], Math.PI / 2, { kind: 'sedan', label: '1937 sedan' });
     sed._col = box([8.9, 0, -5.3], [11.1, 1.6, -3.1]); s.colliders.push(sed._col);
@@ -1610,12 +1652,19 @@
       if (s._c0 === undefined) s._c0 = t;
       var dayMin = EMP.START_MIN + (t - s._c0) * 0.5;
       s.skyT = dayMin;
+      var nOn = empNightF(dayMin) > 0.5;
+      if (nOn !== s._nightOn) {
+        s._nightOn = nOn;
+        s._townIt.mesh = nOn ? s._mNight : s._mDay;
+        s._townIt.glyphEpoch = (s._townIt.glyphEpoch | 0) + 1; s._townIt.reResolve = 1; s._townIt.loadT = 0; s._townIt.loadDir = 1;
+        s._valleyIt.mesh = nOn ? s._mgNight : s._mgDay;
+      }
       var dEdge = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
       var nf = empNightF(dayMin), df = empDuskF(dayMin), ef = empSS(EMP.DESAT0, EMP.DARK1, dEdge);
       var fogC = C.mixHex(C.mixHex('#c9d4dc', '#4a3a4e', df), '#0a0d16', nf);
       s.fog.col = C.mixHex(fogC, '#020503', ef * 0.75);
-      s.fog.far = (240 - 40 * df - 50 * nf) * (1 - 0.3 * ef);
-      s.fog.near = 40;
+      s.fog.far = (360 - 20 * df - 230 * nf) * (1 - 0.3 * ef);
+      s.fog.near = 64 - 40 * nf;
       // timers
       for (var tiq = s._timers.length - 1; tiq >= 0; tiq--) { if (t >= s._timers[tiq].at) { var fnq = s._timers[tiq].fn; s._timers.splice(tiq, 1); fnq(); } }
       while (s._beeps.length && t >= s._beeps[0]) { s._beeps.shift(); game.emit('chirp'); }

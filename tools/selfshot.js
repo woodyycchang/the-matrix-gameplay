@@ -10,6 +10,8 @@ function paint(pose,out,sceneWord){
   if(sceneWord && (!g.scene || g.scene.name.indexOf(sceneWord)<0)){ g.request(sceneWord); for(let i=0;i<90;i++) g.update({},1/30); }   // full materialize settle
   g.player.pos=[pose[0],pose[1],pose[2]]; g.player.yaw=pose[3]; g.player.pitch=pose[4]; g.player.vel=[0,0,0];
   if(pose[5]!==undefined) g.time=pose[5];
+  if(pose[6]!==undefined && g.scene && g.scene.sky==='empire'){ g.scene._c0 = g.time - 2*(pose[6]-1164);
+    for(let i=0;i<100;i++) g.update({},1/30); }   // the night swap re-materializes the town; wait for it
   g.update({},1/60);
   const ops=C.render(g,W,H,g.time);
   const png=new PNG({width:W,height:H});
@@ -37,6 +39,39 @@ function paint(pose,out,sceneWord){
     const mc=seg===3?[5,7,14]:(seg===2?[28,16,22]:[42,32,38]);
     for(let mx=0;mx<=W;mx++){const t3=mx/W*40;const mh=Math.sin(t3*1.7+0.6)*0.5+Math.sin(t3*0.53-g.player.yaw*2.2)*0.5;
       const ridge=hor-(12+mh*16)*(H/540);for(let y=ridge;y<hor;y++)put(mx,y,mc);}
+  } else if (sop && sop.mode==='empire'){
+    const mm=((sop.time||0)%1440+1440)%1440;
+    const ssf=(a,b,x)=>{const t2=Math.max(0,Math.min(1,(x-a)/(b-a)));return t2*t2*(3-2*t2);};
+    const eve=ssf(1190,1238,mm), morn=1-ssf(308,382,mm);
+    const nf=Math.max(eve, mm<720?morn:0);
+    const de=ssf(1085,1165,mm)*(1-ssf(1185,1240,mm)), dm=ssf(300,345,mm)*(1-ssf(370,420,mm));
+    const df=Math.max(de,dm);
+    const bl=(a,b,c)=>mix(mix(a,b,df),c,nf);
+    const top=bl([74,118,184],[28,42,82],[4,6,14]);
+    const mid=bl([166,196,230],[122,90,138],[10,16,31]);
+    const horC=bl([233,238,240],[232,132,60],[19,26,38]);
+    const fogc=hex2(sop.fogCol||'#4a3a4e');
+    for(let y=0;y<H;y++){
+      let c;
+      if(y<hor){const u=y/Math.max(1,hor); c = u<0.5 ? mix(top,mid,u/0.5) : mix(mid,horC,(u-0.5)/0.5);
+        if(df>0.1 && y>hor-H*0.22){const wt=df*0.55*(1-(hor-y)/(H*0.22)); c=mix(c,[255,196,106],Math.max(0,wt));}}
+      else c=fogc;
+      for(let x=0;x<W;x++)put(x,y,c);
+    }
+    if(nf>0.08){
+      for(let si=0;si<80;si++){let h1=Math.sin(si*12.9898)*43758.5453;h1-=Math.floor(h1);let h2=Math.sin(si*78.233)*12543.21;h2-=Math.floor(h2);
+        let sd=h1*Math.PI*2-g.player.yaw;while(sd>Math.PI)sd-=Math.PI*2;while(sd<-Math.PI)sd+=Math.PI*2;
+        if(Math.abs(sd)<1.3)put(W*0.5+sd/1.3*W*0.62,h2*hor*0.85,[207,216,255],nf*0.6);}
+      let mdx=((2.6-g.player.yaw)%(Math.PI*2));if(mdx>Math.PI)mdx-=Math.PI*2;if(mdx<-Math.PI)mdx+=Math.PI*2;
+      if(Math.abs(mdx)<1.4){const mxp=W*0.5+mdx/1.25*W*0.62,myp=hor*0.22,MR=9;
+        for(let dy=-MR;dy<=MR;dy++)for(let dx=-MR;dx<=MR;dx++)if(dx*dx+dy*dy<=MR*MR)put(mxp+dx,myp+dy,[220,228,255],nf*0.9);}
+    }
+    const sa=Math.max(-0.2,Math.min(1.2,(mm-360)/840))*Math.PI;
+    const sunEl=Math.sin(sa), sunAz=Math.cos(sa)>0?1.5708:-1.5708;
+    let sdx=((sunAz-g.player.yaw)%(Math.PI*2));if(sdx>Math.PI)sdx-=Math.PI*2;if(sdx<-Math.PI)sdx+=Math.PI*2;
+    if(sunEl>-0.05&&nf<0.85&&Math.abs(sdx)<1.5){const sx=W*0.5+sdx/1.25*W*0.62,sy=hor-sunEl*H*0.75,SR=df>0.35?19:12;
+      const scc=df>0.35?[255,164,90]:[255,242,221];
+      for(let dy=-SR;dy<=SR;dy++)for(let dx=-SR;dx<=SR;dx++)if(dx*dx+dy*dy<=SR*SR)put(sx+dx,sy+dy,scc,0.9);}
   } else if (sop && sop.mode==='erebus'){
     for(let i=0;i<W*H;i++){png.data[i*4]=bgD[0];png.data[i*4+1]=bgD[1];png.data[i*4+2]=bgD[2];png.data[i*4+3]=255;}
     for(let si=0;si<110;si++){let h1=Math.sin(si*12.9898)*43758.5453;h1-=Math.floor(h1);let h2=Math.sin(si*78.233)*12543.21;h2-=Math.floor(h2);
@@ -74,3 +109,6 @@ paint([0,0.02,10.5, 0, 0.10], '/tmp/shot_rotunda'+SUF+'.png', 'erebus');
 paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png', 'erebus');
 paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png', 'erebus');
 paint([-4,12.62,9.5, 0.6, 0.30], '/tmp/shot_dome'+SUF+'.png', 'erebus');
+paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1170], '/tmp/shot_empire_dusk'+SUF+'.png', 'empire');
+paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
+paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');

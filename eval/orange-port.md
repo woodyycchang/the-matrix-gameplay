@@ -78,3 +78,42 @@ near+far render nonzero; perf budget; audio event set; determinism twin-run.
 
 ## VISUAL LOOP LOG (side-by-side, keep-only-if-better)
 (passes appended below as they land)
+
+### Pass 1 - superseded (baseline shots)
+- First light: dusk {lum79, colors47, violet 54%} vs theirs {lum63, violet 25%, amber 10%} -
+  a violet flood; night {lum41} vs {lum16} - masses too bright; wire close {lum12 vs 11}.
+- Diagnosis receipts: no lighting rig in this renderer, so day-albedo + short fog = wrong dusk.
+
+### Pass 2 - KEPT (albedo learns the hour)
+- Town albedo dusk-BAKED (warm-shift 10% + 0.60), vivid faces exempt (sat>0.5 & max>140:
+  neon bands, lit windows, wire green); amber horizon wash at dusk in both painters;
+  wire pose recomposed into the 665..832 band. Wire verdict lands: blk 61%==61%.
+
+### Pass 3 - one verdict INVALIDATED, one change KEPT
+- Night becomes a SECOND MESH (shared verts, colors remapped x0.34 + night-blue; faces
+  inside The Blue Pacific exempt - the windows glow) swapped by the mutation trick at
+  nightF 0.5. Wire rows widen to +-72 past x608.
+- SHUTTER AUDIT: the night frame (175 polys vs 527) was shot mid-materialize after the
+  swap - the matching histogram was an artifact of a half-loaded town. Verdict struck;
+  the settle-brace lesson, relearned on a new instrument path.
+
+### Pass 4 - KEPT (the fog was the violet)
+- selfshot settles 100 steps after turning the day knob (pose[6] = dayMin). Fog distances
+  restored toward theirs (near 64/24, far 360/130 dusk/night; theirs 760/480): the 40/200
+  fog had been painting 34% violet onto everything at 100 m. Dusk violet 62% -> 12%.
+- Night, honestly shot this time: {lum15, blk 88%} vs {lum16, blk 92%}; the neon gold
+  survives the night fog at exactly their #b49048. Wire green 4% vs 3%.
+
+### Pass 5 - KEPT (the ground learns the hour too)
+- The bake had skipped the ground mesh: #6c6c6c 10% was raw sidewalk. Both meshes now
+  share the knife. FINAL: dusk {lum65, dark-mass 70%, violet 12%} vs {lum63, dark 40%+,
+  violet 25%}; night matched; wire {grn 3% == 3%, blk 80 vs 94}.
+
+### Honest remaining deltas (final)
+- Dusk true-black floor: our darkest fog-lit face is #242424, theirs bottoms at #000000
+  (they have shadow; we have albedo). Character verdict: matched; floor verdict: lighter.
+- Wire frame carries a 17% night-sky band (#000024 family, same as their 2% cluster) -
+  composition, not palette. Day phase (a 20-real-minute wait away) wears the dusk bake:
+  a moody overcast noon, logged as renderer-native.
+- Browser-side validations selfshot cannot reach: the neon flicker feel, the amber wash
+  in the live canvas painter, engine audio under way. Queued for Master's eyes.
