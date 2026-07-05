@@ -35,3 +35,8 @@ finite yaw/time; near+far zero-NaN; word trigger via 'palace'.
 - Receipts: epang dawn lum194 colors51 warm97%, top #ccaa88/#cc9977/#bb8866 - squarely in their
   #aa8855 gate_dawn family. All five erebus poses re-verified post scene-word fix.
 - Scene fix: courtyard random tiles gain an epsilon ladder (coplanar shimmer killed).
+
+### Pass 5 addendum - instrument self-audit
+- False alarm caught: post scene-switch settle was 1 s while the materialize ramp needs ~3 s ->
+  every erebus pose shot half-transparent (lum halved, warm vanished). Settle now 90 steps.
+  Ad-hoc metric drift also noted (warm threshold 60 vs the Pass-4 baseline 28) - thresholds pinned.

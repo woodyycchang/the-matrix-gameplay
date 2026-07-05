@@ -7,7 +7,7 @@ for(let i=0;i<50;i++) g.update({},1/30);
 const W=960,H=540;
 function hex2(c){const m=/^#?([0-9a-f]{6})/i.exec(c||'#000000');const v=parseInt(m?m[1]:'000000',16);return [v>>16,(v>>8)&255,v&255];}
 function paint(pose,out,sceneWord){
-  if(sceneWord && (!g.scene || g.scene.name.indexOf(sceneWord)<0)){ g.request(sceneWord); for(let i=0;i<30;i++) g.update({},1/30); }
+  if(sceneWord && (!g.scene || g.scene.name.indexOf(sceneWord)<0)){ g.request(sceneWord); for(let i=0;i<90;i++) g.update({},1/30);   // full materialize settle }
   g.player.pos=[pose[0],pose[1],pose[2]]; g.player.yaw=pose[3]; g.player.pitch=pose[4]; g.player.vel=[0,0,0];
   if(pose[5]!==undefined) g.time=pose[5];
   g.update({},1/60);
