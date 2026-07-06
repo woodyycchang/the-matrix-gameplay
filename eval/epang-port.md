@@ -40,3 +40,45 @@ finite yaw/time; near+far zero-NaN; word trigger via 'palace'.
 - False alarm caught: post scene-switch settle was 1 s while the materialize ramp needs ~3 s ->
   every erebus pose shot half-transparent (lum halved, warm vanished). Settle now 90 steps.
   Ad-hoc metric drift also noted (warm threshold 60 vs the Pass-4 baseline 28) - thresholds pinned.
+
+
+## THE REBUILD REPORT CAMPAIGN (original developer's F1-F10 + E6 probes, 2026-07-05)
+Layer 1: the ORIGINAL (Three.js r152) now lives at /epang-palace/ - subtree snapshot,
+root untouched, playable on Pages. Layer 2, executed in order:
+
+- F1 fog follows the sky: fog.col derives per frame from the sky painter's own horizon
+  keys (one-scalar law 4.4). E6.1 proves lockstep at four times; the pinned '#2a2430' is gone.
+- F2 treasury ember-on-black: albedo authored down (#141008 floor / #33100a walls), ember
+  pool widened + deep heart, a tipped ding, a ding over a two-state fire, and QI ZHI LI YI -
+  30 pearls + 6 gold blocks strewn out the west door and into River B. Receipt: night lum
+  113 -> 60 (target <=70); E6.2 albedo audit 70%+ dark with ember faces.
+- F3/F4/F5 MOTION (stateless, 4.5): 22 petals (day-only), 16 river mists (night+dawn),
+  lantern sway, 5 swinging cold sleeves + cool wash + cold-blue flame (nuan xiang vs leng
+  xiu), the MIRROR TOWER (8 bronze mirrors, sin^16 star-glints, two censers whose smoke
+  shears as age^2 - yan xie wu heng). E6.4: half a second moves >=8 probes; petals obey day.
+- F6 er chuan rong rong: barred water-gate pierces the west wall, the rouge film rides
+  River A only, three oil-sheen swirls drift, the region speaks.
+- F7 (reduced, honest): the deck ARCHES over River B (0.28 risers, peak 5.84) and the roof
+  now rides at 8.15-8.85, ABOVE the hall ridge (7.7); eave lanterns sway, rafter teeth run
+  the span. Full deck>=1.15x-ridge deferred (needs a switchback stair) - logged in HANDOFF.
+- F8 feng fang shui wo: seven jittered mini-pavilions SE of the treasury, region speaks.
+  The winding corridor already bridges River A; two piers now show the truth.
+- F9 shu shan wu: the western ridge renders barren tan with stump teeth in the sky painter.
+- F10 instruments: selfshot's pngjs require is a 3-way chain (P9); poses report polys.
+
+## WHAT THE PROBES CAUGHT (real findings, all fixed)
+1. The skyway stair was UNMOUNTABLE by real input - its foot hung over the river void.
+   A base pier now rises from the dance-hall flank. (E6.3's no-teleport clause did this.)
+2. A dance-hall column stood in the stair lane (x18.6) and stopped every climber at step 7.
+3. The arch's first cut (0.42 risers) exceeded step-up; walkers slid out a 0.95 m rail gap
+   and 'finished' the span on the ground. Risers 0.28; inner guard closes the gap.
+4. The treasury door header (6.2) clipped every head - this door had never been walked,
+   only teleported. Raised to 6.9 with a door bay.
+5. Interior stair treads went dark wood (75 bright faces were drowning the ember read).
+6. settle-brace, third billing: E6.1 first read fog mid-materialize whiteout.
+
+## Honest residuals
+- Treasury night pose composition: lum 60 (target met) but bronze dings + roof shadow take
+  the top clusters at this camera angle; the ember family reads on floor/walls, not top-2.
+- F7-full (whole deck above ridge) deferred; the arch + raised roof carry bu ji he hong.
+- Guqin stays silent per the music law; the original at /epang-palace/ carries its own.

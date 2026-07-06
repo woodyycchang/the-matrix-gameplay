@@ -329,6 +329,20 @@
                 ctx.lineTo(wx, hor3 - (12 + mh * 16) * (H / 540));
               }
               ctx.lineTo(W, hor3); ctx.closePath(); ctx.fill();
+              // SHU SHAN WU: the western ridge is stripped bare - logged, stump-toothed (F9)
+              var sdw = ((-Math.PI/2 - op.yaw) % (Math.PI*2)); if (sdw>Math.PI) sdw-=Math.PI*2; if (sdw<-Math.PI) sdw+=Math.PI*2;
+              if (Math.abs(sdw) < 1.5) {
+                var wxc = W*0.5 + sdw/1.25*W*0.62, wspan = W*0.19;
+                ctx.fillStyle = seg===3 ? '#241c12' : (seg===2 ? '#4a3826' : '#8a7250');
+                ctx.beginPath(); ctx.moveTo(wxc-wspan, hor3);
+                for (var bx=0; bx<=16; bx++){ var bu=bx/16;
+                  var bh=(10+Math.sin(bx*1.3+2.2)*5)*(H/540)*Math.sin(bu*Math.PI);
+                  ctx.lineTo(wxc-wspan+bu*wspan*2, hor3-bh); }
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = seg===3 ? '#171209' : '#4e3e28';
+                for (var st5=0; st5<7; st5++){ var su=(st5+0.5)/7;
+                  ctx.fillRect(wxc-wspan+su*wspan*2, hor3-3*(H/540), Math.max(1,W/480), 3*(H/540)); }
+              }
             } else if (op.mode === 'empire') {
               // Angel City, June 1937: the branch's three-palette day (their EDGE.PAL,
               // verbatim hexes) blended by nightF/duskF; sun rises 6:00 east (+x),

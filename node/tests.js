@@ -2022,7 +2022,7 @@ section('EPANG: the palace stands and the rhapsody speaks');
   for (let i = 0; i < 30; i++) evs0 = evs0.concat(step(g, null, 1 / 20));
   ok(g.scene.name === 'epang palace', "the word chain opens the gates: 'palace' -> epang");
   const s = g.scene;
-  ok(s.regions.length === 8 && s.regions[0].said === true && has(evs0, 'say'), 'the GATE speaks its line on spawn (' + s.regions.filter(r => r.said).length + ' said)');
+  ok(s.regions.length === 12 && s.regions[0].said === true && has(evs0, 'say'), 'the GATE speaks its line on spawn; TWELVE stagings stand (' + s.regions.filter(r => r.said).length + ' said)');
   const probes = [[0, 0, 26, 0, 'courtyard'], [0, 0.9, 4, 0.9, 'front-hall platform'], [0, 1.12, 15.2, 1.12, 'dragon-bridge crest'], [18, 5.0, 0.4, 5.0, 'skyway across the void'], [40, 0, 8, 0, 'treasury'], [-22, 0.6, 4, 0.6, 'song terrace'], [8, -0.23, 16.8, -0.23, 'ghat step']];
   for (const [x, y, z, want, name] of probes) {
     g.player.pos = [x, y + 0.9, z]; g.player.vel = [0, 0, 0];
@@ -2427,6 +2427,88 @@ section('MOBIL AVE (the between-place; the operator fails here)');
     const {g}=mkM();
     const t0=Date.now(); for(let i=0;i<30;i++)C.render(g,480,270,g.time+i*0.03);
     ok((Date.now()-t0)/30<34,'platform renders inside the painter budget ('+((Date.now()-t0)/30).toFixed(1)+' ms)');
+  }
+}
+
+// ------------------------------------------- EPANG E6 probes (original developer's report)
+section('EPANG E6 (the rebuild report acceptance probes)');
+{
+  const mkP=(T)=>{ const g=new C.Game(); g.emit=()=>{}; g.update({},0.2); g.request('epang');
+    for(let i=0;i<100;i++) g.update({},1/30);   // settle-brace: the materialize whiteout must clear (third time this lesson has billed us)
+    g.time=T; g.update({},1/30); g.update({},1/30); return g; };   // then the day knob turns directly: engine clamps dt
+  // E6.1 fog-sky lockstep: one scalar drives both
+  {
+    const EPKB=['#e8b088','#d8e0e6','#5a2430','#0a0c18'];
+    const seen=new Set();
+    for (const T of [12,72,132,204]){ const g=mkP(T);
+      const ph=(((g.time)%240)+240)%240/240, seg=Math.floor(ph*4), fr=ph*4-seg;
+      const want=C.scaleHex(C.mixHex(EPKB[seg],EPKB[(seg+1)%4],fr),0.92);
+      eq(g.scene.fog.col, want, 'E6.1 fog IS the horizon at t='+T+' (seg '+seg+')');
+      seen.add(g.scene.fog.col); }
+    ok(seen.size===4, 'E6.1 the fog cycles with the day ('+seen.size+' distinct)');
+    ok(!seen.has('#2a2430'), 'E6.1 the pinned dusk constant is gone');
+  }
+  // E6.2 treasury is ember-on-black (albedo audit)
+  {
+    const g=mkP(1); const m=g.scene.insts.find(it=>it.label==='palace').mesh;
+    let dark=0, tot=0, ember=0;
+    for (const f of m.f){ let cx=0,cy=0,cz=0; for (const vi of f.i){ const v=m.v[vi]; cx+=v[0]; cy+=v[1]; cz+=v[2]; }
+      cx/=f.i.length; cy/=f.i.length; cz/=f.i.length;
+      if (cx>34.2 && cx<45.8 && cz>-3.8 && cz<11.8 && cy<4.5){ tot++;
+        if (f.c==='#5e2a10'||f.c==='#3a1c0c'||f.c==='#4a2410') ember++;
+        const r=parseInt(f.c.slice(1,3),16),gr2=parseInt(f.c.slice(3,5),16),b=parseInt(f.c.slice(5,7),16);
+        if (0.2126*r+0.7152*gr2+0.0722*b <= 72) dark++; } }
+    ok(tot>10 && dark/tot>=0.7, 'E6.2 the treasury reads dark ('+(100*dark/tot).toFixed(0)+'% of '+tot+' faces under lum 72)');
+    ok(ember>=3, 'E6.2 and the embers burn in it ('+ember+' ember faces)');
+  }
+  // E6.3 THE LITMUS: walk the skyway end to end on real input, over the arch, down into the treasury
+  {
+    const g=mkP(30);
+    g.player.pos=[18,0.42,11.9]; g.player.yaw=0; g.player.vel=[0,0,0]; g.update({},1/30);   // standing on the stair base pier, facing -z up the flight
+    let maxY=0, minDeckY=99, said0=g.msgs.filter(m2=>m2.text.indexOf('\u8907\u9053\u884c\u7a7a')>=0).length;
+    for(let i=0;i<7*30;i++){ g.update({fwd:1},1/30); }   // climb the stair (-z)
+    ok(g.player.pos[1]>4.6, 'E6.3 the stair carries a real walker to the landing (y='+g.player.pos[1].toFixed(2)+')');
+    g.player.yaw=Math.PI/2; g.player.pos[2]=0.2;
+    for(let i=0;i<14*30;i++){ g.update({fwd:1},1/30);
+      if (g.player.pos[0]>17.2 && g.player.pos[0]<41.4){ maxY=Math.max(maxY,g.player.pos[1]); minDeckY=Math.min(minDeckY,g.player.pos[1]); }
+      if (g.player.pos[0]>=41.6) break; }
+    ok(g.player.pos[0]>=41.4, 'E6.3 the span walks end to end ('+g.player.pos[0].toFixed(1)+')');
+    ok(minDeckY>4.7, 'E6.3 with support the whole way (min y '+minDeckY.toFixed(2)+')');
+    ok(maxY>5.7, 'E6.3 and it ARCHES over River B (peak y '+maxY.toFixed(2)+') - bu ji he hong');
+    for(let i=0;i<2*30;i++){ g.update({fwd:1},1/30); if (g.player.pos[0]>=42.3) break; }   // through the door bay
+    g.player.yaw=Math.PI;
+    for(let i=0;i<10*30;i++){ g.update({fwd:1},1/30); if (g.player.pos[1]<0.5) break; }
+    ok(g.player.pos[1]<0.5 && g.player.pos[0]>41.5, 'E6.3 the interior stair descends into the treasury (y='+g.player.pos[1].toFixed(2)+')');
+    const saidNow=g.msgs.filter(m2=>m2.text.indexOf('\u8907\u9053\u884c\u7a7a')>=0).length;
+    eq(saidNow-said0, 1, 'E6.3 fu dao xing kong speaks exactly once on the crossing');
+  }
+  // E6.4 motion exists (deterministic renderer, exploited)
+  {
+    const g=mkP(30);
+    const grab=()=>g.scene._pet.slice(0,8).map(p=>p.pos.slice()).concat(g.scene._slv.map(sv=>[sv.yaw,sv.pos[0],0]));
+    const A2=grab(); for(let i=0;i<15;i++) g.update({},1/30); const B2=grab();
+    let moved=0; for(let i2=0;i2<A2.length;i2++){ if (Math.hypot(A2[i2][0]-B2[i2][0],(A2[i2][1]-B2[i2][1]),(A2[i2][2]-B2[i2][2]))>0.03) moved++; }
+    ok(moved>=8, 'E6.4 half a second later, the world has moved ('+moved+'/'+A2.length+' probes)');
+    g.time=204; g.update({},1/30); g.update({},1/30);   // turn the knob to night
+    ok(g.scene._pet.every(p=>p.pos[1]<-50), 'E6.4 petals are a daylight thing (chun guang rong rong)');
+  }
+  // E6.5 the trail out the door
+  {
+    const g=mkP(1); const m=g.scene.insts.find(it=>it.label==='palace').mesh;
+    let trail=0; for (const f of m.f){ if (f.tag!=='treasure') continue;
+      let cx=0; for (const vi of f.i) cx+=m.v[vi][0]; cx/=f.i.length; if (cx<34) trail++; }
+    ok(trail>=20, 'E6.5 qi zhi li yi: '+trail+' treasures strewn outside the west door');
+  }
+  // E6.6 the grand tour: all TWELVE stagings speak, once each
+  {
+    const g=mkP(30);
+    const tourY={'\u5bae\u9580':0.2,'\u524d\u6bbf':1.15,'\u8907\u9053\u884c\u7a7a':5.25,'\u6b4c\u81fa':0.85,'\u821e\u6bbf':0.55,'\u5eca\u8170\u7e35\u56de':0.5,'\u9577\u6a4b\u81e5\u6ce2':1.4,'\u9f0e\u9435\u7389\u77f3':0.25,'\u599d\u93e1\u6a13':0.9,'\u963f\u623f\u5bae':0.25,'\u4e8c\u5ddd\u6eb6\u6eb6':1.15,'\u8702\u623f\u6c34\u6e26':0.45};
+    for (const rg of g.scene.regions){ g.player.pos=[(rg.x0+rg.x1)/2, tourY[rg.cn]!==undefined?tourY[rg.cn]:rg.y0+1.2, (rg.z0+rg.z1)/2]; g.player.vel=[0,0,0];
+      g.update({},1/30); g.update({},1/30); g.update({},1/30); }
+    eq(g.scene.regions.length, 12, 'E6.6 twelve stagings stand');
+    ok(g.scene.regions.every(r=>r.said), 'E6.6 and every one of them spoke its line');
+    for (const rg of g.scene.regions){ const n2=g.msgs.filter(m2=>m2.text.indexOf(rg.q)>=0).length; if(n2!==1){ ok(false,'E6.6 '+rg.cn+' spoke '+n2+' times'); } }
+    ok(true,'E6.6 no staging spoke twice');
   }
 }
 

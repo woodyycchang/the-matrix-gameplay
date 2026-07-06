@@ -1,5 +1,6 @@
 const fs=require('fs');
-const {PNG}=(function(){try{return require('pngjs')}catch(e){return require('/home/claude/rigb/node_modules/pngjs')}})();
+let PNGMOD; try { PNGMOD = require('pngjs'); } catch(e1) { try { PNGMOD = require('/home/claude/rigb/node_modules/pngjs'); } catch(e2) { PNGMOD = require(__dirname + '/../node_modules/pngjs'); } }
+const {PNG} = PNGMOD;   // P9: no single container path may be load-bearing
 for (const f of ['00_math','01_glyph','02_mesh','03_props','04_scenes','05_engine','06_game','07_audio']) require(__dirname+'/../src/'+f+'.js');
 const C=globalThis.C;
 const g=new C.Game(); g.update({},0.2); g.request('erebus');
@@ -138,6 +139,9 @@ paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png', 'erebus');
 paint([-4,12.62,9.5, 0.13, 0.42, 5], '/tmp/shot_dome'+SUF+'.png', 'erebus');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1170], '/tmp/shot_empire_dusk'+SUF+'.png', 'empire');
 paint([281,1.35,-1.5, Math.PI/2+0.05, 0.02, undefined, 1172], '/tmp/shot_empire_sign'+SUF+'.png', 'empire');
+paint([21,7.48,0.2, Math.PI/2, 0.02, 120], '/tmp/shot_epang_skyway'+SUF+'.png', 'epang');
+paint([40.5,1.62,6.8, -2.0, 0.06, 204], '/tmp/shot_epang_treasury'+SUF+'.png', 'epang');
+paint([-19.5,1.62,4.2, -Math.PI/2, 0.04, 30], '/tmp/shot_epang_getai'+SUF+'.png', 'epang');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
 paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');
 paint([21.69,1.62,43.98, 4.254, 0.02, undefined, 10], '/tmp/shot_mobil_vista'+SUF+'.png', 'mobil ave');

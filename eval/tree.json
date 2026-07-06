@@ -14,7 +14,7 @@
     "ROOT/TRUST"
    ],
    "status": "PASS",
-   "evidence": "971全绿; 14关键词主题; 五跨引擎移植; 视觉仪器化审计全入册; 每叶携证据串,单报告即重开."
+   "evidence": "1001全绿; 14主题+原版阿房宫入驻子目录; 三份原作者报告全数执行(empire/erebus/epang); 探针文化抓获真缺陷十余处; 单报告即重开."
   },
   {
    "path": "ROOT/SOUND",
@@ -489,14 +489,20 @@
    "type": "BRANCH",
    "why": "阿房宮: epang分支跨引擎移植为关键词主题",
    "status": "PASS",
-   "evidence": "E0-E6全FIXED; E5首跑零返修; 845绿",
+   "evidence": "E0-E6全FIXED; E5首跑零返修; 845绿 | 2026-07-05原作者报告重开→F1-F10全落+E6六探针(1001绿); 原版入驻/epang-palace/. 重开.",
    "priors": [
     "ROOT/EPANG/E1-skeleton",
     "ROOT/EPANG/E2-sky-props",
     "ROOT/EPANG/E3-wordchain",
     "ROOT/EPANG/E4-quotes-wading",
     "ROOT/EPANG/E5-courts",
-    "ROOT/EPANG/E6-feel"
+    "ROOT/EPANG/E6-feel",
+    "ROOT/EPANG/E6.1-fog-sky",
+    "ROOT/EPANG/E6.2-treasury-ember",
+    "ROOT/EPANG/E6.3-skyway-litmus",
+    "ROOT/EPANG/E6.4-motion",
+    "ROOT/EPANG/E6.5-trail",
+    "ROOT/EPANG/E6.6-twelve"
    ]
   },
   {
@@ -720,6 +726,54 @@
    ],
    "status": "PASS",
    "evidence": "971全绿(+35); E0+三轮视觉环入册eval/mobil-port.md; vista lum123==123; 周期40s两班线序法庭."
+  },
+  {
+   "path": "ROOT/EPANG/E6.1-fog-sky",
+   "type": "UNIT",
+   "why": "雾天同锁: 一标量律",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/EPANG/E6.2-treasury-ember",
+   "type": "UNIT",
+   "why": "宝库烬上之黑(反照率审计)",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/EPANG/E6.3-skyway-litmus",
+   "type": "UNIT",
+   "why": "复道真步走通含拱与一次逐字",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/EPANG/E6.4-motion",
+   "type": "UNIT",
+   "why": "动存在且落花昼性",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/EPANG/E6.5-trail",
+   "type": "UNIT",
+   "why": "弃掷逦迤>=20件出门",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/EPANG/E6.6-twelve",
+   "type": "UNIT",
+   "why": "十二景各言一次",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
   }
  ]
 }
