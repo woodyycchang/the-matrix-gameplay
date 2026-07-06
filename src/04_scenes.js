@@ -1610,7 +1610,7 @@
 
   function sceneEmpire() {
     var s = {
-      name: 'angel city 1937', sky: 'empire', fog: { near: 55, far: 200, col: '#4a3a4e' },
+      name: 'angel city 1937', sky: 'empire', uiDark: true, fog: { near: 55, far: 200, col: '#4a3a4e' },
       groundY: 0, ambience: 'empire', colliders: [], insts: [],
       spawn: { pos: [-4, 0.02, -3.4], yaw: Math.PI / 2 },
       label: 'ANGEL CITY 1937', barricades: [], chunks: {}

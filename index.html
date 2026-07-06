@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0842</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0847</span></div>
 </div>
 
 <script>
@@ -100,7 +100,7 @@
 (function (G) {
   'use strict';
   var C = G.C = G.C || {};
-  C.VER = 'v39';   // bump on every push: the HUD wears it
+  C.VER = 'v40';   // bump on every push: the HUD wears it
 
   C.clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
   C.lerp = function (a, b, t) { return a + (b - a) * t; };
@@ -2676,7 +2676,7 @@
 
   function sceneEmpire() {
     var s = {
-      name: 'angel city 1937', sky: 'empire', fog: { near: 55, far: 200, col: '#4a3a4e' },
+      name: 'angel city 1937', sky: 'empire', uiDark: true, fog: { near: 55, far: 200, col: '#4a3a4e' },
       groundY: 0, ambience: 'empire', colliders: [], insts: [],
       spawn: { pos: [-4, 0.02, -3.4], yaw: Math.PI / 2 },
       label: 'ANGEL CITY 1937', barricades: [], chunks: {}
