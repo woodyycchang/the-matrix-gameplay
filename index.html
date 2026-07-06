@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0847</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0857</span></div>
 </div>
 
 <script>
@@ -100,7 +100,7 @@
 (function (G) {
   'use strict';
   var C = G.C = G.C || {};
-  C.VER = 'v40';   // bump on every push: the HUD wears it
+  C.VER = 'v41';   // bump on every push: the HUD wears it
 
   C.clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
   C.lerp = function (a, b, t) { return a + (b - a) * t; };
@@ -6458,7 +6458,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city 1937', 'orange empire'], ['peach blossom spring', 'peach blossom'], ['mobil ave', 'mobil ave'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city', 'orange empire'], ['peach blossom spring', 'peach blossom'], ['mobil ave', 'mobil ave'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');
