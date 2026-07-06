@@ -32,10 +32,10 @@
     bike: 'Two wheels. The walls have opinions. respect them.',
     katana: 'A blade. Quiet and honest.',
     neon: 'A mile of wet light and a bike at the line. Twist the throttle.',
-    empire: 'Angel City, June 1937, 7:24 in the evening. The road east is closed. That is the point.',
+    empire: 'Angel City, 7:24 in the evening. The road east is closed. That is the point.',
     mobil: 'A between place. Requests will not compile there. The train keeps the only key.',
     sedan: 'Four doors, June plates. She starts on the first crank.',
-    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city 1937 \u00b7 mobil ave \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
+    help: 'Try: weapons \u00b7 dojo \u00b7 rooftop \u00b7 a hallway \u00b7 erebus station \u00b7 the palace \u00b7 angel city \u00b7 mobil ave \u00b7 city street \u00b7 "a red chair" \u00b7 clear. Press C for code vision.'
   };
 
   // -------- parser --------
