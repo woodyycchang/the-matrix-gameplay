@@ -2549,6 +2549,19 @@ section('EPANG E6 (the rebuild report acceptance probes)');
     eq(g.msgs.length-n0,2,'but after 30 s the line may return');
     ok(typeof C.VER==='string' && C.VER[0]==='v','the build wears a version tag: '+C.VER);
   }
+  // -- the hallway seal fault: undefined lines must never reach the teletype
+  {
+    ok(typeof C.LINES.dejavu==='string' && typeof C.LINES.wayback==='string' && typeof C.LINES.loop==='string', 'the three hallway lines EXIST');
+    const g=new C.Game(); g.emit=()=>{}; g.update({},0.2);
+    const n0=g.msgs.length; g.say(undefined); g.say(null);
+    eq(g.msgs.length,n0,'say(undefined) queues nothing');
+    g.request('hallway'); for(let i=0;i<100;i++) g.update({},1/30);
+    g.player.yaw=-Math.PI/2;
+    for(let i=0;i<200*30;i++){ g.update({fwd:1,run:1},1/30); if (g.scene.dv.sealed && g.scene.dv.loopSaid) break; }
+    ok(g.scene.dv.sealed && g.scene.dv.loopSaid, 'the seal falls and the first wrap speaks');
+    ok(g.msgs.every(m2=>typeof m2.text==='string'), 'EVERY queued line is a string, end to end');
+    ok(g.msgs.some(m2=>m2.text.indexOf('d\u00e9j\u00e0 vu')>=0) && g.msgs.some(m2=>m2.text.indexOf('Listen for it')>=0) && g.msgs.some(m2=>m2.text.indexOf('corridor repeats')>=0), 'and the three lines land verbatim');
+  }
 // ------------------------------------------- PEACH BLOSSOM SPRING (branch port, English-only decree)
 section('PEACH BLOSSOM SPRING');
 {

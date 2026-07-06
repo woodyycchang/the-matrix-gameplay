@@ -2,7 +2,7 @@
 (function (G) {
   'use strict';
   var C = G.C = G.C || {};
-  C.VER = 'v42';   // bump on every push: the HUD wears it
+  C.VER = 'v43';   // bump on every push: the HUD wears it
 
   C.clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
   C.lerp = function (a, b, t) { return a + (b - a) * t; };

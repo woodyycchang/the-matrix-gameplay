@@ -5,6 +5,9 @@
 
   // -------- operator script (all original) --------
   var L = C.LINES = {
+    dejavu: 'A d\u00e9j\u00e0 vu. Something in this hallway has been changed.',
+    wayback: 'The way you came in is brick now. The only way out is ahead. Listen for it.',
+    loop: 'The corridor repeats. You are not moving through it; it is moving through you.',
     boot1: 'Construct online. White, empty, obedient.',
     boot2: 'Ask for what you need. Voice or text, whichever you prefer.',
     weapons: 'Armory request received. Mind the racks.',
@@ -156,6 +159,7 @@
   Game.prototype.emit = function (name, v) { this.events.push({ name: name, v: v, t: this.time }); if (this.events.length > 64) this.events.shift(); };
   Game.prototype.drain = function () { var e = this.events; this.events = []; return e; };
   Game.prototype.say = function (text, delay) {
+    if (text == null) return;   // an undefined line must never reach the teletype (the hallway seal fault)
     // the operator does not repeat itself: identical lines within 30 s are dropped
     this._sayLog = this._sayLog || {};
     var last = this._sayLog[text];
