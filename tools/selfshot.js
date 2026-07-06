@@ -137,6 +137,7 @@ paint([0,-6.9,32.5, 0, 0.05], '/tmp/shot_reactor'+SUF+'.png', 'erebus');
 paint([0,0.02,-19.5, 0, 0.04], '/tmp/shot_bridge'+SUF+'.png', 'erebus');
 paint([-4,12.62,9.5, 0.13, 0.42, 5], '/tmp/shot_dome'+SUF+'.png', 'erebus');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1170], '/tmp/shot_empire_dusk'+SUF+'.png', 'empire');
+paint([281,1.35,-1.5, Math.PI/2+0.05, 0.02, undefined, 1172], '/tmp/shot_empire_sign'+SUF+'.png', 'empire');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
 paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');
 paint([21.69,1.62,43.98, 4.254, 0.02, undefined, 10], '/tmp/shot_mobil_vista'+SUF+'.png', 'mobil ave');

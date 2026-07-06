@@ -117,3 +117,34 @@ near+far render nonzero; perf budget; audio event set; determinism twin-run.
   a moody overcast noon, logged as renderer-native.
 - Browser-side validations selfshot cannot reach: the neon flicker feel, the amber wash
   in the live canvas painter, engine audio under way. Queued for Master's eyes.
+
+
+## PASS 6 - THE BUILD CHAT'S HANDOFF REPORT, INGESTED (owner-delivered, 2026-07-05)
+The original branch author sent a first-principles replication audit. Section F executed in full:
+
+### Correctness courts (+9 -> 981 green), with two real findings
+- C.3 player/car sync: measured EXACT - a constant 1.100 m seat offset with 0.0000 spread over
+  120 driving frames. The invariant that matters (no stale player.pos; boundary/audio read the
+  moving entity) holds by construction; the court now asserts constancy, not proximity.
+- E.3.1 interior immunity: 1000 frames at the bar, boundary never fires; the interior is
+  in-world (d~21), the x=4000 trap from Version A structurally cannot occur here.
+- C.2 kind-2 drums: REAL GAP FOUND - the oil drums existed as geometry but had NO colliders
+  (so no wedge was possible, but the drums were ghosts). Now they are solid, and they die with
+  the sawhorse; a post-break 3 s drive asserts the lane is truly open (+45 m).
+- E.3.2 MIRROR under natural play: crosses well inside the 120 s budget standing on Main.
+
+### Fidelity: the three signs get real letterforms
+5x5 block-letter stencil (16-glyph font) on the planks themselves: ROAD CLOSED over the
+stripes, NO THRU TRAFFIC across the boards, TURN BACK dripping on the hand-paint field.
+Plus approach announcements at <38 m so the beat lands before the letters resolve.
+Side-by-side vs their 04_road_closed.png: lum 82 vs 72; their frame is a close-up plank
+(darkwood 35%), ours reads the plank in road context - letters present, composition differs.
+
+### KEEP verdicts confirmed per the report
+Flat valley, no headlight cones/grain, bike-synth engine, simpler tumble, #242424 dusk floor,
+operator-spoken building names. All correctly renderer-native; no time spent.
+
+### QUEUED FOR WOODY (browser-only, no headless court can reach these)
+1. Neon flicker feel on Main at night. 2. The amber horizon wash in the live canvas painter.
+3. Engine pitch under way + ambience shift with the edge factor. 4. (Low) day-phase look
+after a 20-real-minute wait wears the dusk bake.

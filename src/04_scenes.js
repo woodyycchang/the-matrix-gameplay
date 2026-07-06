@@ -1606,7 +1606,11 @@
       var bit = inst(P.barricade37(BARR[bri][1], false), [BARR[bri][0], 0, 0], Math.PI / 2, { kind: 'barricade', label: 'road closed' });
       var bcol = box([BARR[bri][0] - 0.35, 0, -BW / 2], [BARR[bri][0] + 0.35, 2.0, BW / 2]);
       s.colliders.push(bcol); s.insts.push(bit);
-      s.barricades.push({ it: bit, col: bcol, kind: BARR[bri][1], broken: false, fly: null });
+      var dcs = [];
+      if (BARR[bri][1] === 2) { for (var dr2 = -1; dr2 <= 1; dr2 += 2) {
+        var dc2 = box([BARR[bri][0] - 0.34, 0, dr2 * 4.4 - 0.34], [BARR[bri][0] + 0.34, 0.98, dr2 * 4.4 + 0.34]);
+        s.colliders.push(dc2); dcs.push(dc2); } }
+      s.barricades.push({ it: bit, col: bcol, drumCols: dcs, kind: BARR[bri][1], broken: false, fly: null, read: false });
     }
     var doorIt = inst(P.shackDoor37(false), [334.45, 0, 23.8], 0, { kind: 'door', label: 'shack door' });
     s.insts.push(doorIt); s.shackDoor = doorIt;
@@ -1668,6 +1672,7 @@
       b.fly = { vx: dx2 * v * 0.3, vz: dz2 * v * 0.3, t: 0.9 };
       s._f.knocked++;
       game.emit('thud'); game.shake = Math.max(game.shake || 0, 0.35);
+      for (var dk2 = 0; dk2 < b.drumCols.length; dk2++) { var dix = s.colliders.indexOf(b.drumCols[dk2]); if (dix >= 0) s.colliders.splice(dix, 1); }
       game.say(b.kind === 3 ? 'The sign splinters. Hand-paint and all.' : 'The barricade goes over.', 0.25);
       if (b.kind === 1) game.say('ROAD CLOSED \u2014 The sawhorse went over easy. Nothing behind it but more road. Why close a road to nowhere?', 2.2);
       if (b.kind === 3) game.say('TURN BACK \u2014 Hand-painted, the paint still tacky after who knows how long. Somebody wanted this to look desperate.', 2.2);
@@ -1734,6 +1739,12 @@
         if (kk < lo || kk > hi) { var ci3 = s.chunks[kk]; var ix2 = s.insts.indexOf(ci3); if (ix2 >= 0) s.insts.splice(ix2, 1);
           if (ci3._ccols) { for (var cc3 = 0; cc3 < ci3._ccols.length; cc3++) { var cix = s.colliders.indexOf(ci3._ccols[cc3]); if (cix >= 0) s.colliders.splice(cix, 1); } }
           delete s.chunks[kk]; } }
+      // the three signs announce on approach - the beat lands even before the letters resolve
+      for (var ba2 = 0; ba2 < s.barricades.length; ba2++) { var bb3 = s.barricades[ba2];
+        if (bb3.read || bb3.broken) continue;
+        var bx2 = bb3.it.pos[0] - game.player.pos[0];
+        if (bx2 > 0 && bx2 < 38 && Math.abs(game.player.pos[2]) < 10) { bb3.read = true;
+          game.say(bb3.kind === 1 ? 'The plank reads: ROAD CLOSED.' : bb3.kind === 2 ? 'Stenciled across the boards: NO THRU TRAFFIC.' : 'Hand-painted, the letters dripping: TURN BACK.', 0.2); } }
       // barricade toss
       for (var bf = 0; bf < s.barricades.length; bf++) { var bb2 = s.barricades[bf];
         if (bb2.fly) { bb2.fly.t -= dtv; bb2.it.pos[0] += bb2.fly.vx * dtv; bb2.it.pos[2] += bb2.fly.vz * dtv; bb2.it.yaw += dtv * 2.6;

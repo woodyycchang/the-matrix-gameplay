@@ -2246,6 +2246,43 @@ section('ORANGE EMPIRE 1937 (Angel City recovered as native scene)');
     for (let i = 0; i < 8 * 30; i++) g.update({}, 1 / 30);
     ok(g.msgs.filter(m => m.said).some(m => m.text.indexOf('There are worse loops, Mr. Voss.') >= 0), 'and answers it');
   }
+  // -- the build chat's Section-F correctness courts (handoff report, 2026-07-05)
+  {
+    const { g } = mkE(); mountSedan(g);
+    let mn = 1e9, mx = 0;
+    for (let i = 0; i < 120; i++) { g.update({ fwd: 1 }, 1 / 60);
+      const d2 = Math.hypot(g.scene.sedan.pos[0] - g.player.pos[0], g.scene.sedan.pos[2] - g.player.pos[2]);
+      mn = Math.min(mn, d2); mx = Math.max(mx, d2); }
+    ok(mx - mn < 0.01 && mx < 2, 'C.3: the player IS the car, every frame - a fixed 1.1 m seat offset, zero staleness (spread ' + (mx - mn).toFixed(4) + ')');
+  }
+  {
+    const { g } = mkE();
+    g.player.pos = [-16, 0, 14];
+    for (let i = 0; i < 1000; i++) g.update({}, 1 / 30);
+    ok(!g.scene._f.end, 'E.3.1: a thousand frames at the bar and the boundary never fires');
+    ok(Math.hypot(g.player.pos[0], g.player.pos[2]) < 965, 'the interior lives in-world, not at x=4000');
+  }
+  {
+    const { g } = mkE(); mountSedan(g);
+    const b2 = g.scene.barricades[1];
+    eq(b2.drumCols.length, 2, 'kind-2 carries its two oil drums as colliders');
+    ok(b2.drumCols.every(c => g.scene.colliders.indexOf(c) >= 0), 'and they are solid before the break');
+    g.player.pos = [508, 0, 0]; g.player.yaw = Math.PI / 2; g.car.speed = 15;
+    for (let i = 0; i < 90; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(b2.broken, 'NO THRU TRAFFIC goes over at speed');
+    ok(g.scene.colliders.indexOf(b2.col) < 0 && b2.drumCols.every(c => g.scene.colliders.indexOf(c) < 0), 'C.2: every collider it owns dies with it - drums included');
+    const x0 = g.player.pos[0];
+    for (let i = 0; i < 3 * 60; i++) g.update({ fwd: 1 }, 1 / 60);
+    ok(g.player.pos[0] - x0 > 30, 'and the lane is truly open: no invisible wedge (' + (g.player.pos[0] - x0).toFixed(0) + ' m onward)');
+  }
+  {
+    const { g } = mkE();
+    g.player.pos = [0, 0, -3];
+    let tCross = -1;
+    for (let i = 0; i < 120 * 30; i++) { g.player.pos = [0, 0, -3]; g.update({}, 1 / 30);
+      if (g.scene._f.mirror) { tCross = i / 30; break; } }
+    ok(tCross >= 0 && tCross <= 120, 'E.3.2: THE MIRROR crosses within natural play (' + (tCross < 0 ? 'never' : tCross.toFixed(0) + ' s') + ', budget 120)');
+  }
   // -- END SESSION wakes in the white
   {
     const { g } = mkE();

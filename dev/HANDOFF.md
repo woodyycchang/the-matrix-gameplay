@@ -18,7 +18,7 @@ You are picking up a long-running, highly successful agentic engineering maratho
 - **THE CONSTRUCT** — a Matrix-homage white-void browser game. One self-contained HTML, zero dependencies, Canvas-2D **software renderer** (no WebGL).
 - Repo: `https://github.com/woodyycchang/the-matrix-gameplay` · Live: `https://woodyycchang.github.io/the-matrix-gameplay/`
 - Layout: `src/00_math.js … 09_intent.js` → `build.sh` (concats + injects into template) → `dist/the-construct.html` → `cp` to `index.html` (the Pages artifact).
-- Tests: `node node/tests.js` — **971 PASS / 0 FAIL** at handoff. Feature tree: `eval/tree.json` enforced by `node/tree_guard.js` (rules R1–R5: every node needs evidence; branches close only when children close; etc.). Tree state at handoff: **ROOT = PASS, zero open nodes**.
+- Tests: `node node/tests.js` — **981 PASS / 0 FAIL** at handoff. Feature tree: `eval/tree.json` enforced by `node/tree_guard.js` (rules R1–R5: every node needs evidence; branches close only when children close; etc.). Tree state at handoff: **ROOT = PASS, zero open nodes**.
 - Design/battle logs live in `eval/erebus-port.md`, `eval/epang-port.md` (contain the VISUAL LOOP LOG + EPISTEMICS AUDIT — read them).
 
 ### THE GATE PROTOCOL (every change, no exceptions)
@@ -93,7 +93,7 @@ peach-blossom (桃花源 fable, THREE, own shots) · erebus-station (THREE origi
 ## 5. OPEN THREADS / BACKLOG (the reopenable & the queued)
 
 1. **STREET PROTOCOL** (cyberpunk-motorcycle branch): motorcycle engine audio too loud — needs RPM-based volume scaling. (Separate repo per memory: woodyycchang/the-street-protocol may also exist.)
-1b. EMPIRE browser-side eyes: neon flicker feel, live amber wash, engine audio under way, day-phase look after a 20-real-minute wait (dusk-baked albedo reads as moody noon — logged delta).
+1b. EMPIRE browser-side eyes (per the build chat's report, queued for Woody): neon flicker \u00b7 live amber wash \u00b7 engine-under-way \u00b7 day-phase after 20 min. Was: neon flicker feel, live amber wash, engine audio under way, day-phase look after a 20-real-minute wait (dusk-baked albedo reads as moody noon — logged delta).
 2. Phase-2 density backfill (city props etc.) — logged as backlog in tree evidence.
 3. Browser-side validations selfshot can't reach: erebus dome sunrise flood, epang dusk phase live look.
 4. Optional EPANG visual Pass-6: gate stone vs sky dominance composition (side-by-side judged).

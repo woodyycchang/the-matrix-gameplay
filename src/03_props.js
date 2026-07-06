@@ -610,6 +610,19 @@
     return m;
   };
 
+  var F5 = { A:[14,17,31,17,17], B:[30,17,30,17,30], C:[15,16,16,16,15], D:[30,17,17,17,30],
+    E:[31,16,30,16,31], F:[31,16,30,16,16], H:[17,17,31,17,17], I:[14,4,4,4,14], K:[17,18,28,18,17],
+    L:[16,16,16,16,31], N:[17,25,21,19,17], O:[14,17,17,17,14], R:[30,17,30,20,18], S:[15,16,14,1,30],
+    T:[31,4,4,4,4], U:[17,17,17,17,14] };
+  // block-letter stencil on a +z face: the three east-road signs carry the beat
+  P.stencil5 = function (m, text, cx, cy, z, cell, col) {
+    var x = cx - text.length * cell * 0.5;
+    for (var i = 0; i < text.length; i++) { var g = F5[text[i]];
+      if (g) for (var r = 0; r < 5; r++) for (var c2 = 0; c2 < 5; c2++) { if (!((g[r] >> (4 - c2)) & 1)) continue;
+        var px = x + c2 * cell * 0.17, py2 = cy + (2 - r) * cell * 0.24;
+        C.addQuadZ(m, px, py2, px + cell * 0.15, py2 + cell * 0.21, z, col, true); }
+      x += cell; }
+  };
   P.barricade37 = function (kind, broken) { // sawhorse barricade, plank spans x; faces +z driver
     var m = C.newMesh();
     var W = kind === 3 ? 4.6 : 7.2, H = kind === 3 ? 1.5 : 1.0;
@@ -618,9 +631,13 @@
     if (!broken) {
       C.addBox(m, 0, py, 0, W, H, 0.1, base);
       if (kind === 1) { for (var st = 0; st < 5; st++) C.addQuadZ(m, -W/2 + 0.3 + st * 1.45, py - H/2 + 0.1, -W/2 + 0.85 + st * 1.45, py + H/2 - 0.1, 0.07, '#c8541e', true);
+        C.addQuadZ(m, -3.2, py - 0.34, 3.2, py + 0.34, 0.085, '#ded6c2', true);
+        P.stencil5(m, 'ROAD CLOSED', 0, py, 0.10, 0.56, '#33231a');
         C.addBox(m, 0, py + H/2 + 0.28, 0, 0.24, 0.24, 0.24, '#ff5520'); }   // the lantern
-      if (kind === 2) { C.addBox(m, -4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); C.addBox(m, 4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); }
-      if (kind === 3) { C.addQuadZ(m, -1.6, py - 0.35, 1.6, py + 0.42, 0.06, '#e8e2d2', true); }   // the hand-paint field
+      if (kind === 2) { C.addBox(m, -4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a'); C.addBox(m, 4.4, 0.48, 0, 0.64, 0.95, 0.64, '#6a3c2a');
+        P.stencil5(m, 'NO THRU TRAFFIC', 0, py, 0.075, 0.44, '#46281a'); }
+      if (kind === 3) { C.addQuadZ(m, -1.6, py - 0.35, 1.6, py + 0.42, 0.06, '#e8e2d2', true);
+        P.stencil5(m, 'TURN BACK', 0, py + 0.04, 0.085, 0.335, '#26180f'); }   // hand-painted, letters dripping
       for (var lg = -1; lg <= 1; lg += 2) { C.addBox(m, lg * (W/2 - 0.5), 0.8, 0.28, 0.12, 1.7, 0.12, '#6a5436'); C.addBox(m, lg * (W/2 - 0.5), 0.8, -0.28, 0.12, 1.7, 0.12, '#6a5436'); }
     } else {
       C.addBox(m, -W * 0.22, 0.09, 0.9, W * 0.55, 0.1, 0.34, base);   // planks thrown past, flat
