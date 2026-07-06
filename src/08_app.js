@@ -584,7 +584,7 @@
   // ---------- HUD ----------
   var lastSceneLine = '', lastAimLabel = null, lastAimOp = -1;
   function updateHUD() {
-    var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '');
+    var sceneLine = 'THE CONSTRUCT \u2044 ' + game.sceneName + (game.mode === 'code' ? ' \u00b7 CODE' : '') + ' \u00b7 ' + C.VER;
     if (game.scene && game.scene.infinite) {
       var dpx = game.player.pos[0], dpz = game.player.pos[2];
       var dOut = Math.round(Math.sqrt(dpx * dpx + dpz * dpz) * 8 / 10) * 10;  // 10 m steps, not per-frame churn

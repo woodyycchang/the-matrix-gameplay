@@ -2529,7 +2529,7 @@ section('EPANG E6 (the rebuild report acceptance probes)');
     eq(g.scene.name,'dojo','THE TRANSFER ROUTES: mobil cannot lock the operator');
     g.request('mobil ave'); for(let i=0;i<160;i++) g.update({},1/30);
     g.request('epang palace');
-    eq(g.msgs.filter(m2=>m2.text.indexOf('Static on the line clears')>=0).length,2,'flavor is once PER VISIT: a new arc earns one new line');
+    eq(g.msgs.filter(m2=>m2.text.indexOf('Static on the line clears')>=0).length,1,'flavor is once per SESSION: the operator does not nag');
     for(let i=0;i<160;i++) g.update({},1/30);
     eq(g.scene.name,'epang palace','and the second transfer routes too');
   }
@@ -2539,6 +2539,15 @@ section('EPANG E6 (the rebuild report acceptance probes)');
       const sc=C.makeScene(nm==='empire'?'empire':nm==='mobil'?'mobil':nm==='peach'?'peach':nm==='neon'?'neon':nm);
       if (sc.uiDark) darks.push(sc.name); }
     eq(JSON.stringify(darks),JSON.stringify(['neon mile']),'uiDark census: ONLY neon mile speaks code-green');
+  }
+  {
+    const g=new C.Game(); g.emit=()=>{}; g.update({},0.2);
+    const n0=g.msgs.length;
+    g.say('the same breath'); g.say('the same breath'); g.update({},1);
+    eq(g.msgs.length-n0,1,'DE-NAG: identical lines within 30 s collapse to one');
+    g.time+=31; g.say('the same breath');
+    eq(g.msgs.length-n0,2,'but after 30 s the line may return');
+    ok(typeof C.VER==='string' && C.VER[0]==='v','the build wears a version tag: '+C.VER);
   }
 // ------------------------------------------- PEACH BLOSSOM SPRING (branch port, English-only decree)
 section('PEACH BLOSSOM SPRING');

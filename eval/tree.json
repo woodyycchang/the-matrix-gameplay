@@ -14,7 +14,7 @@
     "ROOT/TRUST"
    ],
    "status": "PASS",
-   "evidence": "1001全绿; 14主题+原版阿房宫入驻子目录; 三份原作者报告全数执行(empire/erebus/epang); 探针文化抓获真缺陷十余处; 单报告即重开. 1037绿(业主改约: mobil放行+uiDark宣告制)."
+   "evidence": "1001全绿; 14主题+原版阿房宫入驻子目录; 三份原作者报告全数执行(empire/erebus/epang); 探针文化抓获真缺陷十余处; 单报告即重开. 1037绿(业主改约: mobil放行+uiDark宣告制). 1040(去噪法+版本标)."
   },
   {
    "path": "ROOT/SOUND",
@@ -855,6 +855,14 @@
    "priors": [],
    "status": "PASS",
    "evidence": "普查庭: 唯neon mile为真; 五场景误绿根路封死."
+  },
+  {
+   "path": "ROOT/UI/de-nag",
+   "type": "UNIT",
+   "why": "业主令: operator太碎嘴",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "say同句30s去重(时刻表40s周期安全); 风味每会话一次; empire路牌静默; 桃源刻痕仅首末开口; C.VER上HUD. 1040绿."
   }
  ]
 }

@@ -1517,7 +1517,9 @@
       if ((s._ph==='marking'||s._ph==='leave') && s._mkCool<=0 && g2.player.pos[2]>-150){
         var mp2=g2.player.pos; var mk=inst(P.cutMark(), [riverX(mp2[2])+3.1, 0, mp2[2]], 0, { label:'a fresh cut', kind:'mark' });
         s._marks.push(mk); s.insts.push(mk); s._mkCool=1.2;
-        g2.say('You cut a mark. ('+s._marks.length+')', 0.15); return true; }
+        if (s._marks.length===1) g2.say('You cut the first mark into the bank.', 0.15);
+        else if (s._marks.length===6) g2.say('Six cuts. The way home is written.', 0.15);
+        return true; }
       return false;
     };
     return s;
@@ -2056,12 +2058,7 @@
         if (kk < lo || kk > hi) { var ci3 = s.chunks[kk]; var ix2 = s.insts.indexOf(ci3); if (ix2 >= 0) s.insts.splice(ix2, 1);
           if (ci3._ccols) { for (var cc3 = 0; cc3 < ci3._ccols.length; cc3++) { var cix = s.colliders.indexOf(ci3._ccols[cc3]); if (cix >= 0) s.colliders.splice(cix, 1); } }
           delete s.chunks[kk]; } }
-      // the three signs announce on approach - the beat lands even before the letters resolve
-      for (var ba2 = 0; ba2 < s.barricades.length; ba2++) { var bb3 = s.barricades[ba2];
-        if (bb3.read || bb3.broken) continue;
-        var bx2 = bb3.it.pos[0] - game.player.pos[0];
-        if (bx2 > 0 && bx2 < 38 && Math.abs(game.player.pos[2]) < 10) { bb3.read = true;
-          game.say(bb3.kind === 1 ? 'The plank reads: ROAD CLOSED.' : bb3.kind === 2 ? 'Stenciled across the boards: NO THRU TRAFFIC.' : 'Hand-painted, the letters dripping: TURN BACK.', 0.2); } }
+      // the letters on the planks speak for themselves now (de-nag, 2026-07-06)
       // barricade toss
       for (var bf = 0; bf < s.barricades.length; bf++) { var bb2 = s.barricades[bf];
         if (bb2.fly) { bb2.fly.t -= dtv; bb2.it.pos[0] += bb2.fly.vx * dtv; bb2.it.pos[2] += bb2.fly.vz * dtv; bb2.it.yaw += dtv * 2.6;

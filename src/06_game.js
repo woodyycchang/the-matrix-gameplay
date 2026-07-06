@@ -156,6 +156,11 @@
   Game.prototype.emit = function (name, v) { this.events.push({ name: name, v: v, t: this.time }); if (this.events.length > 64) this.events.shift(); };
   Game.prototype.drain = function () { var e = this.events; this.events = []; return e; };
   Game.prototype.say = function (text, delay) {
+    // the operator does not repeat itself: identical lines within 30 s are dropped
+    this._sayLog = this._sayLog || {};
+    var last = this._sayLog[text];
+    if (last !== undefined && (this.time - last) < 30) return;
+    this._sayLog[text] = this.time;
     this.msgs.push({ text: text, at: this.time + (delay || 0), said: false });
   };
 
@@ -171,7 +176,7 @@
     var a = C.parse(text);
     // scene requests ALWAYS route: no station may lock the operator out of a transfer.
     if (a.type === 'scene' || a.type === 'clear') {
-      if (this.scene && this.scene.exitFlavor && !this.scene._exitSaid) { this.scene._exitSaid = true; this.say(this.scene.exitFlavor, 0.1); }
+      if (this.scene && this.scene.exitFlavor && !this._flavorSaid) { this._flavorSaid = true; this.say(this.scene.exitFlavor, 0.1); }
     } else if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     if (a.type === 'none') return a;
     if (a.type === 'help') { this.say(L.help); return a; }
