@@ -2538,7 +2538,7 @@ section('EPANG E6 (the rebuild report acceptance probes)');
     for (const nm of ['weapons','dojo','hallway','erebus','epang','empire','mobil','peach','neon']){
       const sc=C.makeScene(nm==='empire'?'empire':nm==='mobil'?'mobil':nm==='peach'?'peach':nm==='neon'?'neon':nm);
       if (sc.uiDark) darks.push(sc.name); }
-    eq(JSON.stringify(darks),JSON.stringify(['neon mile']),'uiDark census: ONLY neon mile speaks code-green');
+    eq(JSON.stringify(darks.sort()),JSON.stringify(['epang palace','erebus station','hallway','mobil ave','neon mile','peach blossom']),'uiDark census: the six DESIGNATED scenes speak code-green, no others');
   }
   {
     const g=new C.Game(); g.emit=()=>{}; g.update({},0.2);

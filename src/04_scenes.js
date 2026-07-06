@@ -386,7 +386,7 @@
   function sceneHallway() {
     var HL = HALL.HL, HW = HALL.HW, H = HALL.H;
     var s = {
-      name: 'hallway', sky: 'hall', fog: { near: 8, far: 34, col: '#14100d' },
+      name: 'hallway', sky: 'hall', uiDark: true, fog: { near: 8, far: 34, col: '#14100d' },
       groundY: 0, ambience: 'hall', colliders: [], insts: [],
       spawn: { pos: [8.2, 0, 0], yaw: -Math.PI / 2 },
       update: null
@@ -717,7 +717,7 @@
     // Three decks on one groundY=-7 basement: every floor is a collider top,
     // stairs are 0.28 risers, the walker's support scan does the rest.
     var s = {
-      name: 'erebus station', sky: 'erebus', fog: { near: 7, far: 58, col: '#0b0f18' },   // matches their FogExp2 .023 falloff at hall scale
+      name: 'erebus station', sky: 'erebus', uiDark: true, fog: { near: 7, far: 58, col: '#0b0f18' },   // matches their FogExp2 .023 falloff at hall scale
       groundY: -7, ambience: 'station', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 27], yaw: 0 },
       label: 'EREBUS STATION'
@@ -1085,7 +1085,7 @@
   function sceneEpang() {
     // EPANG PALACE - condensed native staging of Du Mu's rhapsody (branch port).
     var s = {
-      name: 'epang palace', sky: 'epang', fog: { near: 12, far: 88, col: '#2a2430' },
+      name: 'epang palace', sky: 'epang', uiDark: true, fog: { near: 12, far: 88, col: '#2a2430' },
       groundY: -0.7, ambience: 'wind', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 44], yaw: 0 },
       label: 'EPANG PALACE'
@@ -1331,7 +1331,7 @@
   // the branch's own gloss column is the script; not one CJK glyph ships in-scene.
   function scenePeach() {
     var s = {
-      name: 'peach blossom', sky: 'peach', fog: { near: 14, far: 84, col: '#e6dad6' },
+      name: 'peach blossom', sky: 'peach', uiDark: true, fog: { near: 14, far: 84, col: '#e6dad6' },
       groundY: -0.6, ambience: 'wind', colliders: [], insts: [],
       spawn: { pos: [1.8, 0.02, 4.2], yaw: 0 },
       label: 'THE PEACH BLOSSOM SPRING'
@@ -2185,7 +2185,7 @@
   function sceneMobil() {
     var R = MOB.R;
     var s = {
-      name: 'mobil ave', sky: 'mobil', fog: { near: 14, far: 110, col: '#0a1212' },
+      name: 'mobil ave', sky: 'mobil', uiDark: true, fog: { near: 14, far: 110, col: '#0a1212' },
       groundY: -1.1, ambience: 'mobil', colliders: [], insts: [],
       spawn: { pos: [0, 0.02, 0], yaw: 0 }, label: 'MOBIL AVE'
     };
