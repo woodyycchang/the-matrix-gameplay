@@ -1325,6 +1325,204 @@
     return s;
   }
 
+
+  // ============ THE PEACH BLOSSOM SPRING (peach-blossom branch, native port) ============
+  // Tao Yuanming's fable, played from the skiff. English throughout by decree:
+  // the branch's own gloss column is the script; not one CJK glyph ships in-scene.
+  function scenePeach() {
+    var s = {
+      name: 'peach blossom', sky: 'peach', fog: { near: 14, far: 84, col: '#e6dad6' },
+      groundY: -0.6, ambience: 'wind', colliders: [], insts: [],
+      spawn: { pos: [1.8, 0.02, 4.2], yaw: 0 },
+      label: 'THE PEACH BLOSSOM SPRING'
+    };
+    var m = C.newMesh();
+    function col(x0,y0,z0,x1,y1,z1){ var c=box([x0,y0,z0],[x1,y1,z1]); s.colliders.push(c); return c; }
+    function riverX(z){ return 6*Math.sin(z*0.045); }
+    // ---------------- the stream: banks, water, forest that turns pure peach ----------------
+    var TR_ORD=P.ordTree(), TR_PEACH=P.peachTree(true);
+    s._trunks={ord:[],peach:[]};
+    for (var z0=6; z0>-150; z0-=3){
+      var cx=riverX(z0), cx1=riverX(z0-3);
+      C.addQuadY(m, Math.min(cx,cx1)-3.4, z0-3, Math.max(cx,cx1)+3.4, z0, -0.14, '#6f9098');   // water
+      C.addQuadY(m, Math.min(cx,cx1)-16, z0-3, Math.min(cx,cx1)-3.2, z0, 0.02, z0>-58?'#5d7a48':'#6d8a56');   // banks
+      C.addQuadY(m, Math.max(cx,cx1)+3.2, z0-3, Math.max(cx,cx1)+16, z0, 0.02, z0>-58?'#587446':'#688454');
+      col(Math.min(cx,cx1)-16, -0.2, z0-3, Math.min(cx,cx1)-2.9, 0.02, z0);
+      col(Math.max(cx,cx1)+2.9, -0.2, z0-3, Math.max(cx,cx1)+16, 0.02, z0);
+      col(Math.min(cx,cx1)-2.8, -0.6, z0-3, Math.max(cx,cx1)+2.8, -0.12, z0);   // wading floor: the stream is knee-deep and the skiff sits low
+    }
+    var rg=C.rng(421);
+    for (var zt=2; zt>-146; zt-=4.6){
+      var side=(((zt*7)|0)%2)?1:-1, off=4.6+rg()*7;
+      var zz1=zt+rg()*2, g1=zz1<-58;
+      var tr=inst(g1?TR_PEACH:TR_ORD, [riverX(zt)+side*off,0,zz1], rg()*6.28, { label: g1?'peach tree':'a tree', kind: g1?'peach':'ordtree' });
+      s.insts.push(tr); s._trunks[g1?'peach':'ord'].push(tr);
+      if (rg()<0.5){ var zz2=zt-1.6, g2b=zz2<-58;
+        var t2=inst(g2b?TR_PEACH:TR_ORD, [riverX(zt)-side*(4.6+rg()*7),0,zz2], rg()*6.28, { label: g2b?'peach tree':'a tree', kind: g2b?'peach':'ordtree' });
+        s.insts.push(t2); s._trunks[g2b?'peach':'ord'].push(t2); }
+    }
+    // dock + skiff
+    C.addQuadY(m, 0.2, 2.2, 3.6, 5.4, 0.3, '#6a5a44'); col(0.2,-0.2,2.2,3.6,0.3,5.4);
+    var skiff=inst(P.skiff(), [riverX(1.2), -0.12, 1.2], 0, { label:'the skiff', kind:'skiff' });
+    s.insts.push(skiff); s._skiff=skiff;
+    // ---------------- the source: cliff, the small opening, the light ----------------
+    var SRC=-150, gx=riverX(SRC);
+    C.addBox(m, gx-9, 7, SRC-1, 14, 14, 2.6, '#6a665d', { noBottom: true }); col(gx-16,0,SRC-2.3,gx-2.1,14,SRC+0.3);
+    C.addBox(m, gx+9, 7, SRC-1, 14, 14, 2.6, '#6a665d', { noBottom: true }); col(gx+2.1,0,SRC-2.3,gx+16,14,SRC+0.3);
+    C.addBox(m, gx, 9.5, SRC-1, 5. , 9, 2.6, '#6a665d', { noBottom: true });   // lintel over the opening
+    C.addQuadY(m, gx-4, SRC-2.5, gx+4, SRC+2, 0.02, '#7a7468');   // beach at the source
+    col(gx-4,-0.2,SRC-0.5,gx+4,0.02,SRC+2);
+    s._glow=[]; var gm=C.newMesh();
+    C.addQuadZ(gm, -0.9, 0.2, 0.9, 4.6, 0, '#fff2c8', false);
+    C.addQuadZ(gm, -0.55, 0.6, 0.55, 4.0, -0.1, '#ffe9a8', false); C.meshBounds(gm);
+    var glow=inst(gm, [gx, 0, SRC-0.6], 0, { label:'a faint light', kind:'glow' });
+    s.insts.push(glow); s._glow.push(glow);
+    // the squeeze: a passage barely wide enough for a person
+    for (var qz=SRC-1; qz>SRC-13; qz-=1){
+      C.addQuadY(m, gx-0.95, qz-1, gx+0.95, qz, 0.02, '#5e5a50');
+      col(gx-0.95,-0.4,qz-1,gx+0.95,0.02,qz);   // the passage floor is real: a walker must not fall out of the story
+      col(gx-3.2,-0.2,qz-1,gx-0.82,4.5,qz); col(gx+0.82,-0.2,qz-1,gx+3.2,4.5,qz);
+      C.addBox(m, gx-1.6, 2.2, qz-0.5, 2.0, 4.4, 1.0, '#615d54', { noBottom: true });
+      C.addBox(m, gx+1.6, 2.2, qz-0.5, 2.0, 4.4, 1.0, '#615d54', { noBottom: true });
+    }
+    s._seal = null;   // in the LOST phase, this becomes a collider and the light goes out
+    // ---------------- the hidden village: level fields, houses in good order ----------------
+    var VC=[gx, SRC-40];
+    C.addQuadY(m, VC[0]-46, VC[1]-34, VC[0]+46, VC[1]+27, 0.02, '#5c7a40');
+    col(VC[0]-46,-0.2,VC[1]-34,VC[0]+46,0.02,VC[1]+27);
+    for (var hh=0; hh<14; hh++){ var ha=hh/14*6.283, hr=46+((hh*13)%7);
+      var hxp=VC[0]+Math.cos(ha)*hr, hzp=VC[1]+Math.sin(ha)*hr*0.72;
+      C.addBox(m, hxp, 6+((hh*29)%9), hzp, 13, 12+((hh*29)%18), 12, '#6f7560', { noBottom: true });
+      col(hxp-6.5,0,hzp-6,hxp+6.5,18,hzp+6); }
+    C.addQuadY(m, VC[0]+9, VC[1]+4, VC[0]+21, VC[1]+13, 0.05, '#4a6a78');   // the pond
+    for (var rd=0; rd<14; rd++){ var ra=rd/14*6.283;
+      C.addBox(m, VC[0]+15+Math.cos(ra)*6.6, 0.5, VC[1]+8.5+Math.sin(ra)*4.9, 0.08, 1.0, 0.08, '#6f8a4a', { noBottom: true }); }
+    col(VC[0]+9.6,-0.2,VC[1]+4.4,VC[0]+20.4,0.4,VC[1]+12.6);
+    function fieldP(fx,fz,fw,fd){ C.addQuadY(m,fx-fw/2,fz-fd/2,fx+fw/2,fz+fd/2,0.04,'#6b5538');
+      for (var fr=-fw/2+0.6; fr<fw/2; fr+=1.1) C.addBox(m,fx+fr,0.24,fz,0.2,0.4,fd-0.8,(((fr*10)|0)%2)?'#7c9a4a':'#90a64f',{noBottom:true});
+      col(fx-fw/2,-0.2,fz-fd/2,fx+fw/2,0.05,fz+fd/2); }
+    fieldP(VC[0]-16, VC[1]-12, 12, 8); fieldP(VC[0]-15, VC[1]+6, 10, 7); fieldP(VC[0]+14, VC[1]-14, 11, 7);
+    function houseP(hx,hz,yaw2){ var hw=3.8,hd=3.3,ht=2.1;
+      C.addBox(m,hx,ht/2,hz,hw,ht,hd,'#cdbb95',{noBottom:true});
+      C.addBox(m,hx,ht+0.07,hz,hw+0.2,0.15,hd+0.2,'#4a3a2c',{noBottom:true});
+      C.addBox(m,hx,ht+0.75,hz,hw*0.72,1.3,hd*0.72,'#6e5a3a',{noBottom:true});
+      C.addQuadZ(m,hx-0.4,0,hx+0.4,1.3,hz+hd/2+0.01,'#3a2e22',true);
+      col(hx-hw/2,0,hz-hd/2,hx+hw/2,ht+2,hz+hd/2); }
+    houseP(VC[0]-6, VC[1]-2); houseP(VC[0]+2, VC[1]-8); houseP(VC[0]+7, VC[1]+1);
+    houseP(VC[0]-2, VC[1]+9); houseP(VC[0]-11, VC[1]+13); houseP(VC[0]+18, VC[1]-4);
+    for (var bb=0; bb<8; bb++){ C.addBox(m, VC[0]-26+bb*1.1, 2.1, VC[1]+18+((bb*7)%3), 0.14, 4.2, 0.14, '#7ca050', { noBottom: true }); }
+    var mul=P.peachTree(false);
+    for (var mu=0; mu<4; mu++){ s.insts.push(inst(mul, [VC[0]-30+mu*4.4, 0, VC[1]-20-((mu*5)%4)], mu, { label:'a mulberry', kind:'mulberry' })); }
+    var chick=C.newMesh(); C.addBox(chick,0,0.14,0,0.22,0.2,0.3,'#e8e2d0',{noBottom:true}); C.addBox(chick,0,0.3,0.16,0.1,0.1,0.1,'#c84a2e',{noBottom:true}); C.meshBounds(chick);
+    var dog=C.newMesh(); C.addBox(dog,0,0.26,0,0.28,0.3,0.7,'#8a6a44',{noBottom:true}); C.addBox(dog,0,0.5,0.42,0.18,0.2,0.2,'#7a5a38',{noBottom:true}); C.meshBounds(dog);
+    for (var ck=0; ck<4; ck++){ var ci2=inst(chick,[VC[0]-4+ck*2.3,0,VC[1]+3.5+((ck*3)%3)],ck,{label:'a chicken',kind:'chicken'}); ci2._b=[ci2.pos[0],ci2.pos[2]]; s.insts.push(ci2); if(!s._hens)s._hens=[]; s._hens.push(ci2); }
+    var dg3=inst(dog,[VC[0]+5,0,VC[1]+6],2.2,{label:'a dog',kind:'dog'}); s.insts.push(dg3);
+    // villagers: the startled man, the elder, the woman at the pond, the youth, the host
+    function vil(x2,z2,seed2,lab){ var v=inst(P.human({tier:'custom',suit:'#6b7b6a',skin:'#c98f63',hair:'#3a342c',shirt:'#cdbb95',seed:seed2}),[x2,0,z2],0,{kind:'villager',label:lab});
+      v.pose=[0,0,0,0,0,0]; s.insts.push(v); return v; }
+    s._vill=[ vil(gx-1, SRC-22, 421, 'a startled villager'),
+      vil(VC[0]-4.6, VC[1]-1.2, 502, 'the village elder'),
+      vil(VC[0]+8.0, VC[1]+2.9, 603, 'a woman by the pond'),
+      vil(VC[0]+1.2, VC[1]-6.2, 704, 'a youth with loose hair'),
+      vil(VC[0]-1.4, VC[1]+7.6, 805, 'your host') ];
+    C.meshBounds(m); C.anchorize(m, 0.05, 73, 8);
+    s.insts.unshift(inst(m, [0,0,0], 0, { label: 'the valley', kind: 'static' }));
+    // ---------------- the script: the branch's English gloss column, verbatim ----------------
+    var PB = s.PB = {
+      caps: {
+        stream:'Rowing along the stream, he forgot how far he had come',
+        grove:'Suddenly, a forest of peach blossoms lining both banks',
+        grove2:'Fresh grasses, fragrant - and a confusion of falling petals',
+        source:"The grove ends at the water's source; a mountain appears",
+        opening:'A small opening in the hill - and from it, a faint light',
+        squeeze:'At first so narrow it barely lets a person through',
+        reveal:'Then all at once - open, and bright',
+        village:'Level open land; houses standing in good order',
+        warned:'"It is not worth telling to those outside."',
+        marking:'Going out, he follows the old way and marks it everywhere',
+        report:'He reaches the commandery and tells the prefect all of it',
+        lost:'They seek the marks he left - and lose the way, for good',
+        epilogue:'And after that, no one ever asked the way again.'
+      },
+      talk: {
+        first:['You... where have you come from? No outsider has ever reached this place.',
+          'The peach trees... so they still stand. Our ancestors planted them.',
+          "Don't be afraid. Come home with me and rest a while."],
+        elder:['Sit, young man. Drink first. Our ancestors were people of the Qin.',
+          'Under the Qin the laws were cruel as tigers - endless taxes, endless killing.',
+          'What age is it now, may I ask? Is it still the realm of the great Qin?',
+          'Han...? We never knew there had been a Han. And this Wei, this Jin - what are they?',
+          'At each thing you tell us, we can only sigh.'],
+        woman:['Our ponds and mulberries feed us well. The war never found this valley.',
+          'You must eat with every family before you go. It is our way.'],
+        youth:['I have never seen the world outside. Is it beautiful?',
+          'The elders say it is loud, and that it burns.'],
+        host:['They led their wives and children to this cut-off place, and never left again.',
+          'Stay. Eat. There is wine enough for many days.']
+      }
+    };
+    s.regions = [];
+    s._ph='stream'; s._talked={}; s._marks=[]; s._mkCool=0; s._boat=false; s._said={};
+    function cap(k){ if (s._said[k]) return; s._said[k]=1; game.say(PB.caps[k], 0.3); }
+    var game=null;
+    s.update = function (g2) {
+      game=g2; var p=g2.player.pos, t=g2.time||0;
+      // hens wander; the dog stands watch
+      if (s._hens) for (var hn=0; hn<s._hens.length; hn++){ var H2=s._hens[hn];
+        H2.pos[0]=H2._b[0]+Math.sin(t*0.6+hn*2.1)*0.9; H2.pos[2]=H2._b[1]+Math.cos(t*0.5+hn*1.7)*0.7; H2.yaw=Math.sin(t*0.8+hn)*2; }
+      // petals in the grove, stateless, day-law of this valley: always falling
+      if (!s._pet){ s._pet=[]; var pm2=C.newMesh(); C.addQuadZ(pm2,-0.07,0,0.07,0.12,0,'#f0b8c8',true); C.addQuadX(pm2,-0.07,0,0.07,0.12,0,'#e8a8bc',true); C.meshBounds(pm2);
+        for (var pp=0; pp<20; pp++){ var pI=inst(pm2,[-99,-99,-99],0,{label:'petal',kind:'petal'}); s._pet.push(pI); s.insts.push(pI); } }
+      for (var pq=0; pq<s._pet.length; pq++){ var PT=s._pet[pq];
+        var bz=-62-((pq*83)%80), bx=riverX(bz)+(((pq*37)%13)-6);
+        PT.pos[0]=bx+Math.sin(t*0.8+pq)*0.6; PT.pos[2]=bz+Math.cos(t*0.6+pq*1.3)*0.5;
+        PT.pos[1]=4.2-((t*0.5+pq*0.7)%4.4); PT.yaw=t*2.2+pq; }
+      if (s._mkCool>0) s._mkCool-=1/30;
+      var gxq=riverX(-150);
+      if (p[2]<-147 && p[2]>-164){ p[0]+=(gxq-p[0])*0.14; }   // the crevice funnels a person: barely wide enough
+      if (s._boat && p[2]<-144){ s._boat=false; g2.say('You leave the boat on the sand. (bian she chuan)'.replace(' (bian she chuan)',''), 0.2); }
+      if (s._boat){ var wz=Math.max(-149, Math.min(2, p[2]));
+        s._skiff.pos[0]=riverX(wz); s._skiff.pos[2]=wz; s._skiff.pos[1]=-0.12;
+        s._skiff.yaw=Math.atan2(riverX(wz-2)-riverX(wz+2), -4)+0;
+        p[0]+=(riverX(wz)-p[0])*0.12; }
+      // ---------------- the phase spine ----------------
+      if (s._ph==='stream'){ cap('stream'); if (p[2]<-58){ s._ph='grove'; cap('grove'); } }
+      else if (s._ph==='grove'){ if (p[2]<-96) cap('grove2'); if (p[2]<-136){ s._ph='source'; cap('source'); } }
+      else if (s._ph==='source'){ if (p[2]<-144) cap('opening'); if (p[2]<-150.5){ s._ph='squeeze'; cap('squeeze'); } }
+      else if (s._ph==='squeeze'){ if (p[2]<-163){ s._ph='village'; cap('reveal'); } }
+      else if (s._ph==='village'){ if (!s._said.village && p[2]<-172) cap('village');
+        if (s._talked.first && s._talked.elder && s._talked.woman && s._talked.youth && s._talked.host && !s._said.warned){
+          cap('warned'); s._ph='leave'; } }
+      else if (s._ph==='leave'){ if (p[2]>-150){ s._ph='marking'; cap('marking'); } }
+      else if (s._ph==='marking'){ if (p[2]>2 && s._marks.length>=6){ s._ph='report'; cap('report');
+          g2.say('The prefect at once sends men to go back with you.', 0.3);
+          for (var mk2=0; mk2<s._marks.length; mk2++){ s._marks[mk2].pos[1]=-99; }
+          if (s._glow[0]) s._glow[0].pos[1]=-99;
+          s._seal = col(riverX(-150)-2.2, 0, -151.6, riverX(-150)+2.2, 9, -149.4);
+          s._ph='lost'; } }
+      else if (s._ph==='lost'){ if (p[2]<-136 && !s._said.lost){ cap('lost');
+          g2.say('The marks are gone. The cliff face is blank stone.', 0.3); }
+        if (s._said.lost && p[2]>-60 && !s._said.epilogue){ cap('epilogue');
+          g2.say('Liu Ziji of Nanyang, a gentleman of high ideals, heard of it and gladly planned to go - but it came to nothing.', 0.35); } }
+    };
+    s.onAction = function (g2, it) {
+      if (it && it.kind==='skiff'){ s._boat=!s._boat; g2.say(s._boat?'You take the oar.':'You step ashore.', 0.2); return true; }
+      // (the skiff follows in update while s._boat)
+      if (it && it.kind==='villager'){
+        var key = it.label.indexOf('startled')>=0?'first' : it.label.indexOf('elder')>=0?'elder' : it.label.indexOf('woman')>=0?'woman' : it.label.indexOf('youth')>=0?'youth' : 'host';
+        var L2=s.PB.talk[key]; s._tk=s._tk||{}; var ix=s._tk[key]||0;
+        g2.say(it.label+': '+L2[ix%L2.length], 0.25); s._tk[key]=ix+1;
+        if (ix+1>=L2.length) s._talked[key]=true;
+        return true; }
+      if ((s._ph==='marking'||s._ph==='leave') && s._mkCool<=0 && g2.player.pos[2]>-150){
+        var mp2=g2.player.pos; var mk=inst(P.cutMark(), [riverX(mp2[2])+3.1, 0, mp2[2]], 0, { label:'a fresh cut', kind:'mark' });
+        s._marks.push(mk); s.insts.push(mk); s._mkCool=1.2;
+        g2.say('You cut a mark. ('+s._marks.length+')', 0.15); return true; }
+      return false;
+    };
+    return s;
+  }
+
   // ============ ORANGE EMPIRE 1937 (branch port, native re-forge) ============
   // Angel City at dusk; six seams; a road east that ends in green wire at 965.
   // Distances are the branch's, 1:1. Colors are its rendered pixels, decay-baked.
@@ -2215,6 +2413,7 @@
       case 'hallway': return sceneHallway();
       case 'erebus': return sceneErebus();
       case 'epang': return sceneEpang();
+      case 'peach': return scenePeach();
       case 'empire': return sceneEmpire();
       case 'mobil': return sceneMobil();
       default: return sceneVoid();

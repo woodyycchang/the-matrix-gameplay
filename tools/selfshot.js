@@ -142,6 +142,9 @@ paint([281,1.35,-1.5, Math.PI/2+0.05, 0.02, undefined, 1172], '/tmp/shot_empire_
 paint([21,7.48,0.2, Math.PI/2, 0.02, 120], '/tmp/shot_epang_skyway'+SUF+'.png', 'epang');
 paint([40.5,1.62,6.8, -2.0, 0.06, 204], '/tmp/shot_epang_treasury'+SUF+'.png', 'epang');
 paint([-19.5,1.62,4.2, -Math.PI/2, 0.04, 30], '/tmp/shot_epang_getai'+SUF+'.png', 'epang');
+paint([0.5,1.7,-92, 0.34, 0.08, 20], '/tmp/shot_peach_grove'+SUF+'.png', 'peach blossom');
+paint([-2.7,1.62,-165, 0, -0.02, 20], '/tmp/shot_peach_reveal'+SUF+'.png', 'peach blossom');
+paint([-2.2,1.62,-141, 0, 0.05, 20], '/tmp/shot_peach_source'+SUF+'.png', 'peach blossom');
 paint([40,1.62,3.4, -Math.PI/2-0.2, -0.07, undefined, 1258], '/tmp/shot_empire_night'+SUF+'.png', 'empire');
 paint([742,1.5,3.0, Math.PI/2-0.12, -0.16, undefined, 1256], '/tmp/shot_empire_wire'+SUF+'.png', 'empire');
 paint([21.69,1.62,43.98, 4.254, 0.02, undefined, 10], '/tmp/shot_mobil_vista'+SUF+'.png', 'mobil ave');

@@ -343,6 +343,18 @@
                 for (var st5=0; st5<7; st5++){ var su=(st5+0.5)/7;
                   ctx.fillRect(wxc-wspan+su*wspan*2, hor3-3*(H/540), Math.max(1,W/480), 3*(H/540)); }
               }
+            } else if (op.mode === 'peach') {
+              var horP = H * 0.5 + Math.tan(op.pitch) * (H * 0.62);
+              var gP = ctx.createLinearGradient(0, 0, 0, Math.max(1, horP));
+              gP.addColorStop(0, '#b8c8d8'); gP.addColorStop(0.72, '#e6dade'); gP.addColorStop(1, '#f2e4de');
+              ctx.fillStyle = gP; ctx.fillRect(0, 0, W, Math.max(1, horP));
+              ctx.fillStyle = '#ece0da'; ctx.fillRect(0, Math.max(0, horP), W, H);
+              ctx.fillStyle = '#8a9884';
+              ctx.beginPath(); ctx.moveTo(0, horP);
+              for (var mp = 0; mp <= 40; mp++) { var wxp = mp / 40 * W;
+                var mhp = Math.sin(mp * 1.1 + 1.7 - op.yaw * 2.2) * 0.5 + Math.sin(mp * 0.47 + op.yaw) * 0.5;
+                ctx.lineTo(wxp, horP - (9 + mhp * 11) * (H / 540)); }
+              ctx.lineTo(W, horP); ctx.closePath(); ctx.fill();
             } else if (op.mode === 'empire') {
               // Angel City, June 1937: the branch's three-palette day (their EDGE.PAL,
               // verbatim hexes) blended by nightF/duskF; sun rises 6:00 east (+x),
@@ -1069,7 +1081,7 @@
     hud.input.addEventListener('blur', function () { consoleOpen = false; });
     hud.hint = document.getElementById('lookhint');
     hud.chips = document.getElementById('chips');
-    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city 1937', 'orange empire'], ['mobil ave', 'mobil ave'], ['a chair', 'a chair'], ['clear', 'clear']];
+    var defs = [['weapons', 'weapons'], ['dojo', 'dojo'], ['rooftop jump', 'rooftop'], ['motorcycle', 'motorcycle'], ['katana', 'katana'], ['city street', 'city street'], ['neon mile', 'neon'], ['hallway', 'hallway'], ['erebus station', 'erebus'], ['epang palace', 'epang'], ['angel city 1937', 'orange empire'], ['peach blossom spring', 'peach blossom'], ['mobil ave', 'mobil ave'], ['a chair', 'a chair'], ['clear', 'clear']];
     for (var i = 0; i < defs.length; i++) hud.chips.appendChild(chip(defs[i][0], defs[i][1]));
     hud.hint.textContent = 'edges = turn \u00b7 hold right-drag = look \u00b7 click = act \u00b7 Esc = type';
     hud.mic = document.getElementById('mic');

@@ -2512,6 +2512,95 @@ section('EPANG E6 (the rebuild report acceptance probes)');
   }
 }
 
+// ------------------------------------------- PEACH BLOSSOM SPRING (branch port, English-only decree)
+section('PEACH BLOSSOM SPRING');
+{
+  const mkB=()=>{ const g=new C.Game(); g.emit=()=>{}; g.update({},0.2); g.request('peach blossom');
+    for(let i=0;i<100;i++) g.update({},1/30); return g; };
+  { // word chain + the peach-chair trap
+    for (const w of ['peach blossom','blossom','wuling','row me up the peach stream']){
+      const g=new C.Game(); g.emit=()=>{}; g.update({},0.2); g.request(w);
+      for(let i=0;i<14;i++) g.update({},1/30);
+      eq(g.scene.name,'peach blossom', 'chain: '+JSON.stringify(w)); }
+    const g2=new C.Game(); g2.emit=()=>{}; g2.update({},0.2); g2.request('a peach chair');
+    ok(g2.scene.name!=='peach blossom' || g2.scene.insts.some(it=>it.kind==='prop'), 'the trap: a peach chair is still furniture-adjacent, not a pilgrimage');
+  }
+  { // NO CJK, anywhere: the decree court
+    const g=mkB(); const PB=g.scene.PB; const cjk=/[\u3400-\u9fff\uf900-\ufaff]/;
+    let all=Object.values(PB.caps).join('|');
+    for (const k in PB.talk) all+=PB.talk[k].join('|');
+    for (const it of g.scene.insts) all+='|'+(it.label||'');
+    all+='|'+g.scene.label+'|'+g.scene.name;
+    ok(!cjk.test(all), 'not one CJK glyph ships in-scene (script, labels, name)');
+  }
+  { // the grove law: no other kind of tree among them
+    const g=mkB();
+    ok(g.scene._trunks.peach.length>=24, 'the grove stands ('+g.scene._trunks.peach.length+' peach trunks)');
+    ok(g.scene._trunks.ord.every(tr=>tr.pos[2]>-58), 'zhong wu za shu: zero ordinary trunks inside the grove band');
+    ok(g.scene._trunks.peach.every(tr=>tr.pos[2]<-58), 'and no peach strays below it');
+  }
+  { // petals fall, hens wander: motion probe
+    const g=mkB(); for(let i=0;i<30;i++) g.update({},1/30);
+    const a=g.scene._pet.slice(0,6).map(p=>p.pos.slice()); const h0=g.scene._hens[0].pos.slice();
+    for(let i=0;i<15;i++) g.update({},1/30);
+    const moved=g.scene._pet.slice(0,6).filter((p,i2)=>Math.hypot(p.pos[0]-a[i2][0],p.pos[1]-a[i2][1],p.pos[2]-a[i2][2])>0.03).length;
+    ok(moved>=5, 'petals drift ('+moved+'/6)');
+    ok(Math.hypot(g.scene._hens[0].pos[0]-h0[0],g.scene._hens[0].pos[2]-h0[2])>0.01, 'the hens wander the yard');
+  }
+  { // the light in the cliff exists, then the crown court: the WHOLE fable, end to end
+    const g=mkB();
+    ok(g.scene._glow[0].pos[1]>-50, 'a faint light shows in the opening');
+    // board the skiff
+    g.player.pos=[1.4,0.02,3.4]; g.player.vel=[0,0,0];
+    g.player.yaw=Math.atan2(g.scene._skiff.pos[0]-1.4, -(g.scene._skiff.pos[2]-3.4));
+    for(let i=0;i<8;i++) g.update({},1/30);
+    g.doAction(); ok(g.scene._boat===true, 'the oar is taken');
+    g.player.yaw=0;
+    // row upstream: the whole stream, watching phases
+    let sawGrove=false;
+    for(let i=0;i<95*30;i++){ g.update({fwd:1},1/30);
+      if (g.scene._ph==='grove') sawGrove=true;
+      if (g.player.pos[2]<-146) break; }
+    ok(sawGrove && g.player.pos[2]<-146, 'rowed the stream to the source ('+g.player.pos[2].toFixed(0)+')');
+    for(let i=0;i<4;i++) g.update({},1/30);
+    ok(g.scene._boat===false, 'bian she chuan: the boat is left at the beach, by itself');
+    // squeeze through
+    for(let i=0;i<14*30;i++){ g.update({fwd:1},1/30); if (g.player.pos[2]<-166) break; }
+    ok(g.scene._ph==='village' || g.scene._ph==='leave', 'huo ran kai lang: through the squeeze ('+g.scene._ph+')');
+    ok(g.msgs.some(m2=>m2.text.indexOf('open, and bright')>=0), 'the reveal line lands');
+    // talk to all five, everywhere they stand
+    const gx=g.scene._vill[0].pos[0];
+    for (const v of g.scene._vill){
+      g.player.pos=[v.pos[0]+1.2, 0.02, v.pos[2]+1.2]; g.player.vel=[0,0,0];
+      g.player.yaw=Math.atan2(v.pos[0]-g.player.pos[0], -(v.pos[2]-g.player.pos[2]));
+      for(let k=0;k<6;k++){ g.update({},1/30); g.doAction(); } }
+    ok(g.scene._talked.first&&g.scene._talked.elder&&g.scene._talked.woman&&g.scene._talked.youth&&g.scene._talked.host, 'all five villagers heard out');
+    eq(g.msgs.filter(m2=>m2.text.indexOf('not worth telling')>=0).length, 1, 'the warning is given exactly once');
+    ok(g.msgs.some(m2=>m2.text.indexOf('never knew there had been a Han')>=0), 'nai bu zhi you Han, in English');
+    // walk out, marking the way
+    g.player.pos=[gx,0.02,-152]; g.player.yaw=Math.PI; g.player.vel=[0,0,0];
+    let lastMark=-999;
+    for(let i=0;i<120*30;i++){ g.update({fwd:1},1/30);
+      if (g.scene._ph==='marking' && g.player.pos[2]-lastMark>22 && g.scene._marks.length<8){ lastMark=g.player.pos[2]; g.doAction(); }
+      if (g.player.pos[2]>3) break; }
+    ok(g.scene._marks.length>=6, 'chu chu zhi zhi: '+g.scene._marks.length+' cuts on the way home');
+    ok(g.scene._ph==='lost', 'the prefect sends men back with you (phase '+g.scene._ph+')');
+    ok(g.scene._marks.every(mk=>mk.pos[1]<-50), 'and every mark is GONE');
+    ok(g.scene._glow[0].pos[1]<-50, 'the light in the cliff is out');
+    // lead them upstream: the way is lost
+    g.player.pos=[1.4,0.02,3.4]; g.player.vel=[0,0,0];
+    g.player.yaw=Math.atan2(g.scene._skiff.pos[0]-1.4, -(g.scene._skiff.pos[2]-3.4));
+    for(let i=0;i<6;i++) g.update({},1/30); g.doAction(); g.player.yaw=0;
+    for(let i=0;i<95*30;i++){ g.update({fwd:1},1/30); if (g.player.pos[2]<-148.6) break; }
+    ok(g.player.pos[2]>-151.4, 'the cliff is blank stone: sealed ('+g.player.pos[2].toFixed(1)+')');
+    ok(g.msgs.some(m2=>m2.text.indexOf('lose the way, for good')>=0), 'the lost line lands');
+    g.player.yaw=Math.PI;
+    for(let i=0;i<70*30;i++){ g.update({fwd:1},1/30); if (g.player.pos[2]>-58) break; }
+    ok(g.msgs.some(m2=>m2.text.indexOf('no one ever asked the way again')>=0), 'the epilogue: Liu Ziji, and silence');
+    const cjk=/[\u3400-\u9fff]/; ok(g.msgs.every(m2=>!cjk.test(m2.text)), 'the full transcript is CJK-clean, end to end');
+  }
+}
+
 // ---------------------------------------------------------------- summary
 console.log('\n' + '='.repeat(50));
 console.log('PASS ' + pass + '   FAIL ' + fail);

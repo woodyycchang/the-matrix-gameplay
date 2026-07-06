@@ -64,6 +64,7 @@
     [/\b(hallway|corridor|dejavu|deja|vu|doors)\b/, 'hallway'],
     [/\b(erebus|station|tower)\b/, 'erebus'],
     [/\b(epang|palace)\b/, 'epang'],
+    [/\b(peach blossom|blossom|peach|wuling)\b/, 'peach'],
     [/\b(orange empire|empire|1937|angel city|citrus|nostalgia|nostalgic)\b/, 'empire'],
     [/\b(mobil ave|mobil|limbo|subway|underground)\b/, 'mobil'],
     [/\b(dojo|spar|sparring|kung|fight|fighting|train)\b/, 'dojo'],
@@ -477,11 +478,11 @@
     for (var i = 0; i < insts.length; i++) {
       var it = insts[i];
       if (it.loadT < 0.9) continue;
-      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'sedan' && it.kind !== 'katana') continue;
-      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : (it.kind === 'sedan' ? 1.0 : 1.1)));
+      if (it.kind !== 'gun' && it.kind !== 'dummy' && it.kind !== 'booth' && it.kind !== 'bike' && it.kind !== 'sedan' && it.kind !== 'katana' && it.kind !== 'skiff' && it.kind !== 'villager') continue;
+      var cy = it.kind === 'gun' ? 0.05 : (it.kind === 'katana' ? 0.35 : (it.kind === 'bike' ? 0.6 : (it.kind === 'sedan' ? 1.0 : (it.kind === 'skiff' ? 1.05 : 1.1))));
       var to = [it.pos[0] - eye[0], it.pos[1] + cy - eye[1], it.pos[2] - eye[2]];
       var d = C.len(to);
-      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'sedan' ? 3.4 : (it.kind === 'katana' ? 2.4 : 2.8))));
+      var maxd = it.kind === 'dummy' ? 2.1 : (it.kind === 'booth' ? 2.4 : (it.kind === 'bike' ? 3.0 : (it.kind === 'sedan' ? 3.4 : (it.kind === 'katana' ? 2.4 : (it.kind === 'skiff' ? 3.4 : 2.8)))));
       if (d > maxd) continue;
       var ang = Math.acos(C.clamp(C.dot(C.norm(to), fw), -1, 1));
       if (ang > 0.5) continue;
@@ -494,6 +495,7 @@
     if (this.bike) { this.dismountBike(); return; }
     if (this.car) { this.dismountCar(); return; }
     var it = this.aim;
+    if (this.scene && this.scene.onAction && this.scene.onAction(this, it)) return;
     if (!it) return;
     if (it.kind === 'gun') {
       it.loadDir = -1;

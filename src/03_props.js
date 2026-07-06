@@ -650,6 +650,39 @@
     return m;
   };
 
+  P.peachTree = function (bloom) { // trunk + three blossom clouds; bloom=false gives bare green
+    var m = C.newMesh();
+    C.addBox(m, 0, 1.0, 0, 0.26, 2.0, 0.26, '#5a4632', { noBottom: true });
+    C.addBox(m, 0.5, 1.9, 0.1, 0.16, 1.0, 0.16, '#5a4632', { noBottom: true });
+    var pc = bloom ? ['#efb6c8', '#f4c6d4', '#e8a4bc'] : ['#7c9a4a', '#6f8a44', '#86a452'];
+    C.addBox(m, 0, 2.9, 0, 1.9, 1.0, 1.9, pc[0], { noBottom: true });
+    C.addBox(m, 0.8, 3.4, 0.3, 1.2, 0.8, 1.2, pc[1], { noBottom: true });
+    C.addBox(m, -0.7, 3.3, -0.3, 1.1, 0.7, 1.1, pc[2], { noBottom: true });
+    C.meshBounds(m); return m;
+  };
+  P.ordTree = function () { // the ordinary forest, before the grove
+    var m = C.newMesh();
+    C.addBox(m, 0, 1.2, 0, 0.3, 2.4, 0.3, '#4a3c2c', { noBottom: true });
+    C.addBox(m, 0, 3.2, 0, 1.7, 1.6, 1.7, '#3f5a30', { noBottom: true });
+    C.addBox(m, 0, 4.1, 0, 1.0, 0.9, 1.0, '#4a6a38', { noBottom: true });
+    C.meshBounds(m); return m;
+  };
+  P.skiff = function () { // the fisherman's flat skiff
+    var m = C.newMesh();
+    C.addBox(m, 0, 0.28, 0, 1.2, 0.22, 3.4, '#6a5436', { noBottom: true });
+    C.addBox(m, 0, 0.44, 1.55, 1.2, 0.34, 0.3, '#5a4630', { noBottom: true });
+    C.addBox(m, 0, 0.44, -1.55, 1.2, 0.34, 0.3, '#5a4630', { noBottom: true });
+    C.addBox(m, -0.52, 0.5, 0, 0.16, 0.5, 3.4, '#5a4630', { noBottom: true });
+    C.addBox(m, 0.52, 0.5, 0, 0.16, 0.5, 3.4, '#5a4630', { noBottom: true });
+    C.addBox(m, 0.7, 0.62, -0.4, 0.06, 1.3, 0.06, '#4a3a28', { noBottom: true });
+    C.meshBounds(m); return m;
+  };
+  P.cutMark = function () { // a fresh white cut on bark or stone
+    var m = C.newMesh();
+    C.addQuadZ(m, -0.06, 0.9, 0.1, 1.5, 0.14, '#e8e2d0', true);
+    C.addQuadZ(m, -0.1, 1.1, 0.06, 1.42, 0.15, '#f2ecda', true);
+    C.meshBounds(m); return m;
+  };
   P.shackDoor37 = function (open) { // the packing shack door, hinge on the left edge
     var m = C.newMesh();
     if (open) { C.addBox(m, 0.38, 1.08, 0.42, 0.07, 2.15, 1.05, '#3a2c1e'); }

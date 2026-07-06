@@ -232,7 +232,8 @@
     "ROOT/WORLD/density",
     "ROOT/WORLD/void-onboarding",
     "ROOT/WORLD/empire-port",
-    "ROOT/WORLD/mobil-port"
+    "ROOT/WORLD/mobil-port",
+    "ROOT/WORLD/peach-port"
    ],
    "status": "PASS",
    "evidence": "子叶全FIXED; 四主题回填 +empire-port(936绿,五轮视觉环). +mobil-port(971绿)."
@@ -774,6 +775,69 @@
    "priors": [],
    "status": "PASS",
    "evidence": "原作者报告§8探针; 1001绿; 六项真缺陷(梯不可登/柱挡道/拱梯超步/栏缝坠落/门楣削头/亮踏板)由探针抓出并修复入册epang-port.md."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/word-chain",
+   "type": "UNIT",
+   "why": "peach blossom|blossom|peach|wuling + prop trap",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/no-cjk",
+   "type": "UNIT",
+   "why": "ENGLISH-ONLY decree: script+labels+transcript",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/grove-law",
+   "type": "UNIT",
+   "why": "zhong wu za shu: purity by final z",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/fable-e2e",
+   "type": "UNIT",
+   "why": "crown court: whole story on real input",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/lost-seal",
+   "type": "UNIT",
+   "why": "marks gone, light out, cliff sealed",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port/visual-parity",
+   "type": "UNIT",
+   "why": "3 poses vs branch shots; grove v2 receipts",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "peach-port.md; 1029绿; 六缺陷(瞄准锥/缝无地板/舍舟/塘域/纯度z判/漏斗)由法庭抓获并修."
+  },
+  {
+   "path": "ROOT/WORLD/peach-port",
+   "type": "BRANCH",
+   "why": "主题#15 桃花源(英文限定)",
+   "priors": [
+    "ROOT/WORLD/peach-port/word-chain",
+    "ROOT/WORLD/peach-port/no-cjk",
+    "ROOT/WORLD/peach-port/grove-law",
+    "ROOT/WORLD/peach-port/fable-e2e",
+    "ROOT/WORLD/peach-port/lost-seal",
+    "ROOT/WORLD/peach-port/visual-parity"
+   ],
+   "status": "PASS",
+   "evidence": "peach-blossom分支原生移植; 去中文令执行; E2E冠冕庭全绿."
   }
  ]
 }
