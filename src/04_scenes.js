@@ -303,7 +303,7 @@
   }
   function sceneNeon() {
     var s = {
-      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
+      name: 'neon mile', sky: 'neon', uiDark: true, fog: { near: 26, far: 150, col: '#0c0a18' },
       groundY: 0, ambience: 'neon', colliders: [],
       insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }, infinite: true, chunks: {}
     };
@@ -2318,9 +2318,10 @@
     s._train = train; s._doors = doorsIt; s._trainCols = []; s._doorCols = [];
     // ---------------- the director ----------------
     s._f = { entered:false, sign:false, arr:false, open:false, seal:false, gone:true, scram:false, shut:false, drip:0, unr:null };
+    s.exitFlavor = 'Static on the line clears, just once. A door compiles where none should. Take it before whatever runs this station notices.';
     s.onWord = function (game, raw) {
       var lw = String(raw).toLowerCase();
-      if (/\b(clear|exit|void|leave|wake|back|out|help)\b/.test(lw)) {
+      if (/\b(exit|void|leave|wake|back|out|help)\b/.test(lw)) {
         game.say('Static on the line. No door compiles, no ring, no way up. Whatever runs this station is not your operator.', 0.3);
         game.emit('unravel');
         return true;

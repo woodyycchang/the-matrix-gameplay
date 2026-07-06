@@ -82,3 +82,15 @@ Two design bugs the courts caught before any player could:
 - Their Pass-3 life (dust motes, moths at the bad fixture, posters) is not ported - the
   flickering fixture over the doors IS (baked at 0.45 intensity, dark tube geometry).
 - Boarding is walk-through-the-open-doors (region), not a key press; matches our booth idiom.
+
+
+## COVENANT AMENDED BY THE OWNER (2026-07-06)
+Report from live play: the station locked ALL requests (as designed) and the log went
+neon-green in five scenes. Two rulings:
+1. TRANSFERS ALWAYS ROUTE. C.parse now runs before any scene word-claim; scene/clear
+   requests bypass onWord. Mobil keeps its soul: props still sketch-and-unravel, the
+   door-words still get Static verbatim - but asking for a SCENE compiles a way out,
+   with a one-line exit flavor per visit ('Static on the line clears, just once...').
+2. THE GREEN LOG IS DECLARED, NEVER INFERRED. body.dark was keyed to /NEON/i on the
+   scene name; whatever edge made it stick in hallway/erebus/epang/mobil/peach, the
+   name-regex is retired. Scenes declare uiDark; census court: only 'neon mile' does.

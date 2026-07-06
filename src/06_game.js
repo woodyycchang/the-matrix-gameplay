@@ -168,9 +168,11 @@
 
   // ----- requests -----
   Game.prototype.request = function (text) {
-    // scene-local console hook: an armed scene may claim the raw word (the empire terminal)
-    if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     var a = C.parse(text);
+    // scene requests ALWAYS route: no station may lock the operator out of a transfer.
+    if (a.type === 'scene' || a.type === 'clear') {
+      if (this.scene && this.scene.exitFlavor && !this.scene._exitSaid) { this.scene._exitSaid = true; this.say(this.scene.exitFlavor, 0.1); }
+    } else if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     if (a.type === 'none') return a;
     if (a.type === 'help') { this.say(L.help); return a; }
     if (a.type === 'code') { this.toggleCode(); return a; }

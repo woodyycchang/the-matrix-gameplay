@@ -14,7 +14,7 @@
     "ROOT/TRUST"
    ],
    "status": "PASS",
-   "evidence": "1001全绿; 14主题+原版阿房宫入驻子目录; 三份原作者报告全数执行(empire/erebus/epang); 探针文化抓获真缺陷十余处; 单报告即重开."
+   "evidence": "1001全绿; 14主题+原版阿房宫入驻子目录; 三份原作者报告全数执行(empire/erebus/epang); 探针文化抓获真缺陷十余处; 单报告即重开. 1037绿(业主改约: mobil放行+uiDark宣告制)."
   },
   {
    "path": "ROOT/SOUND",
@@ -723,7 +723,8 @@
     "ROOT/WORLD/mobil-port/bake",
     "ROOT/WORLD/mobil-port/audio-law",
     "ROOT/WORLD/mobil-port/visual-parity",
-    "ROOT/WORLD/mobil-port/feel"
+    "ROOT/WORLD/mobil-port/feel",
+    "ROOT/WORLD/mobil-port/transfer-covenant"
    ],
    "status": "PASS",
    "evidence": "971全绿(+35); E0+三轮视觉环入册eval/mobil-port.md; vista lum123==123; 周期40s两班线序法庭."
@@ -838,6 +839,22 @@
    ],
    "status": "PASS",
    "evidence": "peach-blossom分支原生移植; 去中文令执行; E2E冠冕庭全绿."
+  },
+  {
+   "path": "ROOT/WORLD/mobil-port/transfer-covenant",
+   "type": "UNIT",
+   "why": "业主改约: 转场永远放行",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "parse先于onWord; 道具照拆/门词照答/离站风味每次一句; 1037绿."
+  },
+  {
+   "path": "ROOT/UI/uidark-declared",
+   "type": "UNIT",
+   "why": "日志绿皮肤由场景宣告(uiDark)非名字推断",
+   "priors": [],
+   "status": "PASS",
+   "evidence": "普查庭: 唯neon mile为真; 五场景误绿根路封死."
   }
  ]
 }

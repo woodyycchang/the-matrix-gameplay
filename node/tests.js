@@ -1578,7 +1578,7 @@ section('scene-aware voice: code-green after dark');
   const tplO = fsAO.readFileSync(__dirname + '/../template.html', 'utf8');
   const appO = fsAO.readFileSync(__dirname + '/../src/08_app.js', 'utf8');
   ok(/body\.dark #log \.line\{color:#9affc0/.test(tplO) && /body\.dark #inrow input\{color:#9affc0/.test(tplO), 'dark scenes wear the Matrix default #9affc0 across lines, chips and input');
-  ok(/classList\.toggle\('dark', \/NEON\/i/.test(appO), 'only NEON flips the code-green skin; armory and the rest keep the original ink');
+  ok(appO.indexOf("classList.toggle('dark', !!(game.scene && game.scene.uiDark)")>=0, 'the code-green skin is DECLARED (uiDark), never inferred from a name');
 }
 
 
@@ -2374,17 +2374,20 @@ section('MOBIL AVE (the between-place; the operator fails here)');
   {
     const {g,ev}=mkM();
     const before=g.scene.name;
-    const r1=g.request('give me a rifle');
-    eq(r1.type,'sceneword','the scene claims the word');
-    ok(g.scene.name===before,'no scene loads');
+    const r1=g.request('give me a red chair');
+    eq(r1.type,'sceneword','the scene claims the prop word');
+    ok(g.scene.name===before,'no prop compiles into the station');
     ok(g.scene.insts.some(it=>it.label==='a request'),'a pedestal sketches itself');
     ok(g.msgs.some(m=>m.text.indexOf('unravels before it can hold anything')>=0),'and the refusal line is verbatim');
     for(let i=0;i<80;i++)g.update({},1/30);
     ok(!g.scene.insts.some(it=>it.label==='a request'),'and it unravels to nothing');
-    g.request('clear');
-    ok(g.scene.name==='mobil ave','clear does not compile either');
-    ok(g.msgs.some(m=>m.text.indexOf('not your operator')>=0),'the static line, verbatim');
     ok(ev.indexOf('unravel')>=0,'the unravel is heard');
+    g.request('let me out');
+    ok(g.msgs.some(m=>m.text.indexOf('not your operator')>=0),'the static line still answers the door-words, verbatim');
+    g.request('clear');
+    ok(g.msgs.some(m=>m.text.indexOf('Static on the line clears')>=0),'but CLEAR routes: the exit flavor plays');
+    for(let i=0;i<160;i++)g.update({},1/30);
+    ok(g.scene.name!=='mobil ave','and the station lets go');
   }
   // the timetable, two full periods, lines in order
   {
@@ -2512,6 +2515,31 @@ section('EPANG E6 (the rebuild report acceptance probes)');
   }
 }
 
+  // -- the station may not lock the operator; the log may not go green by accident
+  {
+    const g=new C.Game(); g.emit=()=>{}; g.update({},0.2); g.request('mobil ave');
+    for(let i=0;i<100;i++) g.update({},1/30);
+    eq(g.scene.name,'mobil ave','in the station');
+    g.request('a red chair');
+    for(let i=0;i<10;i++) g.update({},1/30);
+    eq(g.scene.name,'mobil ave','junk words still unravel in-station (no transfer)');
+    g.request('take me to the dojo');
+    ok(g.msgs.some(m2=>m2.text.indexOf('Static on the line clears')>=0),'the exit flavor plays once');
+    for(let i=0;i<160;i++) g.update({},1/30);
+    eq(g.scene.name,'dojo','THE TRANSFER ROUTES: mobil cannot lock the operator');
+    g.request('mobil ave'); for(let i=0;i<160;i++) g.update({},1/30);
+    g.request('epang palace');
+    eq(g.msgs.filter(m2=>m2.text.indexOf('Static on the line clears')>=0).length,2,'flavor is once PER VISIT: a new arc earns one new line');
+    for(let i=0;i<160;i++) g.update({},1/30);
+    eq(g.scene.name,'epang palace','and the second transfer routes too');
+  }
+  {
+    const darks=[];
+    for (const nm of ['weapons','dojo','hallway','erebus','epang','empire','mobil','peach','neon']){
+      const sc=C.makeScene(nm==='empire'?'empire':nm==='mobil'?'mobil':nm==='peach'?'peach':nm==='neon'?'neon':nm);
+      if (sc.uiDark) darks.push(sc.name); }
+    eq(JSON.stringify(darks),JSON.stringify(['neon mile']),'uiDark census: ONLY neon mile speaks code-green');
+  }
 // ------------------------------------------- PEACH BLOSSOM SPRING (branch port, English-only decree)
 section('PEACH BLOSSOM SPRING');
 {

@@ -92,7 +92,7 @@
   <button id="go" type="button">ENTER</button>
   <div class="keys">WASD move · SHIFT sprint · SPACE jump · edge/right-drag to look · C code vision<br>
   E use · quick click fire/strike · just type &amp; ENTER to ask · hold V to speak · F fullscreen · M mute<br>  music · Stellardrone “Light Years” (CC BY)<br>
-  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0413</span></div>
+  <span style="opacity:.45;font-size:10px;letter-spacing:.2em">BUILD 0706-0816</span></div>
 </div>
 
 <script>
@@ -1368,7 +1368,7 @@
   }
   function sceneNeon() {
     var s = {
-      name: 'neon mile', sky: 'neon', fog: { near: 26, far: 150, col: '#0c0a18' },
+      name: 'neon mile', sky: 'neon', uiDark: true, fog: { near: 26, far: 150, col: '#0c0a18' },
       groundY: 0, ambience: 'neon', colliders: [],
       insts: [], spawn: { pos: [0, 0, 6], yaw: 0 }, infinite: true, chunks: {}
     };
@@ -3383,9 +3383,10 @@
     s._train = train; s._doors = doorsIt; s._trainCols = []; s._doorCols = [];
     // ---------------- the director ----------------
     s._f = { entered:false, sign:false, arr:false, open:false, seal:false, gone:true, scram:false, shut:false, drip:0, unr:null };
+    s.exitFlavor = 'Static on the line clears, just once. A door compiles where none should. Take it before whatever runs this station notices.';
     s.onWord = function (game, raw) {
       var lw = String(raw).toLowerCase();
-      if (/\b(clear|exit|void|leave|wake|back|out|help)\b/.test(lw)) {
+      if (/\b(exit|void|leave|wake|back|out|help)\b/.test(lw)) {
         game.say('Static on the line. No door compiles, no ring, no way up. Whatever runs this station is not your operator.', 0.3);
         game.emit('unravel');
         return true;
@@ -3937,9 +3938,11 @@
 
   // ----- requests -----
   Game.prototype.request = function (text) {
-    // scene-local console hook: an armed scene may claim the raw word (the empire terminal)
-    if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     var a = C.parse(text);
+    // scene requests ALWAYS route: no station may lock the operator out of a transfer.
+    if (a.type === 'scene' || a.type === 'clear') {
+      if (this.scene && this.scene.exitFlavor && !this.scene._exitSaid) { this.scene._exitSaid = true; this.say(this.scene.exitFlavor, 0.1); }
+    } else if (this.scene && this.scene.onWord && this.scene.onWord(this, String(text || ''))) return { type: 'sceneword' };
     if (a.type === 'none') return a;
     if (a.type === 'help') { this.say(L.help); return a; }
     if (a.type === 'code') { this.toggleCode(); return a; }
@@ -5963,7 +5966,7 @@
     }
     if (lastMsAvg > 0) sceneLine += ' \u00b7 ' + (Math.round(lastMsAvg / 2) * 2) + 'ms';
     if (sceneLine !== lastSceneLine) { lastSceneLine = sceneLine; hud.scene.textContent = sceneLine; } // write only on change
-    document.body.classList.toggle('dark', /NEON/i.test(String(game.sceneName || '')));   // only true night speaks in code-green
+    document.body.classList.toggle('dark', !!(game.scene && game.scene.uiDark));   // scenes DECLARE the code-green log; names never decide it
     var a = game.aim, label = '';
     if (game.bike) {
       if (game.bike.dist < 12) label = '[E] dismount \u00b7 W/S throttle \u00b7 Shift nitro';
